@@ -39,24 +39,78 @@ nav{
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
     border-radius: 50px;
+    border: solid 1px #AEFF2B;
+}
+.intro{
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin:30px;    
-    border: solid 1px #AEFF2B;
+    margin:30px;
+    padding: 30px;
 }
 h1.home-intro{
     color: #AEFF2B;
     font-family: "Alfa Slab One", serif;
     text-align: center;
-    margin:20px;
-    font-size: 85px;
+    margin: 5px;
+    font-size: 6.5em;
+    letter-spacing: 0.02em;
 }
 img.intro-img{
-    width:70%;
-    margin: 40px;
+    width:90%;
+    margin: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+div.image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.image-text {
+    position: absolute;
+    color: #FFF;
+    font-size: 2.5em;
+    top:10%;
+    left:10%;
+    text-align:left;
+}
+.register-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 30px;
+    padding: 70px;
+}
+.register-text {
+    text-align: left;
+    color: #FFF;
+    flex: 2;
+}
+.register-text h2 {
+    font-size: 2em;
+    color: #AEFF2B;
+}
+.register-text p {
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+.register-button {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+.register{
+    font-family: "Alfa Slab One", serif;
+    color: #AEFF2B;
+    background: #00804C;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 1.2em;
+    text-align: center;
+    border: solid 1px #AEFF2B;
 }
