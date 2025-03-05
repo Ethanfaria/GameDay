@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAME DAY - Book Your Futsal Experience</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="#" class="logo">GAME DAY</a>
+        <button class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="homepage.html" class="active">Home</a>
+            <a href="#">Grounds</a>
+            <a href="academy.html">Academy</a>
+            <a href="about.html">About</a>
+            <a href="#">FAQ</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="cta-button">Get started</a>
+        </div>
+    </nav>
+
+    <!-- Bento Grid Layout -->
+    <div class="bento-grid">
+        <!-- Header Item -->
+        <div class="bento-item item-header">
+            <h1>From Click To Kick!</h1>
+            <p>Find and book the best futsal grounds near you with just a few clicks</p>
+        </div>
+
+        <!-- Booking Item -->
+        <div class="bento-item item-booking">
+            <h2>Book Your Futsal Experience,<br> Anytime, Anywhere!</h2>
+            <a href="#" class="btn">Book Now</a>
+        </div>
+
+        <!-- Stats Item -->
+        <div class="bento-item item-stats">
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-number">200+</div>
+                    <div class="stat-label">Grounds</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50k+</div>
+                    <div class="stat-label">Players</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100k+</div>
+                    <div class="stat-label">Bookings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Item -->
+        <div class="bento-item item-features">
+            <h3 class="feature-title">Why Choose Us</h3>
+            <ul class="feature-list">
+                <li>Instant booking confirmation</li>
+                <li>Secure online payments</li>
+                <li>Top-rated facilities</li>
+                <li>24/7 customer support</li>
+            </ul>
+        </div>
+
+        <!-- Testimonial Item -->
+        <div class="bento-item item-testimonial">
+            <p class="testimonial-text">"Game Day has completely transformed how we book our weekly matches. No more phone calls or waiting for confirmations!"</p>
+            <p class="testimonial-author">- Alex Chen, Regular Player</p>
+        </div>
+
+        <!-- Partner Item -->
+        <div class="bento-item item-partner">
+            <div class="partner-text">
+                <h2>Whistle ready?</h2>
+                <p>Referees can now sign up and take charge of the game! Join our platform to get booked for matches, connect with teams, and officiate like a pro</p>
+            </div>
+            <a href="#" class="btn btn-large">Register Now</a>
+        </div>
+
+        <!-- Facilities Item -->
+        <div class="bento-item item-facilities">
+            <h3 class="feature-title">Top-Notch Facilities</h3>
+            <div class="facilities-grid">
+                <div class="facility-item">
+                    <i class="fas fa-futbol"></i>
+                    <span>Premium Turfs</span>
+                </div>
+                <div class="facility-item">
+                    <i class="fas fa-shower"></i>
+                    <span>Changing Rooms</span>
+                </div>
+                <div class="facility-item">
+                    <i class="fas fa-parking"></i>
+                    <span>Parking Space</span>
+                </div>
+                <div class="facility-item">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Floodlights</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Partner Item -->
+        <div class="bento-item item-partner">
+            <div class="partner-text">
+                <h2>Partner With Us:<br>List Your Ground or Academy Today!</h2>
+                <p>Reach more players, fill your slots, and grow your business effortlessly by joining our platform</p>
+            </div>
+            <a href="#" class="btn btn-large">Register Now</a>
+        </div>
+
+        
+
+        <!-- CTA Item -->
+        <div class="bento-item item-cta">
+            <h2>Ready to Play?</h2>
+            <a href="#" class="btn btn-large">Get Started Now</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-col">
+            <div class="footer-logo">GAME DAY</div>
+            <p class="footer-text">The #1 platform for booking futsal grounds and finding the best playing experiences in your area.</p>
+        </div>
+
+        <div class="footer-col footer-links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li><a href="#">Find Grounds</a></li>
+                <li><a href="#">Join Academy</a></li>
+                <li><a href="#">Partner With Us</a></li>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">FAQs</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <div class="contact">
+                <h3>Contact Us</h3>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> info@gameday.com</p>
+                    <p><i class="fas fa-phone"></i> +1 234 567 8900</p>
+                </div>
+            </div>
+            <div class="social">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Profile Dashboard Popup -->
+<div id="dashboard-popup" class="dashboard-overlay" style="display: none;">
+    <div class="dashboard-container">
+        <span class="close-btn" onclick="closeDashboard()">&times;</span>
+        
+        <div class="profile-header">
+            <div class="profile-icon">
+                <img src="user.jpg" alt="Profile Picture">
+            </div>
+            <h2 id="user-name">John Doe</h2>
+            <p id="user-email">johndoe@example.com</p>
+        </div>
+
+        <div class="dashboard-menu">
+            <div class="menu-item" onclick="openSection('edit-profile')">👤 Edit Profile</div>
+            <div class="menu-item" onclick="openSection('bookings')">📅 My Bookings</div>
+            <div class="menu-item" onclick="openSection('support')">📞 Support</div>
+            <div class="menu-item" onclick="logout()">🚪 Logout</div>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+        // JavaScript for enhanced user experience
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+            
+            mobileMenuBtn.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.navbar')) {
+                    navLinks.classList.remove('active');
+                }
+            });
+
+            // Add smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    
+                    if(this.getAttribute('href') !== '#') {
+                        document.querySelector(this.getAttribute('href')).scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // Animation for stats
+            const stats = document.querySelectorAll('.stat-number');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCount(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            stats.forEach(stat => {
+                observer.observe(stat);
+            });
+            
+            function animateCount(el) {
+                const target = parseInt(el.textContent);
+                const suffix = el.textContent.replace(/[0-9]/g, '');
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        el.textContent = target + suffix;
+                        clearInterval(timer);
+                    } else {
+                        el.textContent = Math.floor(current) + suffix;
+                    }
+                }, 16);
+            }
+            
+            // Adding hover effects to bento items
+            const bentoItems = document.querySelectorAll('.bento-item');
+            bentoItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+        let isLoggedIn = localStorage.getItem("loggedIn") === "true";
+        
+        let loginBtn = document.querySelector("a[href='login.html']");
+        let signupBtn = document.querySelector("a[href='signup.html']");
+        let navLinks = document.querySelector(".nav-links");
+
+        // Remove existing "My Profile" button (if any)
+        let existingProfileBtn = document.getElementById("profile-btn");
+        if (existingProfileBtn) {
+            existingProfileBtn.remove();
+        }
+
+        if (isLoggedIn) {
+            loginBtn.style.display = "none";  // Hide Login Button
+            signupBtn.style.display = "none"; // Hide Signup Button
+
+            let profileBtn = document.createElement("button");
+            profileBtn.textContent = "My Profile";
+            profileBtn.classList.add("cta-button");
+            profileBtn.id = "profile-btn";
+            profileBtn.onclick = function() {
+                document.getElementById("dashboard-popup").style.display = "block"; // Show popup
+            };
+            navLinks.appendChild(profileBtn);
+        } else {
+            loginBtn.style.display = "inline-block";  
+            signupBtn.style.display = "inline-block";  
+        }
+    });
+
+    // Function to Reset Session when "Home" is clicked
+    function resetSession() {
+        localStorage.removeItem("loggedIn");
+        location.reload(); // Refresh page to reset login state
+    }
+	
+	
+	
+	 function closeDashboard() {
+        document.getElementById("dashboard-popup").style.display = "none";
+    }
+
+    function openSection(section) {
+        document.getElementById('edit-profile-section').style.display = 'none';
+        document.getElementById('bookings-section').style.display = 'none';
+        document.getElementById('support-section').style.display = 'none';
+        document.getElementById(section + '-section').style.display = 'block';
+    }
+
+    function logout() {
+        localStorage.removeItem("loggedIn");
+        location.reload(); // Refresh page to reset login state
+} 
+    function closeDashboard() {
+        document.getElementById("dashboard-popup").style.display = "none";
+    }
+
+    function logout() {
+        localStorage.removeItem("loggedIn");
+        location.reload();
+    }
+    </script>
+</body>
+</html>
