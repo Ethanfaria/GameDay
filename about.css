@@ -53,3 +53,22 @@
     max-width: 1000px;
     opacity: 0.9;
 }
+
+.item-testimonial {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+}
+
+.testimonial-text {
+    font-style: italic;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.testimonial-author {
+    font-weight: bold;
+    color: #b9ff00;
+}
