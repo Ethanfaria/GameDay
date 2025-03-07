@@ -3,144 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up Page</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            background: linear-gradient(to right, #041C0F, #183D26);
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            display: flex;
-            width: 800px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        .left-panel {
-            flex: 1;
-            background: linear-gradient(to bottom right, #042F13, #0A5B25);
-            color: #C8FF00;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-        }
-        .left-panel h1 {
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .left-panel h2 {
-            font-size: 32px;
-            font-weight: bold;
-        }
-        .right-panel {
-            flex: 1;
-            background: #1E2E22;
-            padding: 40px;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        h2 {
-            margin: 0 0 10px;
-            font-size: 24px;
-            text-align: center;
-        }
-        p {
-            text-align: center;
-            color: #66ff99;
-        }
-        label {
-            font-size: 14px;
-            display: block;
-            margin-top: 10px;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            margin-top: 5px;
-            background: #3E4E44;
-            color: white;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #C8FF00;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-        .signin {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .signin a {
-            color: #66ff99;
-            text-decoration: none;
-        }
-    </style>
+    <title>GAME DAY - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <div class="container">
-        <div class="left-panel">
-            <h1>GAME DAY</h1>
-            <h2>Create an account!</h2>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="#" class="logo">GAME DAY</a>
+        <button class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="homepage.html">Home</a>
+            <a href="#">Grounds</a>
+            <a href="academy.html">Academy</a>
+            <a href="tournament.html">Tournament</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="cta-button">Get started</a>
         </div>
-        <div class="right-panel">
-            <h2>Get started</h2>
-            <p>Already have an account? <a href="#">Sign in</a></p>
-            <form id="signupForm">
-                <label for="name">Name</label>
-                <input type="text" id="name" placeholder="user_name" required>
-                
-                <label for="username">Username</label>
-                <input type="email" id="username" placeholder="username@gmail.com" required>
-                
-                <label for="phone">Phone number</label>
-                <input type="tel" id="phone" placeholder="+91 99999 99999" required>
-                
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="" required>
-                
-                <button type="submit">Sign Up</button>
+    </nav>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-user-shield user-icon"></i>
+                <div class="login-title">WELCOME TO GAMEDAY</div>
+                <div class="login-subtitle">Sign up and create an account</div>
+            </div>
+
+            <form id="LoginForm">
+                <div class="form-group">
+                    <label for="Username">Username</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="Username" class="form-input" placeholder="Enter your username" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="Email">Email</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="Email" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="text" id="phone" class="form-input" placeholder="Enter your phone number" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="Password">Password</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="Password" class="form-input" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+
+                <button type="submit" class="login-button">Sign up to GameDay</button>
             </form>
+
+            <div class="forgot-password">
+                <a href="login.html">Already have an account? Login here</a>
+            </div>
         </div>
     </div>
-    <script>
-    document.getElementById("signupForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-        
-        let username = document.getElementById("username").value;
-        let password = document.getElementById("password").value;
-        let userId = Math.floor(Math.random() * 1000000); // Generate Random User ID
-        
-        let user = {
-            id: userId,
-            username: username,
-            password: password
-        };
 
-        localStorage.setItem("user", JSON.stringify(user)); // Save user data in localStorage
-        alert(`Account Created! Your ID: ${userId}, Password: ${password}`);
-        
-        window.location.href = "login.html"; // Redirect to login page
-    });
-</script>
-
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2025 GAME DAY. All Rights Reserved.</p>
+    </div>
 </body>
 </html>

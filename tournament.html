@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAME DAY - Tournaments</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #0a2e1a;
+            color: white;
+            overflow-x: hidden;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background-color: rgba(10, 46, 26, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            margin: 0 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(0, 100, 50, 0.6);
+        }
+
+        .nav-links a:hover:not(.active, .cta-button) {
+            background-color: rgba(0, 100, 50, 0.3);
+        }
+
+        .cta-button {
+            background-color: #b9ff00;
+            color: #0a2e1a;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 30px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        /* Hero Slider */
+        .hero {
+            position: relative;
+            height: 200px;
+            margin: 20px 40px;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .hero-slider {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .hero-slide {
+            min-width: 100%;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 77, 61, 0.6);
+            position: relative;
+        }
+        
+        .hero-text {
+            position: relative;
+            font-size: 60px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+        }
+        
+        .slider-controls {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            padding: 0 20px;
+        }
+        
+        .slider-btn {
+            background-color: rgba(255,255,255,0.3);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+         /* Footer */
+         footer {
+            background-color: rgba(0, 100, 50, 0.3);
+            padding: 60px 5%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            border-radius: 20px;
+            margin: 0 auto 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #b9ff00;
+            margin-bottom: 20px;
+        }
+
+        .footer-text {
+            max-width: 300px;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .footer-links h3, .contact h3, .social h3 {
+            margin-bottom: 20px;
+            color: #b9ff00;
+            font-size: 18px;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+
+        .footer-links a:hover {
+            color: #b9ff00;
+            opacity: 1;
+        }
+
+        .contact-info {
+            margin-bottom: 20px;
+        }
+
+        .contact-info p {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .contact-info i {
+            margin-right: 10px;
+            color: #b9ff00;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-icons a {
+            color: white;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .social-icons a:hover {
+            color: #0a2e1a;
+            background-color: #b9ff00;
+            transform: translateY(-5px);
+        }
+
+        /* Rest of the previous CSS remains the same */
+        .main-content {
+            margin: 20px 40px;
+        }
+        
+        .tournament-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .tournament-card {
+            background-color: rgba(0, 77, 61, 0.8);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .tournament-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .tournament-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .tournament-info {
+            padding: 15px;
+        }
+        
+        .tournament-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .tournament-details {
+            margin-bottom: 15px;
+        }
+        
+        .tournament-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .tournament-detail i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .tournament-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .register-button {
+            flex-grow: 1;
+            background-color: var(--neon-green);
+            color: var(--dark-gray);
+            border: none;
+            padding: 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        
+        .details-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="#" class="logo">GAME DAY</a>
+        
+        <div class="nav-links">
+            <a href="homepage.html">Home</a>
+            <a href="#">Grounds</a>
+            <a href="academy.html">Academy</a>
+            <a href="tournament.html" class="active">Tournament</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="cta-button">Get started</a>
+        </div>
+    </nav>
+    
+    <!-- Hero Slider Section -->
+    <div class="hero">
+        <div class="hero-slider" id="heroSlider">
+            <div class="hero-slide">
+                <h1 class="hero-text">Tournaments</h1>
+            </div>
+            <div class="hero-slide">
+                <h1 class="hero-text">Sports Leagues</h1>
+            </div>
+            <div class="hero-slide">
+                <h1 class="hero-text">Championship Events</h1>
+            </div>
+        </div>
+        <div class="slider-controls">
+            <button class="slider-btn" id="prevBtn">&#10094;</button>
+            <button class="slider-btn" id="nextBtn">&#10095;</button>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Tournament Grid -->
+        <div class="tournament-grid">
+            <!-- Tournament Cards (Same as previous HTML) -->
+            <div class="tournament-card">
+                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
+                <div class="tournament-info">
+                    <div class="tournament-name">Summer Sports League</div>
+                    <div class="tournament-details">
+                        <div class="tournament-detail">
+                            <i class="fas fa-calendar"></i>
+                            15 Jun - 30 Jul 2025
+                        </div>
+                        <div class="tournament-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Don Bosco Ground, Panjim
+                        </div>
+                    </div>
+                    <div class="tournament-actions">
+                        <button class="register-button">Register Now</button>
+                        <button class="details-button">View Details</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tournament-card">
+                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
+                <div class="tournament-info">
+                    <div class="tournament-name">Goa Sports Challenge</div>
+                    <div class="tournament-details">
+                        <div class="tournament-detail">
+                            <i class="fas fa-calendar"></i>
+                            1 Aug - 20 Aug 2025
+                        </div>
+                        <div class="tournament-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Sports Complex, Margao
+                        </div>
+                    </div>
+                    <div class="tournament-actions">
+                        <button class="register-button">Register Now</button>
+                        <button class="details-button">View Details</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tournament-card">
+                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
+                <div class="tournament-info">
+                    <div class="tournament-name">Urban Sports League</div>
+                    <div class="tournament-details">
+                        <div class="tournament-detail">
+                            <i class="fas fa-calendar"></i>
+                            5 Sep - 25 Sep 2025
+                        </div>
+                        <div class="tournament-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Panaji Stadium, Goa
+                        </div>
+                    </div>
+                    <div class="tournament-actions">
+                        <button class="register-button">Register Now</button>
+                        <button class="details-button">View Details</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tournament-card">
+                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
+                <div class="tournament-info">
+                    <div class="tournament-name">Autumn Sports Championship</div>
+                    <div class="tournament-details">
+                        <div class="tournament-detail">
+                            <i class="fas fa-calendar"></i>
+                            15 Oct - 5 Nov 2025
+                        </div>
+                        <div class="tournament-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Local Sports Ground
+                        </div>
+                    </div>
+                    <div class="tournament-actions">
+                        <button class="register-button">Register Now</button>
+                        <button class="details-button">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const heroSlider = document.getElementById('heroSlider');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentSlide = 0;
+            const slides = heroSlider.children;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                // Ensure index wraps around
+                currentSlide = (index + totalSlides) % totalSlides;
+                heroSlider.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+
+            // Next slide
+            nextBtn.addEventListener('click', () => {
+                showSlide(currentSlide + 1);
+            });
+
+            // Previous slide
+            prevBtn.addEventListener('click', () => {
+                showSlide(currentSlide - 1);
+            });
+
+            // Optional: Auto-slide every 5 seconds
+            setInterval(() => {
+                showSlide(currentSlide + 1);
+            }, 5000);
+        });
+    </script>
+   
+   <!-- Footer -->
+    <footer>
+        <div class="footer-col">
+            <div class="footer-logo">GAME DAY</div>
+            <p class="footer-text">The #1 platform for booking futsal grounds and finding the best playing experiences in your area.</p>
+        </div>
+
+        <div class="footer-col footer-links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li><a href="#">Find Grounds</a></li>
+                <li><a href="#">Join Academy</a></li>
+                <li><a href="#">Partner With Us</a></li>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">FAQs</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <div class="contact">
+                <h3>Contact Us</h3>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> info@gameday.com</p>
+                    <p><i class="fas fa-phone"></i> +1 234 567 8900</p>
+                </div>
+            </div>
+            <div class="social">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

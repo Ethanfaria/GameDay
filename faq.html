@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequently Asked Questions</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="faq.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="#" class="logo">GAME DAY</a>
+        <button class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="homepage.html">Home</a>
+            <a href="#">Grounds</a>
+            <a href="academy.html">Academy</a>
+            <a href="tournament.html">Tournament</a>
+            <a href="about.html">About</a>
+            <a href="faq.html" class="active">FAQ</a>
+            <a href="login.html">Login</a>
+            <a href="signup.html" class="cta-button">Get started</a>
+        </div>
+    </nav>
+    <section>
+        <h2 class="title">FAQ</h2>
+
+        <div class="faq">
+            <div class="question">
+                <h3>What is GameDay?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    GameDay is a football and futsal ground booking platform that allows players to easily book slots, find nearby grounds, join tournaments, hire referees/coaches, and stay updated with football-related events.
+                </p>
+            </div>
+        </div>
+        <div class="faq">
+            <div class="question">
+                <h3>How do I book a ground on GameDay?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    Simply search for available grounds, select your preferred time slot, and confirm your booking through our secure payment system.
+                </p>
+            </div>
+        </div>
+        <div class="faq">
+            <div class="question">
+                <h3>Do I need to pay in advance?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    Yes, all bookings require advance payment. This guarantees your slot and prevents last-minute no-shows, ensuring that ground owners don’t face losses due to unclaimed slots.
+                </p>
+            </div>
+        </div>
+        <div class="faq">
+            <div class="question">
+                <h3>Can I list my futsal/football ground on GameDay?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    Absolutely! Ground owners can partner with us to increase visibility and manage bookings efficiently. Contact us for details.
+                </p>
+            </div>
+        </div>
+        <div class="faq">
+            <div class="question">
+                <h3>How does the tournament booking feature work?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    Organizers can list their tournaments, manage registrations, and get access to referees, venues, and event promotions through GameDay.
+                </p>
+            </div>
+        </div>
+        <div class="faq">
+            <div class="question">
+                <h3> Is there a way to leave reviews for a ground?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    Yes! Players can leave reviews and ratings based on their experience to help others choose the best grounds.  
+                </p>
+            </div>
+        </div>
+        <div class="faq">
+            <div class="question">
+                <h3>How do I contact GameDay for support?</h3>
+
+                <svg width="15" height="10" viewbox="0 0 42 25" >
+                    <path d="M3 3L21 21L39 3" stroke="white" stroke-width="7" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="answer">
+                <p>
+                    You can reach out via our support page, email, or helpline for any assistance.
+                </p>
+            </div>
+        </div>
+    </section>
+    <script>
+        const faqs = document.querySelectorAll('.faq');
+
+        faqs.forEach(faq => {
+            faq.addEventListener('click', () => {
+                faq.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>
