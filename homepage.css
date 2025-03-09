@@ -19,7 +19,7 @@
             flex-direction: column;
             justify-content: flex-start;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--translucent-bg);
         }
 
         .bento-item:hover {
@@ -43,7 +43,7 @@
         .item-header h1 {
             font-size: 72px;
             font-weight: 800;
-            color: #b9ff00;
+            color: var(--neon-green);
             margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -119,7 +119,7 @@
             font-size: 20px;
             font-weight: bold;
             margin-bottom: 15px;
-            color: #b9ff00;
+            color: var(--neon-green);
         }
 
         .feature-list {
@@ -134,7 +134,7 @@
 
         .feature-list li:before {
             content: "✓";
-            color: #b9ff00;
+            color: var(--neon-green);
             margin-right: 10px;
             font-weight: bold;
         }
@@ -151,7 +151,7 @@
         .item-app i {
             font-size: 40px;
             margin-bottom: 15px;
-            color: #b9ff00;
+            color: var(--neon-green);
         }
 
         .item-facilities {
@@ -170,7 +170,7 @@
         .facility-item {
             display: flex;
             align-items: center;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: var(--translucent-bg);
             padding: 15px;
             border-radius: 10px;
         }
@@ -178,7 +178,7 @@
         .facility-item i {
             font-size: 24px;
             margin-right: 15px;
-            color: #b9ff00;
+            color: var(--neon-green);
         }
 
         .item-partner {
@@ -186,7 +186,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: rgba(185, 255, 0, 0.1);
+            background-color: rgba(0, 0, 0, 0.2);
             padding: 40px;
         }
 
@@ -197,7 +197,7 @@
 
         .partner-text h2 {
             font-size: 28px;
-            color: #b9ff00;
+            color: var(--neon-green);
             margin-bottom: 15px;
         }
 
@@ -222,7 +222,7 @@
 
         .testimonial-author {
             font-weight: bold;
-            color: #b9ff00;
+            color: var(--neon-green);
         }
 
         .item-cta {
@@ -238,12 +238,12 @@
         .item-cta h2 {
             font-size: 28px;
             margin-bottom: 20px;
-            color: #b9ff00;
+            color: var(--neon-green);
         }
 
         /* Button styles */
         .btn {
-            background-color: #b9ff00;
+            background-color: var(--neon-green);
             color: #0a2e1a;
             font-size: 16px;
             font-weight: bold;

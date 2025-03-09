@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
+    
     <!-- Navigation Bar -->
     <nav class="navbar">
         <a href="#" class="logo">GAME DAY</a>
@@ -26,17 +27,18 @@
             <a href="signup.html" class="cta-button">Get started</a>
         </div>
     </nav>
-
+    
     <!-- Login Container -->
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
                 <i class="fas fa-user-shield user-icon"></i>
-                <div class="login-title">WELCOME TO GAMEDAY</div>
-                <div class="login-subtitle">Sign up and create an account</div>
+                <div class="login-title">WELCOME BACK</div>
+                <div class="login-subtitle">Login to your account.</div>
             </div>
 
             <form id="LoginForm">
+                
                 <div class="form-group">
                     <label for="Username">Username</label>
                     <div class="input-with-icon">
@@ -44,24 +46,11 @@
                         <input type="text" id="Username" class="form-input" placeholder="Enter your username" required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="Email">Email</label>
-                    <div class="input-with-icon">
-                        <i class="fa-solid fa-envelope"></i>
-                        <input type="email" id="Email" class="form-input" placeholder="Enter your email" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <div class="input-with-icon">
-                        <i class="fa-solid fa-phone"></i>
-                        <input type="text" id="phone" class="form-input" placeholder="Enter your phone number" required>
-                    </div>
-                </div>
+
                 <div class="form-group">
                     <label for="Password">Password</label>
                     <div class="input-with-icon">
-                        <i class="fa-solid fa-lock"></i>
+                        <i class="fas fa-lock"></i>
                         <input type="password" id="Password" class="form-input" placeholder="Enter your password" required>
                     </div>
                 </div>
@@ -71,11 +60,11 @@
                     <label for="rememberMe">Remember me</label>
                 </div>
 
-                <button type="submit" class="login-button">Sign up to GameDay</button>
+                <button type="submit" class="login-button">Login to GameDay</button>
             </form>
 
             <div class="forgot-password">
-                <a href="login.html">Already have an account? Login here</a>
+                <a href="signup.html">Don't have an Account? Sign Up</a>
             </div>
         </div>
     </div>
