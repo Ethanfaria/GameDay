@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAME DAY - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="login.css">
@@ -17,13 +20,13 @@
         $password=$_POST["password"];
         $passwordRepeat=$_POST["repeat_password"];
 
-        $passwordHash=password_hash($password, PASSWORD_DEFAULT)
-        
+        $passwordHash=password_hash($password, PASSWORD_DEFAULT);
+
         $errors = array();
         if (empty($fullname) OR empty($email) OR empty($number) OR empty($password) OR empty($passwordRepeat)){
             array_push($errors, "All fields are required");
         }
-        if (!filter_var($email, FILTER_VALIDATE)){
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)){
             array_push($errors, "Email is not valid");
         }
         if (strlen($password)<8){
@@ -33,7 +36,7 @@
             array_push($errors, "Password does not match");
         }
         if (count($errors)>0){
-            foreach($errors as $errors){
+            foreach($errors as $error){
                 echo "<div class='error'>$error</div>";
             }
         }
@@ -47,7 +50,7 @@
         </button>
         <div class="nav-links">
             <a href="homepage.html">Home</a>
-            <a href="#">Grounds</a>
+            <a href="grounds.html">Grounds</a>
             <a href="academy.html">Academy</a>
             <a href="tournament.html">Tournament</a>
             <a href="about.html">About</a>
@@ -112,7 +115,7 @@
             </form>
 
             <div class="forgot-password">
-                <a href="login.html">Already have an account? Login here</a>
+                <a href="login.php">Already have an account? Login here</a>
             </div>
         </div>
     </div>
