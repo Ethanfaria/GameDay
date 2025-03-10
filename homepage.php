@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="homepage.css">
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="CSS\homepage.css">
+    <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
 
@@ -70,7 +70,7 @@
                 <h2>Whistle ready?</h2>
                 <p>Referees can now sign up and take charge of the game! Join our platform to get booked for matches, connect with teams, and officiate like a pro</p>
             </div>
-            <a href="#" class="btn btn-large">Register Now</a>
+            <a href="hire-referee.php" class="btn btn-large">Register Now</a>
         </div>
 
         <!-- Facilities Item -->
@@ -102,13 +102,13 @@
                 <h2>Partner With Us:<br>List Your Ground or Academy Today!</h2>
                 <p>Reach more players, fill your slots, and grow your business effortlessly by joining our platform</p>
             </div>
-            <a href="#" class="btn btn-large">Register Now</a>
+            <a href="ground-academy-register.php" class="btn btn-large">Register Now</a>
         </div>
 
         <!-- CTA Item -->
         <div class="bento-item item-cta">
             <h2>Ready to Play?</h2>
-            <a href="#" class="btn btn-large">Get Started Now</a>
+            <a href="grounds.php" class="btn btn-large">Get Started Now</a>
         </div>
     </div>
 
@@ -149,27 +149,6 @@
             </div>
         </div>
     </footer>
-    <!-- Profile Dashboard Popup -->
-<div id="dashboard-popup" class="dashboard-overlay" style="display: none;">
-    <div class="dashboard-container">
-        <span class="close-btn" onclick="closeDashboard()">&times;</span>
-        
-        <div class="profile-header">
-            <div class="profile-icon">
-                <img src="user.jpg" alt="Profile Picture">
-            </div>
-            <h2 id="user-name">John Doe</h2>
-            <p id="user-email">johndoe@example.com</p>
-        </div>
-
-        <div class="dashboard-menu">
-            <div class="menu-item" onclick="openSection('edit-profile')">👤 Edit Profile</div>
-            <div class="menu-item" onclick="openSection('bookings')">📅 My Bookings</div>
-            <div class="menu-item" onclick="openSection('support')">📞 Support</div>
-            <div class="menu-item" onclick="logout()">🚪 Logout</div>
-        </div>
-    </div>
-</div>
 
     <script>
         // JavaScript for enhanced user experience

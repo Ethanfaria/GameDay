@@ -26,7 +26,7 @@ function isLoggedIn() {
         
         <?php if (isLoggedIn()): ?>
             <!-- Show account link if logged in -->
-            <a href="account.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
+            <a href="userdashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
         <?php else: ?>
             <!-- Show login/signup if not logged in -->
             <a href="login.php">Login</a>

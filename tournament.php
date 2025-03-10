@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="main.css">
-    <link rel="stylesheet" href="tournament.css">
+    <link rel="stylesheet" href="CSS\main.css">
+    <link rel="stylesheet" href="CSS\tournament.css">
 </head>
 <body>
 <?php include 'header.php'; ?>
@@ -53,7 +53,7 @@
                         </div>
                     </div>
                     <div class="tournament-actions">
-                        <button class="register-button" onclick="window.location.href='tournregispage.html'">Register Now</button>
+                        <button class="register-button" onclick="window.location.href='tournregispage.php'">Register Now</button>
                         <button class="details-button">View Details</button>
                     </div>
                 </div>

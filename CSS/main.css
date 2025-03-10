@@ -81,9 +81,9 @@ body {
     box-shadow: 0 5px 15px rgba(185, 255, 0, 0.3);
 }
 .acc-icon{
-    color: #0a2e1a;
-    background-color: #b9ff00;
-    font-size: 25px;
+    color: var(--neon-green);
+    background-color: var(--dark-green);
+    font-size: 40px;
     border-radius: 50%;
     display: flex;
     justify-content: center;

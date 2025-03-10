@@ -1,0 +1,402 @@
+.dashboard {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .welcome {
+    margin-bottom: 2rem;
+    animation: fade-in 1s ease;
+  }
+  
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .welcome h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .welcome p {
+    color: #a9a9a9;
+  }
+  
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    animation: scale-up 0.5s ease;
+  }
+  
+  @keyframes scale-up {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .bento-item {
+    background-color: rgba(0, 100, 50, 0.2);
+    border-radius: 20px;
+    padding: 30px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--translucent-bg);
+  }
+  
+  .bento-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 100, 50, 0.3);
+  }
+  
+  @keyframes pop-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    70% {
+      transform: scale(1.02);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .bento-item h2 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--neon-green);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .bento-item p {
+    font-size: 20px;
+    max-width: 700px;
+    opacity: 0.9;
+  }
+  
+  .section-icon {
+    color: var(--neon-green);
+  }
+  
+  .upcoming-matches, .booking-history {
+    grid-column: span 2;
+  }
+  
+  .stats {
+    grid-row: span 2;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stat-item {
+    background-color: #276e2f;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--neon-green);
+    display: inline-block;
+    position: relative;
+  }
+  
+  .animate-number {
+    animation: count-up 2s ease-out forwards;
+  }
+  
+  @keyframes count-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .match-item, .booking-item, .academy-item, .tournament-item {
+    background-color: rgba(0, 100, 50, 0.2);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--translucent-bg);
+  }
+  
+  .match-item:hover, .booking-item:hover, .academy-item:hover, .tournament-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 100, 50, 0.3);
+  }
+  
+  .match-item::before, .booking-item::before, .academy-item::before, .tournament-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background-color: #c4ff3c;
+  }
+  
+  .match-info, .booking-info, .academy-info, .tournament-info {
+    flex: 1;
+  }
+  
+  .match-location, .booking-location, .academy-location, .tournament-location {
+    color: #a9a9a9;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+  }
+  
+  .match-actions, .booking-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .action-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .action-button.primary {
+    background-color: var(--neon-green);
+    color: #000;
+  }
+  
+  .action-button.secondary {
+    background-color: #3d8a47;
+    color: white;
+  }
+  
+  .quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .quick-action {
+    background-color: #276e2f;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .quick-action:hover {
+    transform: translateX(5px);
+    background-color: #307d38;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .icon-placeholder {
+    width: 2rem;
+    height: 2rem;
+    background-color: #c4ff3c;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #000;
+    font-size: 1rem;
+  }
+  
+  .countdown {
+    background-color: #276e2f;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .countdown::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: linear-gradient(to right, transparent, rgba(196, 255, 60, 0.1), transparent);
+    transform: translateX(-100%);
+    animation: light-sweep 3s infinite;
+  }
+  
+  @keyframes light-sweep {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  .countdown-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #c4ff3c;
+    margin: 0.5rem 0;
+    animation: pulse 1.5s infinite alternate;
+  }
+  
+  @keyframes pulse {
+    from {
+      transform: scale(1);
+      text-shadow: 0 0 5px rgba(196, 255, 60, 0.5);
+    }
+    to {
+      transform: scale(1.05);
+      text-shadow: 0 0 15px rgba(196, 255, 60, 0.8);
+    }
+  }
+  
+  .profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .bento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #276e2f;
+  }
+  
+  .view-all {
+    color: #c4ff3c;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .view-all:hover {
+    text-decoration: underline;
+  }
+  
+  .date-badge {
+    display: inline-block;
+    background-color: #c4ff3c;
+    color: #000;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+  
+  .today-badge {
+    background-color: #ff5c5c;
+    color: white;
+  }
+  
+  .scroll-container {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #c4ff3c #1a461f;
+  }
+  
+  .scroll-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scroll-container::-webkit-scrollbar-track {
+    background: #1a461f;
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb {
+    background-color: #c4ff3c;
+    border-radius: 6px;
+  }
+  
+  .signout-button {
+    background-color: #3d0f0f;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 1rem;
+  }
+  
+  .signout-button:hover {
+    background-color: #5a1818;
+    transform: translateY(-2px);
+  }
+  
+  .section-footer {
+    text-align: center;
+    margin-top: 1rem;
+  }
