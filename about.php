@@ -12,23 +12,8 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <a href="#" class="logo">GAME DAY</a>
-        <button class="mobile-menu-btn">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="nav-links">
-            <a href="homepage.html">Home</a>
-            <a href="grounds.html">Grounds</a>
-            <a href="academy.html">Academy</a>
-            <a href="tournament.html">Tournament</a>
-            <a href="about.html" class="active">About</a>
-            <a href="faq.html">FAQ</a>
-            <a href="login.php">Login</a>
-            <a href="signup.php" class="cta-button">Get started</a>
-        </div>
-    </nav>
+<?php include 'header.php'; ?>
+
     <div class="bento-grid">
         <div class="bento-item about-us">
             <h1>About Us</h1>
@@ -64,11 +49,11 @@
         <div class="footer-col footer-links">
             <h3>Quick Links</h3>
             <ul>
-                <li><a href="#">Find Grounds</a></li>
-                <li><a href="#">Join Academy</a></li>
+                <li><a href="grounds.php">Find Grounds</a></li>
+                <li><a href="academy.php">Join Academy</a></li>
                 <li><a href="#">Partner With Us</a></li>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">FAQs</a></li>
+                <li><a href="about.php">About Us</a></li>
+                <li><a href="faq.php">FAQs</a></li>
             </ul>
         </div>
 

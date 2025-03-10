@@ -13,21 +13,7 @@
 
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <a href="#" class="logo">GAME DAY</a>
-       
-        <div class="nav-links">
-            <a href="homepage.html">Home</a>
-            <a href="grounds.html">Grounds</a>
-            <a href="academy.html">Academy</a>
-            <a href="tournament.html" class="active">Tournament</a>
-            <a href="about.html">About</a>
-            <a href="faq.html">FAQ</a>
-            <a href="login.php">Login</a>
-            <a href="signup.php" class="cta-button">Get started</a>
-        </div>
-    </nav>
+<?php include 'header.php'; ?>
 
     <div class="page-container">
         <!-- Registration Header -->

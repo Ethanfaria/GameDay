@@ -8,27 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="academy.css">
+    <link rel="stylesheet" href="academy-grounds.css">
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <a href="#" class="logo">GAME DAY</a>
-        <button class="mobile-menu-btn">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="nav-links">
-            <a href="homepage.html">Home</a>
-            <a href="#">Grounds</a>
-            <a href="academy.html" class="active">Academy</a>
-            <a href="tournament.html">Tournament</a>
-            <a href="about.html">About</a>
-            <a href="faq.html">FAQ</a>
-            <a href="login.php">Login</a>
-            <a href="signup.php" class="cta-button">Get started</a>
-        </div>
-    </nav>
+<?php include 'header.php'; ?>
 
      <!-- Hero Section -->
      <div class="hero">
@@ -72,14 +56,6 @@
                     <span>₹10000</span>
                 </div>
             </div>
-
-            <!-- Age Group -->
-            <div class="filter-type">
-                <h3>
-                    Age Group
-                    <i class="fas fa-chevron-down  filter-icon"></i>
-                </h3>
-            </div>
         </div>
 
         <!-- Academy Listings -->
@@ -97,7 +73,7 @@
                 <!-- Academy 1 -->
                 <div class="academy">
                     <div class="academy-card">
-                        <img src="https://images.unsplash.com/photo-1577741314755-048d8525d31e" alt="Elite Academy" style="width: 100%; height: 150px; object-fit: cover;">
+                        <img src="https://plus.unsplash.com/premium_photo-1684888759266-ce3768052c80?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Elite Academy" style="width: 100%; height: 150px; object-fit: cover;">
                         <div class="top-icons">
                             <div class="rating">
                                 <i class="fas fa-star star-icon"></i>
@@ -107,10 +83,10 @@
                         </div>
                     </div>
                     <div class="academy-info">
-                        <div class="turf-details">Elite Football Academy</div>
+                        <div class="turf-details">Don Bosco Turf</div>
                         <div class="turf-details">Panjim, Goa</div>
                         
-                        <button class="enroll-button">₹3000/month</button>
+                        <button class="enroll-button" onclick="window.location.href='turfbooknow.html'">₹1000/hr</button>
                     </div>
                 </div>
             </div>
@@ -121,7 +97,7 @@
                 <button class="btn-no active">1</button>
                 <button class="btn-no">2</button>
                 <button class="btn-no">3</button>
-                <div style="display: flex; align-items: center;">...</div>
+                <div class="ellipsis">...</div>
                 <button class="btn-no">5</button>
                 <button class="btn-no">Next</button>
             </div>

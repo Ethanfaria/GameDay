@@ -80,6 +80,15 @@ body {
     background-color: #d1ff4d;
     box-shadow: 0 5px 15px rgba(185, 255, 0, 0.3);
 }
+.acc-icon{
+    color: #0a2e1a;
+    background-color: #b9ff00;
+    font-size: 25px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 /* Mobile menu */
 .mobile-menu-btn {
     display: none;

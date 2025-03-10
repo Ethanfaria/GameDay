@@ -20,6 +20,11 @@
     background-color: var(--neon-green);
     color: var(--dark-green);
 }
+.ellipsis {
+    display: flex;
+    align-items: center;
+    color: white;
+}
 .hero{
     background-image: url('https://images.unsplash.com/photo-1577741314755-048d8525d31e');
     background-size: cover;
@@ -37,7 +42,6 @@
     font-weight: 800;
     text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     letter-spacing: 2px;
-
     position: relative;
     color: white;
 }
@@ -115,9 +119,14 @@
     gap: 20px;
 }
 .academy{
-    background-color: rgba(0, 77, 61, 0.8); 
+    background-color: rgba(0, 100, 50, 0.2); 
     border-radius: 15px; 
     overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+.academy:hover {
+    transform: scale(1.05);
 }
 .enroll-button {
     flex-grow: 1;
@@ -153,7 +162,7 @@
     border-radius: 20px;
 }
 .star-icon{
-    color: #b9ff00;
+    color: var(--neon-green);
     margin-right: 5px;
 }
 .heart-icon{
