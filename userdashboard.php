@@ -12,11 +12,61 @@
   <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
-  <?php include 'header.php'; ?>
+  <?php
+  include 'header.php'; 
+  include 'db.php';
+
+  // Query to fetch upcoming bookings with venue details
+  $bookings_sql = "SELECT b.*, v.venue_nm, v.location 
+          FROM book b 
+          LEFT JOIN venue v ON b.venue_id = v.venue_id 
+          WHERE b.email = ? AND b.bk_date >= CURDATE() 
+          ORDER BY b.bk_date ASC
+          LIMIT 3";
+
+  $bookings_stmt = $conn->prepare($bookings_sql);
+  $bookings_stmt->bind_param("s", $user_email);
+  $bookings_stmt->execute();
+  $bookings_result = $bookings_stmt->get_result();
+
+  // Get user stats
+  $stats_sql = "SELECT 
+                  COUNT(DISTINCT b.bk_date) as matches_played,
+                  COUNT(DISTINCT b.venue_id) as grounds_visited,
+                  SUM(b.bk_dur) as total_hours
+                FROM book b 
+                WHERE b.email = ? AND b.bk_date <= CURDATE()";
+  $stats_stmt = $conn->prepare($stats_sql);
+  $stats_stmt->bind_param("s", $user_email);
+  $stats_stmt->execute();
+  $stats = $stats_stmt->get_result()->fetch_assoc();
+  $stats_stmt->close();
+
+  // Get academy enrollments
+  $academy_sql = "SELECT a.aca_nm, a.ac_location, a.admy_img, e.en_date 
+                  FROM enroll e
+                  JOIN academys a ON e.ac_id = a.ac_id
+                  WHERE e.email = ?
+                  LIMIT 2";
+  $academy_stmt = $conn->prepare($academy_sql);
+  $academy_stmt->bind_param("s", $user_email);
+  $academy_stmt->execute();
+  $academy_result = $academy_stmt->get_result();
+
+  // Get nearest upcoming tournament
+  $next_tournament_sql = "SELECT tr_name, start_date, end_date, img_url,
+                         DATEDIFF(start_date, CURDATE()) as days_left
+                         FROM tournaments
+                         WHERE start_date > CURDATE()
+                         ORDER BY start_date ASC
+                         LIMIT 1";
+  $next_tournament_result = $conn->query($next_tournament_sql);
+  $next_tournament = $next_tournament_result->fetch_assoc();
+  ?>
   
   <div class="dashboard">
     <div class="welcome">
-      <h1>Welcome back, Player!</h1>
+      <h1>Welcome back, <?php echo htmlspecialchars($_SESSION['username'] ?? 'Player'); ?>!</h1>
       <p>Manage your futsal bookings and schedule from your personal dashboard.</p>
     </div>
     
@@ -26,24 +76,32 @@
           <h2><i class="fas fa-futbol section-icon"></i> Upcoming Matches</h2>
         </div>
         <div class="scroll-container">
+          <?php
+          if ($bookings_result->num_rows > 0) {
+              while($row = $result->fetch_assoc()) {
+                  $booking_date = new DateTime($row['bk_date']);
+                  $today = new DateTime('today');
+                  $date_badge = $booking_date == $today ? 'today-badge' : '';
+                  $formatted_date = $booking_date == $today ? 'TODAY' : $booking_date->format('M d');
+                  
+                  // Calculate end time based on duration
+                  $duration_hours = $row['bk_dur'];
+                  $start_time = date('g:i A', strtotime($row['bk_time']));
+                  $end_time = date('g:i A', strtotime($row['bk_time'] . ' + ' . $duration_hours . ' hours'));
+          ?>
           <div class="match-item">
             <div class="match-info">
-              <div><span class="date-badge today-badge">TODAY</span> 6:00 PM - 7:30 PM</div>
-              <div class="match-location"><i class="fas fa-map-marker-alt"></i> Turf City Grounds - Court 3</div>
+              <div><span class="date-badge <?php echo $date_badge; ?>"><?php echo $formatted_date; ?></span> <?php echo $start_time . ' - ' . $end_time; ?></div>
+              <div class="match-location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['venue_nm']); ?></div>
             </div>
           </div>
-          <div class="match-item">
-            <div class="match-info">
-              <div><span class="date-badge">MAR 10</span> 7:00 PM - 8:30 PM</div>
-              <div class="match-location"><i class="fas fa-map-marker-alt"></i> Kickoff Arena - Field 2</div>
-            </div>
-          </div>
-          <div class="match-item">
-            <div class="match-info">
-              <div><span class="date-badge">MAR 15</span> 5:30 PM - 7:00 PM</div>
-              <div class="match-location"><i class="fas fa-map-marker-alt"></i> Sports Hub - Indoor Court</div>
-            </div>
-          </div>
+          <?php
+              }
+          } else {
+              echo "<p>No upcoming matches</p>";
+          }
+          $bookings_stmt->close();
+          ?>
         </div>
         <div class="section-footer">
           <span class="view-all">View all</span>
@@ -56,15 +114,15 @@
         </div>
         <div class="stats-grid">
           <div class="stat-item">
-            <div class="stat-number animate-number">17</div>
+            <div class="stat-number animate-number"><?php echo $stats['matches_played'] ?? 0; ?></div>
             <div class="stat-label">Matches Played</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number animate-number">5</div>
+            <div class="stat-number animate-number"><?php echo $stats['grounds_visited'] ?? 0; ?></div>
             <div class="stat-label">Grounds Visited</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number animate-number">23</div>
+            <div class="stat-number animate-number"><?php echo $stats['total_hours'] ?? 0; ?></div>
             <div class="stat-label">Hours Played</div>
           </div>
           <div class="stat-item">
@@ -73,32 +131,36 @@
           </div>
         </div>
         
+        <?php if ($next_tournament): ?>
         <div class="countdown">
-          <div style="color: #a9a9a9;">City League Tournament</div>
-          <div class="countdown-number">12</div>
+          <div style="color: #a9a9a9;"><?php echo htmlspecialchars($next_tournament['tr_name']); ?></div>
+          <div class="countdown-number"><?php echo $next_tournament['days_left']; ?></div>
           <div>Days Left</div>
         </div>
+        <?php endif; ?>
       </div>
       
       <div class="bento-item academy-enrollments">
         <div class="bento-header">
           <h2><i class="fas fa-graduation-cap section-icon"></i> Enrolled Academies</h2>
         </div>
+        <?php
+        if ($academy_result->num_rows > 0) {
+            while($academy = $academy_result->fetch_assoc()) {
+        ?>
         <div class="academy-item">
           <div class="academy-info">
-            <div>Elite Futsal Academy</div>
-            <div class="academy-location"><i class="far fa-clock"></i> Mondays & Wednesdays, 6:00 PM</div>
+            <div><?php echo htmlspecialchars($academy['aca_nm']); ?></div>
+            <div class="academy-location"><i class="far fa-clock"></i><?php echo htmlspecialchars($academy['ac_location']); ?></div>
           </div>
         </div>
-        <div class="academy-item">
-          <div class="academy-info">
-            <div>Youth Skills Development</div>
-            <div class="academy-location"><i class="far fa-clock"></i> Saturdays, 10:00 AM</div>
-          </div>
-        </div>
-        <div class="section-footer">
-          <span class="view-all">View all</span>
-        </div>
+        <?php
+            }
+        } else {
+            echo "<p>No academy enrollments</p>";
+        }
+        $academy_stmt->close();
+        ?>
       </div>
       
       <div class="bento-item tournament-registration">
@@ -110,15 +172,6 @@
             <div>City League Tournament</div>
             <div class="tournament-location"><i class="far fa-calendar-alt"></i> Starting Mar 20, 2025</div>
           </div>
-        </div>
-        <div class="tournament-item">
-          <div class="tournament-info">
-            <div>Weekend Championship</div>
-            <div class="tournament-location"><i class="far fa-calendar-alt"></i> Apr 5-6, 2025</div>
-          </div>
-        </div>
-        <div class="section-footer">
-          <span class="view-all">View all</span>
         </div>
       </div>
       
@@ -152,36 +205,39 @@
           <h2><i class="fas fa-history section-icon"></i> Booking History</h2>
         </div>
         <div class="scroll-container">
+        <?php
+          // Get past bookings
+          $history_sql = "SELECT b.*, v.venue_nm, v.location 
+                        FROM book b 
+                        LEFT JOIN venue v ON b.venue_id = v.venue_id 
+                        WHERE b.email = ? AND b.bk_date < CURDATE() 
+                        ORDER BY b.bk_date DESC
+                        LIMIT 3";
+          $history_stmt = $conn->prepare($history_sql);
+          $history_stmt->bind_param("s", $user_email);
+          $history_stmt->execute();
+          $history_result = $history_stmt->get_result();
+
+          if ($history_result->num_rows > 0) {
+              while($row = $history_result->fetch_assoc()) {
+                  $booking_date = new DateTime($row['bk_date']);
+          ?>
           <div class="booking-item">
             <div class="booking-info">
-              <div><span class="date-badge">FEB 28</span> 6:00 PM</div>
-              <div class="booking-location"><i class="fas fa-map-marker-alt"></i> Turf City Grounds - Court 1</div>
+              <div><span class="date-badge"><?php echo $booking_date->format('M d'); ?></span></div>
+              <div class="booking-location"><i class="fas fa-map-marker-alt"></i><?php echo htmlspecialchars($row['venue_nm']) . ' - ' . htmlspecialchars($row['location']); ?></div>
             </div>
             <div class="booking-actions">
-              <button class="action-button primary"><i class="fas fa-redo"></i> Book Again</button>
+              <button class="action-button primary" onclick="window.location.href='book.php?venue_id=<?php echo $row['venue_id']; ?>'"><i class="fas fa-redo"></i> Book Again</button>
             </div>
           </div>
-          <div class="booking-item">
-            <div class="booking-info">
-              <div><span class="date-badge">FEB 21</span> 7:30 PM</div>
-              <div class="booking-location"><i class="fas fa-map-marker-alt"></i> Kickoff Arena - Field 1</div>
-            </div>
-            <div class="booking-actions">
-              <button class="action-button primary"><i class="fas fa-redo"></i> Book Again</button>
-            </div>
-          </div>
-          <div class="booking-item">
-            <div class="booking-info">
-              <div><span class="date-badge">FEB 14</span> 5:00 PM</div>
-              <div class="booking-location"><i class="fas fa-map-marker-alt"></i> Sports Hub - Indoor Court</div>
-            </div>
-            <div class="booking-actions">
-              <button class="action-button primary"><i class="fas fa-redo"></i> Book Again</button>
-            </div>
-          </div>
-        </div>
-        <div class="section-footer">
-          <span class="view-all">View all</span>
+          <?php
+              }
+          } else {
+              echo "<p>No booking history</p>";
+          }
+          $history_stmt->close();
+          ?>
         </div>
       </div>
     </div>

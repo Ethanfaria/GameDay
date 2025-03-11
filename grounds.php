@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Game Day - Find Grounds</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,7 +12,14 @@
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
-<?php include 'header.php'; ?>
+    <?php 
+    include 'header.php';
+    include 'db.php';  // Include the database connection
+
+    // Query to fetch venues
+    $sql = "SELECT * FROM venue";
+    $result = $conn->query($sql);
+    ?>
 
      <!-- Hero Section -->
      <div class="hero">
@@ -70,25 +77,40 @@
 
             <!-- Academy Grid -->
             <div class="academy-grid">
-                <!-- Academy 1 -->
+                <?php
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        // Get average rating from venue_reviews table
+                        $venue_id = $row['venue_id'];
+                        $rating_sql = "SELECT AVG(ratings) as avg_rating FROM venue_reviews WHERE venue_id = '$venue_id'";
+                        $rating_result = $conn->query($rating_sql);
+                        $rating_row = $rating_result->fetch_assoc();
+                        $rating = number_format($rating_row['avg_rating'] ?? 4.5, 1); // Default to 4.5 if no ratings
+                ?>
                 <div class="academy">
                     <div class="academy-card">
-                        <img src="https://plus.unsplash.com/premium_photo-1684888759266-ce3768052c80?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Elite Academy" style="width: 100%; height: 150px; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars($row['turf_img']); ?>" alt="<?php echo htmlspecialchars($row['venue_nm']); ?>" style="width: 100%; height: 150px; object-fit: cover;">
                         <div class="top-icons">
                             <div class="rating">
                                 <i class="fas fa-star star-icon"></i>
-                                <span>4.9</span>
+                                <span><?php echo $rating; ?></span>
                             </div>
                             <i class="far fa-heart heart-icon"></i>
                         </div>
                     </div>
                     <div class="academy-info">
-                        <div class="turf-details">Don Bosco Turf</div>
-                        <div class="turf-details">Panjim, Goa</div>
-                        
-                        <button class="enroll-button" onclick="window.location.href='turfbooknow.html'">₹1000/hr</button>
+                        <div class="turf-details"><?php echo htmlspecialchars($row['venue_nm']); ?></div>
+                        <div class="turf-details"><?php echo htmlspecialchars($row['location']); ?></div>
+                        <button class="enroll-button" onclick="window.location.href='turfbooknow.php'">₹<?php echo number_format($row['price']); ?>/hr</button>
                     </div>
                 </div>
+                <?php
+                    }
+                } else {
+                    echo "<p>No venues found</p>";
+                }
+                $conn->close();
+                ?>
             </div>
 
             <!-- Pagination -->

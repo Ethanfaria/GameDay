@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="CSS\faq.css">
 </head>
 <body>
-<?php include 'header.php'; ?>
+    <?php 
+        include 'header.php'; 
+    ?>
 
     <section>
         <h2 class="title">FAQ</h2>

@@ -1,3 +1,33 @@
+<?php
+include 'db.php'; // Include the database connection file
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['registerAcademy'])) { // If Academy form is submitted
+        
+        $ac_id = uniqid('ac_'); // Generate a unique ID
+        $aca_nm = $_POST['academyName'];
+        $ac_location = $_POST['academyLocation'];
+        $ac_charges = $_POST['academyCharges'];
+        $venue_id = $_POST['venueId'];
+        $level = $_POST['academyLevel'];
+        $age_group = $_POST['academyAgeGroup'];
+        $description = $_POST['academyDescription'];
+        $features = $_POST['academyFeatures'];
+
+        $sql = "INSERT INTO academys (ac_id, aca_nm, ac_location, ac_charges, venue_id, level, age_group, description, features) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssdsdsss", $ac_id, $aca_nm, $ac_location, $ac_charges, $venue_id, $level, $age_group, $description, $features);
+        
+        if ($stmt->execute()) {
+            echo "<script>alert('Academy Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+        } else {
+            echo "<script>alert('Error: Unable to register academy.');</script>";
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +93,7 @@
                 </form>
 
                 <!-- Academy Registration Form -->
-                <form id="academyForm" class="registration-form">
+                <form id="academyForm" class="registration-form" method="POST">
                     <h2>Register Your Academy</h2>
                     
                     <div class="form-section">
@@ -84,8 +114,8 @@
                         <h3>Academy Details</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="academyType">Academy Level</label>
-                                <select id="academyType" name="academyType" required>
+                                <label for="academyLevel">Academy Level</label>
+                                <select id="academyLevel" name="academyLevel" required>
                                     <option value="">Select Level</option>
                                     <option value="beginner">Beginner</option>
                                     <option value="intermediate">Intermediate</option>
@@ -94,18 +124,14 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="ageGroups">Age Groups</label>
-                                <select id="ageGroups" name="ageGroups" required>
+                                <label for="academyAgeGroup">Age Groups</label>
+                                <select id="academyAgeGroup" name="academyAgeGroup" required>
                                     <option value="">Select Age Group</option>
                                     <option value="kids">Kids (5-12 years)</option>
                                     <option value="teens">Teens (13-17 years)</option>
                                     <option value="adults">Adults (18+ years)</option>
                                     <option value="all">All Age Groups</option>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="academyImage">Academy Image URL</label>
-                                <input type="url" id="academyImage" name="academyImage" required placeholder="Enter image URL">
                             </div>
                         </div>
                     </div>
@@ -114,12 +140,35 @@
                         <h3>Pricing</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="monthlyFee">Monthly Fee (₹)</label>
-                                <input type="number" id="monthlyFee" name="monthlyFee" required placeholder="Enter monthly fee">
+                                <label for="academyCharges">Monthly Fee (₹)</label>
+                                <input type="number" id="academyCharges" name="academyCharges" required placeholder="Enter monthly fee">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Additional Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="venueId">Venue ID</label>
+                                <input type="text" id="venueId" name="venueId" required placeholder="Enter venue ID">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="academyDescription">Description</label>
+                                <textarea id="academyDescription" name="academyDescription" rows="4" placeholder="Enter academy description"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="academyFeatures">Features</label>
+                                <textarea id="academyFeatures" name="academyFeatures" rows="4" placeholder="Enter academy features"></textarea>
                             </div>
                         </div>
                     </div>
 
+                    <input type="hidden" name="registerAcademy" value="1">
                     <button type="submit" class="submit-btn">Register Academy</button>
                 </form>
             </div>
@@ -146,4 +195,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

@@ -12,7 +12,16 @@
     <link rel="stylesheet" href="CSS\tournament.css">
 </head>
 <body>
-<?php include 'header.php'; ?>
+    <?php 
+    include 'header.php';
+    include 'db.php';  // Include the database connection
+
+    // Query to fetch tournaments with venue details
+    $sql = "SELECT t.tr_id, t.tr_name, t.img_url, v.venue_nm, v.location 
+            FROM tournaments t 
+            LEFT JOIN venue v ON t.venue_id = v.venue_id";
+    $result = $conn->query($sql);
+    ?>
     
     <!-- Hero Slider Section -->
     <div class="hero">
@@ -37,90 +46,33 @@
     <div class="main-content">
         <!-- Tournament Grid -->
         <div class="tournament-grid">
-            <!-- Tournament Cards (Same as previous HTML) -->
+            <?php
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+            ?>
             <div class="tournament-card">
-                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
+                <img src="<?php echo htmlspecialchars($row['img_url']); ?>" alt="<?php echo htmlspecialchars($row['tr_name']); ?>" class="tournament-image">
                 <div class="tournament-info">
-                    <div class="tournament-name">Summer Sports League</div>
+                    <div class="tournament-name"><?php echo htmlspecialchars($row['tr_name']); ?></div>
                     <div class="tournament-details">
                         <div class="tournament-detail">
-                            <i class="fas fa-calendar"></i>
-                            15 Jun - 30 Jul 2025
-                        </div>
-                        <div class="tournament-detail">
                             <i class="fas fa-map-marker-alt"></i>
-                            Don Bosco Ground, Panjim
+                            <?php echo htmlspecialchars($row['venue_nm']) . ', ' . htmlspecialchars($row['location']); ?>
                         </div>
                     </div>
                     <div class="tournament-actions">
-                        <button class="register-button" onclick="window.location.href='tournregispage.php'">Register Now</button>
-                        <button class="details-button">View Details</button>
+                        <button class="register-button" onclick="window.location.href='tournregispage.php?id=<?php echo $row['tr_id']; ?>'">Register Now</button>
+                        <button class="details-button" onclick="window.location.href='tournament-details.php?id=<?php echo $row['tr_id']; ?>'">View Details</button>
                     </div>
                 </div>
             </div>
-            
-            <div class="tournament-card">
-                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
-                <div class="tournament-info">
-                    <div class="tournament-name">Goa Sports Challenge</div>
-                    <div class="tournament-details">
-                        <div class="tournament-detail">
-                            <i class="fas fa-calendar"></i>
-                            1 Aug - 20 Aug 2025
-                        </div>
-                        <div class="tournament-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Sports Complex, Margao
-                        </div>
-                    </div>
-                    <div class="tournament-actions">
-                        <button class="register-button">Register Now</button>
-                        <button class="details-button">View Details</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tournament-card">
-                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
-                <div class="tournament-info">
-                    <div class="tournament-name">Urban Sports League</div>
-                    <div class="tournament-details">
-                        <div class="tournament-detail">
-                            <i class="fas fa-calendar"></i>
-                            5 Sep - 25 Sep 2025
-                        </div>
-                        <div class="tournament-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Panaji Stadium, Goa
-                        </div>
-                    </div>
-                    <div class="tournament-actions">
-                        <button class="register-button">Register Now</button>
-                        <button class="details-button">View Details</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tournament-card">
-                <img src="/api/placeholder/400/250" alt="Tournament" class="tournament-image">
-                <div class="tournament-info">
-                    <div class="tournament-name">Autumn Sports Championship</div>
-                    <div class="tournament-details">
-                        <div class="tournament-detail">
-                            <i class="fas fa-calendar"></i>
-                            15 Oct - 5 Nov 2025
-                        </div>
-                        <div class="tournament-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Local Sports Ground
-                        </div>
-                    </div>
-                    <div class="tournament-actions">
-                        <button class="register-button">Register Now</button>
-                        <button class="details-button">View Details</button>
-                    </div>
-                </div>
-            </div>
+            <?php
+                }
+            } else {
+                echo "<p>No tournaments found</p>";
+            }
+            $conn->close();
+            ?>
         </div>
     </div>
 

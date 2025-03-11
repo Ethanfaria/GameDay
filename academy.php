@@ -12,7 +12,14 @@
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
-<?php include 'header.php'; ?>
+    <?php 
+    include 'header.php';
+    include 'db.php'; 
+
+    // Query to fetch academies
+    $sql = "SELECT * FROM academys";
+    $result = $conn->query($sql);
+    ?>
 
      <!-- Hero Section -->
      <div class="hero">
@@ -78,25 +85,40 @@
 
             <!-- Academy Grid -->
             <div class="academy-grid">
-                <!-- Academy 1 -->
+                <?php
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        // Get average rating from academy_reviews table
+                        $academy_id = $row['ac_id'];
+                        $rating_sql = "SELECT AVG(ratings) as avg_rating FROM academy_reviews WHERE ac_id = '$academy_id'";
+                        $rating_result = $conn->query($rating_sql);
+                        $row = $result->fetch_assoc();
+                        $rating = number_format($rating_row['avg_rating'] ?? 4.5, 1); // Default to 4.5 if no ratings
+                ?>
                 <div class="academy">
                     <div class="academy-card">
-                        <img src="https://images.unsplash.com/photo-1600679472829-3044539ce8ed" alt="Elite Academy" style="width: 100%; height: 150px; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars($row['admy_img']); ?>" alt="<?php echo htmlspecialchars($row['aca_nm']); ?>" style="width: 100%; height: 150px; object-fit: cover;">
                         <div class="top-icons">
                             <div class="rating">
                                 <i class="fas fa-star star-icon"></i>
-                                <span>4.9</span>
+                                <span><?php echo $rating; ?></span>
                             </div>
                             <i class="far fa-heart heart-icon"></i>
                         </div>
                     </div>
                     <div class="academy-info">
-                        <div class="turf-details">Don Bosco Summer Camp</div>
-                        <div class="turf-details">Panjim, Goa</div>
-                        
-                        <button class="enroll-button">₹3000/month</button>
+                        <div class="turf-details"><?php echo htmlspecialchars($row['aca_nm']); ?></div>
+                        <div class="turf-details"><?php echo htmlspecialchars($row['ac_location']); ?></div>
+                        <button class="enroll-button">₹<?php echo number_format($row['ac_charges']); ?>/month</button>
                     </div>
                 </div>
+                <?php
+                    }
+                } else {
+                    echo "<p>No academies found</p>";
+                }
+                $conn->close();
+                ?>
             </div>
 
             <!-- Pagination -->
