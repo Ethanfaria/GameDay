@@ -109,7 +109,7 @@
                     <div class="academy-info">
                         <div class="turf-details"><?php echo htmlspecialchars($row['aca_nm']); ?></div>
                         <div class="turf-details"><?php echo htmlspecialchars($row['ac_location']); ?></div>
-                        <button class="enroll-button">₹<?php echo number_format($row['ac_charges']); ?>/month</button>
+                        <button class="enroll-button" onclick="window.location.href='bookacademy.php?ac_id=<?php echo $row['ac_id']; ?>'">₹<?php echo number_format($row['ac_charges']); ?>/month</button>
                     </div>
                 </div>
                 <?php

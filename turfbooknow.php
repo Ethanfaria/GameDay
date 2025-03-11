@@ -12,7 +12,30 @@
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
-<?php include 'header.php'; ?>
+<?php 
+include 'header.php'; 
+include 'db.php';
+
+$venue_id = isset($_GET['venue_id']) ? $_GET['venue_id'] : null;
+
+if (!$venue_id) {
+    header("Location: grounds.php"); // Redirect if no venue ID provided
+    exit();
+}
+
+$sql = "SELECT * FROM venue WHERE venue_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $venue_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $ground = $result->fetch_assoc();
+} else {
+    echo "<p>Ground not found.</p>";
+    exit();
+}
+?>
 
     <!-- Booking Container -->
     <div class="booking-container">
@@ -20,8 +43,8 @@
         <div class="turf-details">
             <img src="/api/placeholder/600/400" alt="Don Bosco Turf" class="turf-image">
             <div class="turf-info">
-                <h2>Don Bosco Turf</h2>
-                <p>Location: Panjim, Goa</p>
+                <h2><?php echo htmlspecialchars($ground['venue_nm']); ?></h2>
+                <p>Location:<?php echo htmlspecialchars($ground['location']); ?></p>
                 <div class="rating">
                     <i class="fas fa-star" style="color: var(--neon-green);"></i>
                     <span>4.9 (120 Reviews)</span>
@@ -37,7 +60,7 @@
                 </div>
                 <div class="pricing mt-3">
                     <h4>Pricing</h4>
-                    <p>₹1200 per hour</p>
+                    <p>₹<?php echo htmlspecialchars($ground['price']); ?> per hour</p>
                 </div>
             </div>
         </div>

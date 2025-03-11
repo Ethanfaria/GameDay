@@ -101,7 +101,7 @@
                     <div class="academy-info">
                         <div class="turf-details"><?php echo htmlspecialchars($row['venue_nm']); ?></div>
                         <div class="turf-details"><?php echo htmlspecialchars($row['location']); ?></div>
-                        <button class="enroll-button" onclick="window.location.href='turfbooknow.php'">₹<?php echo number_format($row['price']); ?>/hr</button>
+                        <button class="enroll-button" onclick="window.location.href='turfbooknow.php?venue_id=<?php echo $row['venue_id']; ?>'">₹<?php echo number_format($row['price']);?>/hr</button>
                     </div>
                 </div>
                 <?php

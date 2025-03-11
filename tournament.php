@@ -61,8 +61,7 @@
                         </div>
                     </div>
                     <div class="tournament-actions">
-                        <button class="register-button" onclick="window.location.href='tournregispage.php?id=<?php echo $row['tr_id']; ?>'">Register Now</button>
-                        <button class="details-button" onclick="window.location.href='tournament-details.php?id=<?php echo $row['tr_id']; ?>'">View Details</button>
+                        <button class="register-button" onclick="window.location.href='tournregispage.php?tr_id=<?php echo $row['tr_id']; ?>'">Register Now</button>
                     </div>
                 </div>
             </div>
