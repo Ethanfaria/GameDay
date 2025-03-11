@@ -192,29 +192,157 @@
 
 /* Time Slots */
 .time-slots {
+    margin-top: 30px;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.time-slots-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    margin-top: 20px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 15px;
+    padding: 5px;
 }
 
 .time-slot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     background-color: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    aspect-ratio: 1.2;
+    display: flex;
+    flex-direction: column;
+}
+
+.time-slot-content {
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    text-align: center;
+}
+
+.time-range {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.time-slot-start {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--neon-green);
+}
+
+.time-slot-end {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.booking-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+    margin-top: auto;
+}
+
+.booking-status.available {
+    background-color: rgba(185, 255, 0, 0.1);
+    color: var(--neon-green);
+}
+
+.time-slot:not(.booked):hover {
+    background-color: rgba(185, 255, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: var(--neon-green);
+}
+
+.time-slot.booked {
+    background-color: rgba(255, 0, 0, 0.05);
+    cursor: not-allowed;
+    opacity: 0.8;
 }
 
 .time-slot.selected {
     background-color: var(--neon-green);
     color: var(--dark-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(185, 255, 0, 0.3);
 }
 
-.time-slot-end {
-    opacity: 0.7;
+.time-slot.selected .time-slot-start {
+    color: var(--dark-green);
+}
+
+.time-slot.selected .booking-status.available {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--dark-green);
+}
+
+@media (max-width: 1200px) {
+    .time-slots-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .time-slots-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .time-slots {
+        padding: 20px;
+    }
+
+    .time-slots-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .time-slot-start {
+        font-size: 15px;
+    }
+
+    .time-slot-end {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-slots {
+        padding: 15px;
+    }
+
+    .time-slots-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .time-slot-content {
+        padding: 10px 8px;
+    }
+
+    .time-slot-start {
+        font-size: 14px;
+    }
+
+    .time-slot-end {
+        font-size: 12px;
+    }
+
+    .booking-status {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
 }
 
 /* Booking Summary */
@@ -274,6 +402,22 @@
     .nav-links {
         display: none;
     }
+
+    .time-slots {
+        padding: 15px;
+    }
+
+    .time-slots-grid {
+        gap: 8px;
+    }
+
+    .time-slot {
+        flex: 0 0 100px;
+    }
+
+    .time-range {
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -299,7 +443,32 @@
     }
 
     .time-slots {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        padding: 10px;
+    }
+
+    .time-slots-grid {
+        grid-auto-columns: minmax(100px, 1fr);
+        gap: 8px;
+    }
+
+    .time-slot-section {
+        padding: 15px;
+    }
+
+    .time-slot-section h4 {
+        font-size: 16px;
+    }
+
+    .time-slot-content {
+        padding: 10px;
+    }
+
+    .time-range {
+        font-size: 12px;
+    }
+
+    .booking-status {
+        font-size: 10px;
     }
 
     .turf-info h2 {

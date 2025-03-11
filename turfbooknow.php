@@ -35,6 +35,26 @@ if ($result->num_rows > 0) {
     echo "<p>Ground not found.</p>";
     exit();
 }
+
+// Fetch booked slots for the venue
+$booked_slots = array();
+$sql = "SELECT bk_date, bk_dur FROM book WHERE venue_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $venue_id);
+$stmt->execute();
+$bookings_result = $stmt->get_result();
+
+while ($booking = $bookings_result->fetch_assoc()) {
+    $date = $booking['bk_date'];
+    $duration = $booking['bk_dur'];
+    if (!isset($booked_slots[$date])) {
+        $booked_slots[$date] = array();
+    }
+    $booked_slots[$date][] = $duration;
+}
+
+// Pass booked slots to JavaScript
+echo "<script>const bookedSlots = " . json_encode($booked_slots) . ";</script>";
 ?>
 
     <!-- Booking Container -->
@@ -89,7 +109,7 @@ if ($result->num_rows > 0) {
             <div id="bookingSummary">
                 <p>Select a date and time slot</p>
             </div>
-            <button class="confirm-button" id="confirmBooking">Confirm Booking</button>
+            <button class="confirm-button" id="confirmBooking" onclick="window.location.href='payment-ground.php?ac_id=<?php echo $row['ac_id']; ?>'">Confirm Booking</button>
         </div>
     </div>
 
@@ -112,6 +132,14 @@ if ($result->num_rows > 0) {
             }
         }
 
+        // Convert 24h to 12h format
+        function formatTime(hour) {
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            hour = hour % 12;
+            hour = hour ? hour : 12; // Convert 0 to 12
+            return `${hour}:00 ${ampm}`;
+        }
+
         // Generate Date Slider
         function generateDateSlider() {
             const dateSlider = document.getElementById('dateSlider');
@@ -132,56 +160,83 @@ if ($result->num_rows > 0) {
                 dayElement.addEventListener('click', () => {
                     document.querySelectorAll('.date-day').forEach(el => el.classList.remove('selected'));
                     dayElement.classList.add('selected');
-                    generateTimeSlots();
+                    generateTimeSlots(date);
                 });
                 
                 dateSlider.appendChild(dayElement);
             }
+            // Select today by default
+            dateSlider.firstElementChild.click();
         }
 
         // Generate Time Slots
-        function generateTimeSlots() {
+        function generateTimeSlots(selectedDate) {
             const timeSlots = document.getElementById('timeSlots');
             timeSlots.innerHTML = ''; // Clear previous slots
             
-            const startHour = 6; // 6 AM
+            const startHour = 6;  // 6 AM
             const endHour = 22;   // 10 PM
             
+            const dateString = selectedDate.toISOString().split('T')[0];
+            const bookedHours = bookedSlots[dateString] || [];
+
+            // Create a container for all time slots
+            const timeSlotsContainer = document.createElement('div');
+            timeSlotsContainer.className = 'time-slots-grid';
+            
             for (let hour = startHour; hour < endHour; hour++) {
-                const slotStart = `${hour.toString().padStart(2, '0')}:00`;
-                const slotEnd = `${(hour + 1).toString().padStart(2, '0')}:00`;
-                
                 const timeSlot = document.createElement('div');
                 timeSlot.classList.add('time-slot');
+                
+                const startTime = formatTime(hour);
+                const endTime = formatTime(hour + 1);
+                
+                const isBooked = bookedHours.includes(hour);
+                if (isBooked) {
+                    timeSlot.classList.add('booked');
+                }
+                
                 timeSlot.innerHTML = `
-                    <span class="time-slot-start">${slotStart}</span>
-                    <span class="time-slot-end">${slotEnd}</span>
+                    <div class="time-slot-content">
+                        <div class="time-range">
+                            <span class="time-slot-start">${startTime}</span>
+                            <span class="time-slot-end">${endTime}</span>
+                        </div>
+                        ${isBooked ? '<div class="booking-status">Booked</div>' : '<div class="booking-status available">Available</div>'}
+                    </div>
                 `;
                 
-                timeSlot.addEventListener('click', () => {
-                    document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
-                    timeSlot.classList.add('selected');
-                    updateBookingSummary(slotStart, slotEnd);
-                });
-                
-                timeSlots.appendChild(timeSlot);
+                if (!isBooked) {
+                    timeSlot.addEventListener('click', () => {
+                        document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+                        timeSlot.classList.add('selected');
+                        updateBookingSummary(startTime, endTime, selectedDate);
+                    });
+                }
+
+                timeSlotsContainer.appendChild(timeSlot);
             }
+
+            // Add the time slots container to the main container
+            timeSlots.appendChild(timeSlotsContainer);
         }
 
         // Update Booking Summary
-        function updateBookingSummary(startTime, endTime) {
+        function updateBookingSummary(startTime, endTime, selectedDate) {
             const bookingSummary = document.getElementById('bookingSummary');
-            const selectedDate = document.querySelector('.date-day.selected');
+            const formattedDate = selectedDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
             
-            if (selectedDate) {
-                const dateText = selectedDate.innerText.split('\n').join(' ');
-                bookingSummary.innerHTML = `
-                    <p>Date: ${dateText}</p>
-                    <p>Time: ${startTime} - ${endTime}</p>
-                    <p>Location: Don Bosco Turf</p>
-                    <p>Price: ₹1200</p>
-                `;
-            }
+            bookingSummary.innerHTML = `
+                <p>Date: ${formattedDate}</p>
+                <p>Time: ${startTime} - ${endTime}</p>
+                <p>Location: ${<?php echo json_encode(htmlspecialchars($ground['venue_nm'])); ?>}</p>
+                <p>Price: ₹${<?php echo json_encode(htmlspecialchars($ground['price'])); ?>}</p>
+            `;
         }
 
         // Confirm Booking
@@ -190,8 +245,8 @@ if ($result->num_rows > 0) {
             const selectedTime = document.querySelector('.time-slot.selected');
             
             if (selectedDate && selectedTime) {
+                // Send the booking data to the server
                 alert('Booking Confirmed! You will be redirected to payment.');
-                // Here you would typically implement payment or booking confirmation logic
             } else {
                 alert('Please select a date and time slot');
             }

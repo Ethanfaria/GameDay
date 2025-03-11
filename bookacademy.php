@@ -128,25 +128,7 @@
     </div>
 
     <script>
-        // Function to get URL parameters
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                name: params.get('name') || 'Elite Football Academy',
-                location: params.get('location') || 'Panjim, Goa',
-                rating: params.get('rating') || '4.9',
-                price: params.get('price') || '3000'
-            };
-        }
-
-        // Update academy details
-        function updateAcademyDetails() {
-            const params = getUrlParams();
-            document.getElementById('academy-name').textContent = params.name;
-            document.getElementById('academy-location').textContent = params.location;
-            document.getElementById('academy-rating').textContent = params.rating;
-            document.querySelector('.price-tag').textContent = `₹${params.price}/month`;
-        }
+        
 
         // Proceed to payment
         function proceedToPayment() {
@@ -155,8 +137,7 @@
             window.location.href = paymentUrl;
         }
 
-        // Initialize page
-        updateAcademyDetails();
+        
     </script>
 </body>
 </html> 
