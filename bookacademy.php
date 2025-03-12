@@ -56,34 +56,23 @@
                     <p><?php echo htmlspecialchars($academy['description']); ?></p>
 
                     <div class="academy-features">
-                        <div class="feature-item">
-                            <i class="fas fa-user-tie"></i>
-                            <div>
-                                <h3>Professional Coaches</h3>
-                                <p>UEFA licensed coaches with professional playing experience</p>
+                    <?php
+                        // Get features from database and convert to array
+                        $features = explode(',', $academy['features']);
+                        
+                        // Display each feature with fancy icon
+                        foreach ($features as $feature) {
+                            $feature = trim($feature);
+                            ?>
+                            <div class="feature-item">
+                                <i class="fas fa-football"></i>
+                                <div>
+                                    <h3><?php echo htmlspecialchars(ucfirst($feature)); ?></h3>
+                                </div>
                             </div>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-futbol"></i>
-                            <div>
-                                <h3>World-Class Facilities</h3>
-                                <p>FIFA approved artificial turf and modern training equipment</p>
-                            </div>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-chart-line"></i>
-                            <div>
-                                <h3>Performance Tracking</h3>
-                                <p>Regular assessment and detailed progress reports</p>
-                            </div>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-trophy"></i>
-                            <div>
-                                <h3>Tournament Exposure</h3>
-                                <p>Participation in local and national tournaments</p>
-                            </div>
-                        </div>
+                            <?php
+                        }
+                        ?>
                     </div>
 
                     <h2>Training Schedule</h2>
@@ -106,23 +95,70 @@
                     <div class="enrollment-details">
                         <p>
                             <span>Age Group</span>
-                            <span>8-12 years</span>
+                            <span><?php echo htmlspecialchars($academy['age_group']); ?></span>
+                        </p>
+                        <p>
+                            <span>Level</span>
+                            <span><?php echo htmlspecialchars($academy['level']); ?></span>
                         </p>
                         <p>
                             <span>Duration</span>
                             <span>3 months minimum</span>
                         </p>
-                        <p>
-                            <span>Sessions/Week</span>
-                            <span>5 sessions</span>
-                        </p>
-                        <p>
-                            <span>Batch Size</span>
-                            <span>15 students max</span>
-                        </p>
                     </div>
-                    <button class="enroll-button" onclick="proceedToPayment()">Proceed to Payment</button>
+                    <button class="enroll-button" onclick="window.location.href='payment-academy.php?ac_id=<?php echo $academy['ac_id']; ?>'">Proceed to Payment</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Modal -->
+    <div id="reviewsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Academy Reviews</h2>
+                <span class="close-modal" onclick="closeReviewsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <?php
+                // Fetch reviews for this academy
+                $review_sql = "SELECT ar.rating, ar.review_id, v.venue_nm 
+                             FROM academy_reviews ar 
+                             LEFT JOIN venue v ON ar.venue_id = v.venue_id 
+                             WHERE ar.ac_id = ?";
+                $review_stmt = $conn->prepare($review_sql);
+                $review_stmt->bind_param("s", $ac_id);
+                $review_stmt->execute();
+                $reviews_result = $review_stmt->get_result();
+
+                if ($reviews_result->num_rows > 0) {
+                    while ($review = $reviews_result->fetch_assoc()) {
+                        ?>
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="review-rating">
+                                    <?php
+                                    // Display stars based on rating
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        if ($i <= $review['rating']) {
+                                            echo '<i class="fas fa-star"></i>';
+                                        } else {
+                                            echo '<i class="far fa-star"></i>';
+                                        }
+                                    }
+                                    ?>
+                                </div>
+                                <div class="review-venue">
+                                    <?php echo htmlspecialchars($review['venue_nm']); ?>
+                                </div>
+                            </div>
+                        </div>
+                        <?php
+                    }
+                } else {
+                    echo '<p class="no-reviews">No reviews yet.</p>';
+                }
+                ?>
             </div>
         </div>
     </div>
@@ -137,7 +173,24 @@
             window.location.href = paymentUrl;
         }
 
-        
+        // Reviews Modal Functions
+        function openReviewsModal() {
+            document.getElementById('reviewsModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+        }
+
+        function closeReviewsModal() {
+            document.getElementById('reviewsModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('reviewsModal');
+            if (event.target == modal) {
+                closeReviewsModal();
+            }
+        }
     </script>
 </body>
 </html> 

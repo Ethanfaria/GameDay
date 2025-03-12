@@ -54,7 +54,7 @@ while ($booking = $bookings_result->fetch_assoc()) {
 }
 
 // Pass booked slots to JavaScript
-echo "<script>const bookedSlots = " . json_encode($booked_slots) . ";</script>";
+echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) . ";</script>";
 ?>
 
     <!-- Booking Container -->
@@ -109,7 +109,7 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots) . ";</script>";
             <div id="bookingSummary">
                 <p>Select a date and time slot</p>
             </div>
-            <button class="confirm-button" id="confirmBooking" onclick="window.location.href='payment-ground.php?ac_id=<?php echo $row['ac_id']; ?>'">Confirm Booking</button>
+            <button class="confirm-button" id="confirmBooking" onclick="window.location.href='payment-ground.php?venue_id=<?php echo $ground['venue_id']; ?>'">Confirm Booking</button>
         </div>
     </div>
 

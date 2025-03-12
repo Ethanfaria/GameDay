@@ -67,12 +67,44 @@
     align-items: center;
     gap: 15px;
     margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+    transform: translateX(5px);
 }
 
 .feature-item i {
     color: var(--neon-green);
-    font-size: 24px;
-    width: 30px;
+    font-size: 14px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(185, 255, 0, 0.1);
+    border-radius: 50%;
+    padding: 12px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(185, 255, 0, 0.2);
+}
+
+.feature-item:hover i {
+    transform: rotate(360deg);
+    background: rgba(185, 255, 0, 0.2);
+    box-shadow: 0 0 15px rgba(185, 255, 0, 0.3);
+}
+
+.feature-item h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+    transition: color 0.3s ease;
+}
+
+.feature-item:hover h3 {
+    color: var(--neon-green);
 }
 
 .enrollment-card {
@@ -138,22 +170,164 @@
     margin-bottom: 10px;
 }
 
-.back-button {
-    display: inline-flex;
-    align-items: center;
-    color: white;
-    text-decoration: none;
-    margin-bottom: 20px;
-    padding: 10px 20px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+/* Reviews Button */
+.show-reviews-btn {
+    background: var(--neon-green);
+    color: var(--dark-green);
+    border: none;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 10px;
     transition: all 0.3s ease;
 }
 
-.back-button i {
-    margin-right: 10px;
+.show-reviews-btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
 }
 
-.back-button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--dark-green);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background-color: var(--dark-green);
+    z-index: 1;
+}
+
+.modal-header h2 {
+    color: var(--neon-green);
+    margin: 0;
+    font-size: 24px;
+}
+
+.close-modal {
+    color: var(--neon-green);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+    transform: scale(1.1);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.review-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.review-item:hover {
+    transform: translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.review-rating {
+    color: var(--neon-green);
+}
+
+.review-rating i {
+    margin-right: 2px;
+}
+
+.review-venue {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.no-reviews {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Scrollbar Styling for Modal */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--neon-green);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a8ff00;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 }
