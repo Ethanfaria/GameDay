@@ -103,7 +103,6 @@
                                 <i class="fas fa-star star-icon"></i>
                                 <span><?php echo $rating; ?></span>
                             </div>
-                            <i class="far fa-heart heart-icon"></i>
                         </div>
                     </div>
                     <div class="academy-info">

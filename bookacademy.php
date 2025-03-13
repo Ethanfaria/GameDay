@@ -101,12 +101,10 @@
                             <span>Level</span>
                             <span><?php echo htmlspecialchars($academy['level']); ?></span>
                         </p>
-                        <p>
-                            <span>Duration</span>
-                            <span>3 months minimum</span>
-                        </p>
                     </div>
-                    <button class="enroll-button" onclick="window.location.href='payment-academy.php?ac_id=<?php echo $academy['ac_id']; ?>'">Proceed to Payment</button>
+                    <button class="enroll-button" onclick="window.location.href='payment-academy.php?ac_id=<?php echo $academy['ac_id']; ?>&name=<?php echo urlencode($academy['aca_nm']); ?>&location=<?php echo urlencode($academy['ac_location']); ?>&amount=<?php echo $academy['ac_charges']; ?>'">
+    ₹<?php echo number_format($academy['ac_charges']); ?>/month
+</button>
                 </div>
             </div>
         </div>

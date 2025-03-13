@@ -291,6 +291,17 @@
     </style>
 </head>
 <body>
+    <?php
+    // Get parameters from URL
+    $academy_id = isset($_GET['ac_id']) ? $_GET['ac_id'] : '';
+    $academy_name = isset($_GET['name']) ? $_GET['name'] : '';
+    $academy_location = isset($_GET['location']) ? $_GET['location'] : '';
+    $monthly_fee = isset($_GET['amount']) ? intval($_GET['amount']) : 0;
+
+
+    // Format amounts for display
+    $formatted_monthly_fee = number_format($monthly_fee);
+    ?>
     <div class="payment-container">
         <a href="javascript:history.back()" class="back-button">
             <i class="fas fa-arrow-left"></i> Back
@@ -301,15 +312,11 @@
             <div class="order-details">
                 <p>
                     <span>Academy</span>
-                    <span id="academy-name">Elite Football Academy</span>
+                    <span id="academy-name"><?php echo htmlspecialchars($academy_name); ?></span>
                 </p>
                 <p>
                     <span>Location</span>
-                    <span id="academy-location">Panjim, Goa</span>
-                </p>
-                <p>
-                    <span>Duration</span>
-                    <span>3 months</span>
+                    <span id="academy-location"><?php echo htmlspecialchars($academy_location); ?></span>
                 </p>
             </div>
 
@@ -375,7 +382,7 @@
         <i class="fas fa-times-circle"></i>
         <h2>Payment Failed</h2>
         <p>Your payment could not be processed. Please try a different payment method.</p>
-        <button onclick="closeErrorPopup()">Try Again</button>
+        <button onclick="window.location.href='payment-academy-success.php?venue_id=<?php echo $ground['venue_id']; ?>'">Try Again</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
@@ -385,9 +392,9 @@
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
-                name: params.get('name') || 'Elite Football Academy',
-                location: params.get('location') || 'Panjim, Goa',
-                amount: parseInt(params.get('amount')) || 3000
+                name: params.get('name') || '',
+                location: params.get('location') || '',
+                amount: parseInt(params.get('amount')) || 0
             };
         }
 
@@ -417,7 +424,7 @@
         // Update page with enrollment details
         function updateEnrollmentDetails() {
             const params = getUrlParams();
-            const totalAmount = params.amount * 3; // 3 months
+            const totalAmount = params.amount; // 3 months
 
             document.getElementById('academy-name').textContent = params.name;
             document.getElementById('academy-location').textContent = params.location;
@@ -433,7 +440,7 @@
             document.getElementById('overlay').classList.add('show');
             
             setTimeout(() => {
-                window.location.href = 'academy-success.html';
+                window.location.href = 'payment-academy-success.php';
             }, 2000);
         }
 

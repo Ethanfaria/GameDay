@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $description = $_POST['academyDescription'];
         $features = $_POST['academyFeatures'];
 
-        $sql = "INSERT INTO academys (ac_id, aca_nm, ac_location, ac_charges, venue_id, level, age_group, description, features) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO academys (ac_id, aca_nm, ac_location, ac_charges, level, age_group, description, features) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssdsdsss", $ac_id, $aca_nm, $ac_location, $ac_charges, $venue_id, $level, $age_group, $description, $features);
@@ -26,7 +26,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo "<script>alert('Error: Unable to register academy.');</script>";
         }
     }
+
+    if (isset($_POST['registerTurf'])) {
+        $venue_id = uniqid('ven_'); // Generate a unique ID
+        $venue_nm = $_POST['turfName'];
+        $location = $_POST['turfLocation'];
+        $size = $_POST['turfSize'];
+        $price = $_POST['hourlyRate'];
+        $turf_img = $_POST['turfImage'];
+        
+        $sql = "INSERT INTO venue (venue_id, venue_nm, location, size, price, turf_img) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssdds", $venue_id, $venue_nm, $location, $size, $price, $turf_img);
+        
+        if ($stmt->execute()) {
+            echo "<script>alert('Turf Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+        } else {
+            echo "<script>alert('Error: Unable to register turf. " . $conn->error . "');</script>";
+        }
+    }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -54,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <div class="form-container">
                 <!-- Turf Registration Form -->
-                <form id="turfForm" class="registration-form active">
+                <form id="turfForm" class="registration-form active" method="POST">
                     <h2>Register Your Turf</h2>
                     
                     <div class="form-section">
@@ -88,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
                         </div>
                     </div>
-
+                    <input type="hidden" name="registerTurf" value="1">
                     <button type="submit" class="submit-btn">Register Turf</button>
                 </form>
 
@@ -148,12 +170,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                     <div class="form-section">
                         <h3>Additional Information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="venueId">Venue ID</label>
-                                <input type="text" id="venueId" name="venueId" required placeholder="Enter venue ID">
-                            </div>
-                        </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="academyDescription">Description</label>

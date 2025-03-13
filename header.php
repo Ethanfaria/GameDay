@@ -21,6 +21,7 @@ function isLoggedIn() {
         <a href="grounds.php">Grounds</a>
         <a href="academy.php">Academy</a>
         <a href="tournament.php">Tournament</a>
+        <a href="hire-referee.php">Referee</a>
         <a href="about.php">About</a>
         <a href="faq.php">FAQ</a>
         

@@ -125,26 +125,26 @@ if (!$tournament) {
                     <?php
                     // Process form submission
                     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                        $team_name = $_POST['team_name'] ?? '';
-                        $captain_name = $_POST['captain_name'] ?? '';
-                        $captain_phone = $_POST['captain_phone'] ?? '';
-                        $captain_email = $_POST['captain_email'] ?? '';
-                        $players_count = $_POST['players_count'] ?? '';
+                        $team_nm = $_POST['team_name'] ?? '';
+                        $captain_nm = $_POST['captain_name'] ?? '';
+                        $captain_ph = $_POST['captain_phone'] ?? '';
+                        $captain_em = $_POST['captain_email'] ?? '';
+                        $participants = $_POST['players_count'] ?? '';
 
                         // Validate form data
                         $errors = [];
-                        if (empty($team_name)) $errors[] = "Team name is required";
-                        if (empty($captain_name)) $errors[] = "Captain name is required";
-                        if (empty($captain_phone)) $errors[] = "Captain phone is required";
-                        if (empty($captain_email)) $errors[] = "Captain email is required";
-                        if (empty($players_count)) $errors[] = "Number of players is required";
+                        if (empty($team_nm)) $errors[] = "Team name is required";
+                        if (empty($captain_nm)) $errors[] = "Captain name is required";
+                        if (empty($captain_ph)) $errors[] = "Captain phone is required";
+                        if (empty($captain_em)) $errors[] = "Captain email is required";
+                        if (empty($participants)) $errors[] = "Number of players is required";
 
                         if (empty($errors)) {
                             // Insert into tournament_registration table
-                            $insert_sql = "INSERT INTO tourn_reg (tr_id, team_name, cap_name, cap_phone, cap_email, players) 
+                            $insert_sql = "INSERT INTO teams (tr_id, team_nm, captain_nm, captain_ph, captain_em, participants) 
                                          VALUES (?, ?, ?, ?, ?, ?)";
                             $insert_stmt = $conn->prepare($insert_sql);
-                            $insert_stmt->bind_param("issssi", $tr_id, $team_name, $captain_name, $captain_phone, $captain_email, $players_count);
+                            $insert_stmt->bind_param("issssi", $tr_id, $team_nm, $captain_nm, $captain_ph, $captain_em, $participants);
                             
                             if ($insert_stmt->execute()) {
                                 echo '<div class="success-message">Registration successful! Your team has been registered.</div>';

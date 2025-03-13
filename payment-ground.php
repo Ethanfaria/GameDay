@@ -58,7 +58,7 @@
             <p>Or click below to pay using other UPI apps</p>
         </div>
 
-        <button id="pay-button" class="payment-button">Proceed to Pay</button>
+        <button id="pay-button" class="payment-button" onclick="window.location.href='payment-ground-success.php?venue_id=<?php echo $ground['venue_id']; ?>'">Proceed to Pay</button>
     </div>
 
     <div class="success-popup" id="successPopup">
@@ -71,7 +71,7 @@
         <i class="fas fa-times-circle"></i>
         <h2>Payment Failed</h2>
         <p>Your payment could not be processed. Please try a different payment method.</p>
-        <button onclick="closeErrorPopup()">Try Again</button>
+        <button>Try Again</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
@@ -132,7 +132,7 @@
             document.getElementById('overlay').classList.add('show');
             
             setTimeout(() => {
-                window.location.href = 'booking-success.html';
+                window.location.href = 'payment-ground-success.php';
             }, 2000);
         }
 

@@ -51,6 +51,7 @@ if(isset($_POST["submit"])){
                 // Password is correct, create session
                 $_SESSION["user_id"] = $user["email"]; // Using email as identifier since there's no ID
                 $_SESSION["username"] = $user["user_name"];
+                $_SESSION["user_email"] = $email; // Store email in session
                 
                 // Redirect to homepage or dashboard
                 header("Location: homepage.php");
