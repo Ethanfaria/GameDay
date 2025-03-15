@@ -298,9 +298,12 @@
     $academy_location = isset($_GET['location']) ? $_GET['location'] : '';
     $monthly_fee = isset($_GET['amount']) ? intval($_GET['amount']) : 0;
 
+    // Calculate total amount (3 months)
+    $total_amount = $monthly_fee * 3;
 
     // Format amounts for display
     $formatted_monthly_fee = number_format($monthly_fee);
+    $formatted_total = number_format($total_amount);
     ?>
     <div class="payment-container">
         <a href="javascript:history.back()" class="back-button">
@@ -333,7 +336,7 @@
             <div class="order-details">
                 <p>
                     <span>Monthly Fee</span>
-                    <span id="monthly-fee">₹3,000</span>
+                    <span id="monthly-fee">₹<?php echo $formatted_monthly_fee; ?></span>
                 </p>
                 <p>
                     <span>Duration</span>
@@ -341,7 +344,7 @@
                 </p>
                 <p class="total-amount">
                     <span>Total Amount</span>
-                    <span id="total-amount">₹9,000</span>
+                    <span id="total-amount">₹<?php echo $formatted_total; ?></span>
                 </p>
             </div>
         </div>
@@ -364,9 +367,9 @@
 
         <div class="qr-section" id="qrSection">
             <h3>Scan QR Code to Pay</h3>
-            <p class="qr-amount" id="qrAmount">₹9,000</p>
+            <p class="qr-amount" id="qrAmount">₹<?php echo $formatted_total; ?></p>
             <div id="qrcode"></div>
-            <p>UPI ID: gameday@ybl</p>
+            <p class="upi-id">gameday@ybl</p>
         </div>
 
         <button id="pay-button" class="payment-button">Complete Enrollment</button>
@@ -382,7 +385,7 @@
         <i class="fas fa-times-circle"></i>
         <h2>Payment Failed</h2>
         <p>Your payment could not be processed. Please try a different payment method.</p>
-        <button onclick="window.location.href='payment-academy-success.php?venue_id=<?php echo $ground['venue_id']; ?>'">Try Again</button>
+        <button id="retry-button">Try Again</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
@@ -392,6 +395,7 @@
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
+                ac_id: params.get('ac_id') || '',
                 name: params.get('name') || '',
                 location: params.get('location') || '',
                 amount: parseInt(params.get('amount')) || 0
@@ -424,13 +428,14 @@
         // Update page with enrollment details
         function updateEnrollmentDetails() {
             const params = getUrlParams();
-            const totalAmount = params.amount; // 3 months
+            const monthlyFee = params.amount;
+            const totalAmount = monthlyFee * 3; // 3 months
 
             document.getElementById('academy-name').textContent = params.name;
             document.getElementById('academy-location').textContent = params.location;
-            document.getElementById('monthly-fee').textContent = `₹${params.amount}`;
-            document.getElementById('total-amount').textContent = `₹${totalAmount}`;
-            document.getElementById('qrAmount').textContent = `₹${totalAmount}`;
+            document.getElementById('monthly-fee').textContent = `₹${monthlyFee.toLocaleString()}`;
+            document.getElementById('total-amount').textContent = `₹${totalAmount.toLocaleString()}`;
+            document.getElementById('qrAmount').textContent = `₹${totalAmount.toLocaleString()}`;
             generateQRCode(totalAmount);
         }
 
@@ -472,29 +477,66 @@
             });
         });
 
+        // Handle retry button click
+        document.getElementById('retry-button').addEventListener('click', function() {
+            closeErrorPopup();
+        });
+
         // Initialize payment
-        document.getElementById('pay-button').onclick = function() {
+        document.getElementById('pay-button').addEventListener('click', function() {
             const selectedMethod = document.querySelector('.payment-method.selected');
             if (!selectedMethod) {
                 alert('Please select a payment method');
                 return;
             }
             
+            const params = getUrlParams();
+            
             switch(selectedMethod.dataset.method) {
                 case 'upi':
+                    // Simulate UPI payment success
                     setTimeout(showSuccessPopup, 2000);
                     break;
                 case 'card':
-                    setTimeout(showSuccessPopup, 2000);
+                    // Initialize Razorpay for card payment
+                    const options = {
+                        key: 'YOUR_RAZORPAY_KEY', // Replace with actual key
+                        amount: params.amount * 3 * 100, // Amount in paise
+                        currency: 'INR',
+                        name: 'GAME DAY',
+                        description: 'Academy Enrollment Payment',
+                        handler: function() {
+                            showSuccessPopup();
+                        },
+                        prefill: {
+                            name: '',
+                            email: '',
+                            contact: ''
+                        },
+                        theme: {
+                            color: '#b9ff00'
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                console.log('Payment cancelled');
+                            }
+                        }
+                    };
+                    
+                    const rzp = new Razorpay(options);
+                    rzp.open();
                     break;
                 case 'netbanking':
+                    // Simulate error for netbanking (for demonstration)
                     setTimeout(showErrorPopup, 1500);
                     break;
             }
-        };
+        });
 
         // Initialize page
-        updateEnrollmentDetails();
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEnrollmentDetails();
+        });
     </script>
 </body>
-</html> 
+</html>

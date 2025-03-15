@@ -1,3 +1,9 @@
+<?php
+$email = $_GET['email'] ?? 'Unknown';
+$venue_id = $_GET['venue_id'] ?? 'Unknown';
+$booking_date = $_GET['date'] ?? 'Unknown';
+$booking_time = $_GET['time'] ?? 'Unknown';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,20 +108,20 @@
         
         <div class="booking-details">
             <p>
-                <span>Booking ID:</span>
-                <span id="booking-id"></span>
+                <span>Email ID:</span>
+                <span id="booking-id"><?php echo htmlspecialchars($email); ?></span>
             </p>
             <p>
                 <span>Venue:</span>
-                <span id="venue-name"></span>
+                <span id="venue-name"><?php echo htmlspecialchars($venue_id); ?></span>
             </p>
             <p>
-                <span>Date & Time:</span>
-                <span id="booking-datetime"></span>
+                <span>Booking Date:</span>
+                <span id="booking-datetime"><?php echo htmlspecialchars($booking_date); ?><</span>
             </p>
             <p>
-                <span>Amount Paid:</span>
-                <span id="amount-paid"></span>
+                <span>Booking <Time></Time>:</span>
+                <span id="amount-paid"><?php echo htmlspecialchars($booking_time); ?></span>
             </p>
         </div>
 
@@ -124,30 +130,5 @@
             <a href="#" class="button secondary-button" onclick="window.print()">Download Receipt</a>
         </div>
     </div>
-
-    <script>
-        // Function to get URL parameters
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                bookingId: params.get('bookingId') || 'BK' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                venue: params.get('venue') || localStorage.getItem('venueName') || 'Don Bosco Turf',
-                datetime: params.get('datetime') || localStorage.getItem('bookingDateTime') || 'May 15, 2024 | 18:00 - 19:00',
-                amount: params.get('amount') || localStorage.getItem('bookingAmount') || '1200'
-            };
-        }
-
-        // Update booking details
-        function updateBookingDetails() {
-            const params = getUrlParams();
-            document.getElementById('booking-id').textContent = params.bookingId;
-            document.getElementById('venue-name').textContent = params.venue;
-            document.getElementById('booking-datetime').textContent = params.datetime;
-            document.getElementById('amount-paid').textContent = `₹${params.amount}`;
-        }
-
-        // Initialize page
-        updateBookingDetails();
-    </script>
 </body>
 </html>

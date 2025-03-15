@@ -1,0 +1,240 @@
+:root {
+    --dark-green: #0a2e1a;
+    --medium-green: #004d3d;
+    --neon-green: #b9ff00;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+
+body {
+    background-color: #0a2e1a;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.payment-container {
+    background-color: rgba(0, 77, 61, 0.8);
+    width: 100%;
+    max-width: 700px;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(185, 255, 0, 0.1);
+    padding: 30px;
+}
+
+.back-button {
+    display: flex;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.back-button:hover {
+    transform: translateX(-5px);
+}
+
+.back-button i {
+    margin-right: 10px;
+}
+
+.summary-title {
+    color: var(--neon-green);
+    font-size: 28px;
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+.order-summary {
+    background-color: rgba(10, 46, 26, 0.6);
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.summary-label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.summary-value {
+    font-size: 16px;
+    text-align: right;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.total-label {
+    color: var(--neon-green);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.total-value {
+    color: var(--neon-green);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.payment-section-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.payment-option {
+    background-color: rgba(10, 46, 26, 0.6);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.payment-option:hover {
+    background-color: rgba(10, 46, 26, 0.8);
+    border-color: rgba(185, 255, 0, 0.3);
+    transform: translateY(-3px);
+}
+
+.payment-option.selected {
+    border: 1px solid var(--neon-green);
+    background-color: rgba(185, 255, 0, 0.1);
+}
+
+.payment-icon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+    font-size: 20px;
+}
+
+.payment-label {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.proceed-button {
+    background-color: var(--neon-green);
+    color: var(--dark-green);
+    border: none;
+    border-radius: 50px;
+    padding: 16px;
+    width: 100%;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.proceed-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(185, 255, 0, 0.3);
+}
+
+/* QR Code Section */
+.payment-details {
+    display: none;
+    margin-top: 20px;
+}
+
+.qr-section {
+    background-color: rgba(10, 46, 26, 0.6);
+    border-radius: 10px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.qr-code {
+    background-color: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.qr-code img {
+    width: 100%;
+    height: 100%;
+}
+
+.payment-instructions {
+    text-align: center;
+    margin-top: 15px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 350px;
+}
+
+.payment-instructions h3 {
+    color: var(--neon-green);
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.payment-upi-id {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    background-color: rgba(185, 255, 0, 0.1);
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin: 10px 0;
+    display: inline-block;
+    border: 1px dashed rgba(185, 255, 0, 0.5);
+}
+
+.card-form, .banking-form {
+    display: none;
+}

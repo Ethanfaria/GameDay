@@ -21,6 +21,9 @@ if(isset($_POST["submit"])){
     $number = trim($_POST["number"]);
     $password = $_POST["password"];
     $passwordRepeat = $_POST["repeat_password"];
+    
+    // Set default user type to "normal"
+    $user_type = "normal";
 
     // Validate fullname (username)
     if (empty($fullname)) {
@@ -82,10 +85,10 @@ if(isset($_POST["submit"])){
         $phone_int = (int)$number;
         
         // Prepare and bind parameters to prevent SQL injection
-        // Use the correct table name (user) and column names (user_name, user_ph, email, password)
-        $sql = "INSERT INTO user (user_name, user_ph, email, password) VALUES (?, ?, ?, ?)";
+        // Include user_type in the INSERT statement
+        $sql = "INSERT INTO user (user_name, user_ph, email, password, user_type) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("siss", $fullname, $phone_int, $email, $passwordHash);
+        $stmt->bind_param("sisss", $fullname, $phone_int, $email, $passwordHash, $user_type);
         
         // Execute the query
         if ($stmt->execute()) {
@@ -116,26 +119,33 @@ $conn->close();
     <link rel="stylesheet" href="CSS\main.css">
     <link rel="stylesheet" href="CSS\login.css">
     <style>
-        .error {
-            color: #ff0000;
-            background-color: #ffe6e6;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #ff9999;
+        .requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+            margin-bottom: 10px;
+            display: none;
         }
         
-        .success {
-            color: #006600;
-            background-color: #e6ffe6;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #99ff99;
+        .requirements.show {
+            display: block;
         }
         
-        .input-error {
-            border: 1px solid #ff0000 !important;
+        .requirements ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .requirements li {
+            margin-bottom: 2px;
+        }
+        
+        .valid {
+            color: green;
+        }
+        
+        .invalid {
+            color: red;
         }
     </style>
 </head>
@@ -166,41 +176,73 @@ $conn->close();
                 <div class="form-group">
                     <label for="Username">Username</label>
                     <div class="input-with-icon">
-                        <i class="fas fa-user"></i>
+                        <i class="fas fa-user left-icon"></i>
                         <input type="text" id="Username" class="form-input" name="fullname" 
                                placeholder="Enter your username" value="<?php echo isset($fullname) ? htmlspecialchars($fullname) : ''; ?>" required>
+                    </div>
+                    <div id="usernameRequirements" class="requirements">
+                        <ul>
+                            <li id="usernameLength">At least 3 characters long</li>
+                            <li id="usernameChars">Only letters, numbers, and underscores</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="Email">Email</label>
                     <div class="input-with-icon">
-                        <i class="fa-solid fa-envelope"></i>
+                        <i class="fa-solid fa-envelope left-icon"></i>
                         <input type="email" id="Email" class="form-input" name="email" 
                                placeholder="Enter your email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
+                    </div>
+                    <div id="emailRequirements" class="requirements">
+                        <ul>
+                            <li id="emailFormat">Valid email format (example@domain.com)</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
                     <div class="input-with-icon">
-                        <i class="fa-solid fa-phone"></i>
+                        <i class="fa-solid fa-phone left-icon"></i>
                         <input type="text" id="phone" class="form-input" name="number" 
                                placeholder="Enter your phone number (10 digits)" value="<?php echo isset($number) ? htmlspecialchars($number) : ''; ?>" required>
+                    </div>
+                    <div id="phoneRequirements" class="requirements">
+                        <ul>
+                            <li id="phoneDigits">Must be exactly 10 digits</li>
+                            <li id="phoneNumbers">Must contain only numbers</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="Password">Password</label>
                     <div class="input-with-icon">
-                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-lock left-icon"></i>
                         <input type="password" id="Password" class="form-input" name="password" 
                                placeholder="Enter your password (min 8 characters)" required>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('Password')"></i>
+                    </div>
+                    <div id="passwordRequirements" class="requirements">
+                        <ul>
+                            <li id="passwordLength">At least 8 characters long</li>
+                            <li id="passwordUpper">At least one uppercase letter</li>
+                            <li id="passwordLower">At least one lowercase letter</li>
+                            <li id="passwordNumber">At least one number</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="Repeat-Password">Repeat Password</label>
                     <div class="input-with-icon">
-                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-lock left-icon"></i>
                         <input type="password" id="Repeat-Password" class="form-input" name="repeat_password" 
                                placeholder="Enter your password again" required>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('Repeat-Password')"></i>
+                    </div>
+                    <div id="repeatPasswordRequirements" class="requirements">
+                        <ul>
+                            <li id="passwordMatch">Passwords must match</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -225,57 +267,317 @@ $conn->close();
 
     <!-- Client-side validation script -->
     <script>
-        document.getElementById('SignupForm').addEventListener('submit', function(event) {
-            let hasErrors = false;
-            const username = document.getElementById('Username');
-            const email = document.getElementById('Email');
-            const phone = document.getElementById('phone');
-            const password = document.getElementById('Password');
-            const repeatPassword = document.getElementById('Repeat-Password');
+        function togglePasswordVisibility(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = event.currentTarget;
             
-            // Reset previous error styling
-            document.querySelectorAll('.form-input').forEach(input => {
-                input.classList.remove('input-error');
-            });
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            }
+        }
+
+        // Show validation requirements on input focus
+        document.getElementById('Username').addEventListener('focus', function() {
+            document.getElementById('usernameRequirements').classList.add('show');
+        });
+        
+        document.getElementById('Email').addEventListener('focus', function() {
+            document.getElementById('emailRequirements').classList.add('show');
+        });
+        
+        document.getElementById('phone').addEventListener('focus', function() {
+            document.getElementById('phoneRequirements').classList.add('show');
+        });
+        
+        document.getElementById('Password').addEventListener('focus', function() {
+            document.getElementById('passwordRequirements').classList.add('show');
+        });
+        
+        document.getElementById('Repeat-Password').addEventListener('focus', function() {
+            document.getElementById('repeatPasswordRequirements').classList.add('show');
+        });
+        
+        // Live validation feedback
+        document.getElementById('Username').addEventListener('input', validateUsername);
+        document.getElementById('Email').addEventListener('input', validateEmail);
+        document.getElementById('phone').addEventListener('input', validatePhone);
+        document.getElementById('Password').addEventListener('input', validatePassword);
+        document.getElementById('Repeat-Password').addEventListener('input', validatePasswordMatch);
+        
+        function validateUsername() {
+            const username = document.getElementById('Username').value;
+            const lengthRequirement = document.getElementById('usernameLength');
+            const charsRequirement = document.getElementById('usernameChars');
             
-            // Username validation
-            if (username.value.trim().length < 3) {
-                username.classList.add('input-error');
-                hasErrors = true;
+            if (username.length >= 3) {
+                lengthRequirement.classList.add('valid');
+                lengthRequirement.classList.remove('invalid');
+            } else {
+                lengthRequirement.classList.add('invalid');
+                lengthRequirement.classList.remove('valid');
             }
             
-            // Email validation
+            if (/^[a-zA-Z0-9_]+$/.test(username)) {
+                charsRequirement.classList.add('valid');
+                charsRequirement.classList.remove('invalid');
+            } else {
+                charsRequirement.classList.add('invalid');
+                charsRequirement.classList.remove('valid');
+            }
+        }
+        
+        function validateEmail() {
+            const email = document.getElementById('Email').value;
+            const emailFormat = document.getElementById('emailFormat');
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email.value)) {
-                email.classList.add('input-error');
-                hasErrors = true;
+            
+            if (emailPattern.test(email)) {
+                emailFormat.classList.add('valid');
+                emailFormat.classList.remove('invalid');
+            } else {
+                emailFormat.classList.add('invalid');
+                emailFormat.classList.remove('valid');
+            }
+        }
+        
+        function validatePhone() {
+            const phone = document.getElementById('phone').value;
+            const digitsRequirement = document.getElementById('phoneDigits');
+            const numbersRequirement = document.getElementById('phoneNumbers');
+            
+            if (phone.length === 10) {
+                digitsRequirement.classList.add('valid');
+                digitsRequirement.classList.remove('invalid');
+            } else {
+                digitsRequirement.classList.add('invalid');
+                digitsRequirement.classList.remove('valid');
             }
             
-            // Phone validation
-            const phonePattern = /^[0-9]{10}$/;
-            if (!phonePattern.test(phone.value)) {
-                phone.classList.add('input-error');
-                hasErrors = true;
+            if (/^[0-9]+$/.test(phone)) {
+                numbersRequirement.classList.add('valid');
+                numbersRequirement.classList.remove('invalid');
+            } else {
+                numbersRequirement.classList.add('invalid');
+                numbersRequirement.classList.remove('valid');
+            }
+        }
+        
+        function validatePassword() {
+            const password = document.getElementById('Password').value;
+            const lengthRequirement = document.getElementById('passwordLength');
+            const upperRequirement = document.getElementById('passwordUpper');
+            const lowerRequirement = document.getElementById('passwordLower');
+            const numberRequirement = document.getElementById('passwordNumber');
+            
+            if (password.length >= 8) {
+                lengthRequirement.classList.add('valid');
+                lengthRequirement.classList.remove('invalid');
+            } else {
+                lengthRequirement.classList.add('invalid');
+                lengthRequirement.classList.remove('valid');
             }
             
-            // Password validation
-            if (password.value.length < 8) {
-                password.classList.add('input-error');
-                hasErrors = true;
+            if (/[A-Z]/.test(password)) {
+                upperRequirement.classList.add('valid');
+                upperRequirement.classList.remove('invalid');
+            } else {
+                upperRequirement.classList.add('invalid');
+                upperRequirement.classList.remove('valid');
             }
             
-            // Password match validation
-            if (password.value !== repeatPassword.value) {
-                password.classList.add('input-error');
-                repeatPassword.classList.add('input-error');
-                hasErrors = true;
+            if (/[a-z]/.test(password)) {
+                lowerRequirement.classList.add('valid');
+                lowerRequirement.classList.remove('invalid');
+            } else {
+                lowerRequirement.classList.add('invalid');
+                lowerRequirement.classList.remove('valid');
             }
             
-            // If client-side validation fails, prevent form submission
-            if (hasErrors) {
-                event.preventDefault();
+            if (/[0-9]/.test(password)) {
+                numberRequirement.classList.add('valid');
+                numberRequirement.classList.remove('invalid');
+            } else {
+                numberRequirement.classList.add('invalid');
+                numberRequirement.classList.remove('valid');
+            }
+            
+            // If repeat password field has value, check match
+            const repeatPassword = document.getElementById('Repeat-Password').value;
+            if (repeatPassword) {
+                validatePasswordMatch();
+            }
+        }
+
+        function validatePasswordMatch() {
+            const password = document.getElementById('Password').value;
+            const repeatPassword = document.getElementById('Repeat-Password').value;
+            const matchRequirement = document.getElementById('passwordMatch');
+            
+            if (password === repeatPassword) {
+                matchRequirement.classList.add('valid');
+                matchRequirement.classList.remove('invalid');
+            } else {
+                matchRequirement.classList.add('invalid');
+                matchRequirement.classList.remove('valid');
+            }
+        }
+
+        // Form submission validation
+        document.getElementById('SignupForm').addEventListener('submit', function(event) {
+            // Validate all fields before submission
+            validateUsername();
+            validateEmail();
+            validatePhone();
+            validatePassword();
+            validatePasswordMatch();
+            
+            // Check if any requirements are invalid
+            const invalidRequirements = document.querySelectorAll('.requirements .invalid');
+            if (invalidRequirements.length > 0) {
+                event.preventDefault(); // Prevent form submission
+                alert('Please correct the form errors before submitting.');
             }
         });
+        function validatePassword() {
+    const password = document.getElementById('Password').value;
+    const lengthRequirement = document.getElementById('passwordLength');
+    const upperRequirement = document.getElementById('passwordUpper');
+    const lowerRequirement = document.getElementById('passwordLower');
+    const numberRequirement = document.getElementById('passwordNumber');
+    
+    if (password.length >= 8) {
+        lengthRequirement.classList.add('valid');
+        lengthRequirement.classList.remove('invalid');
+    } else {
+        lengthRequirement.classList.add('invalid');
+        lengthRequirement.classList.remove('valid');
+    }
+    
+    if (/[A-Z]/.test(password)) {
+        upperRequirement.classList.add('valid');
+        upperRequirement.classList.remove('invalid');
+    } else {
+        upperRequirement.classList.add('invalid');
+        upperRequirement.classList.remove('valid');
+    }
+    
+    if (/[a-z]/.test(password)) {
+        lowerRequirement.classList.add('valid');
+        lowerRequirement.classList.remove('invalid');
+    } else {
+        lowerRequirement.classList.add('invalid');
+        lowerRequirement.classList.remove('valid');
+    }
+    
+    if (/[0-9]/.test(password)) {
+        numberRequirement.classList.add('valid');
+        numberRequirement.classList.remove('invalid');
+    } else {
+        numberRequirement.classList.add('invalid');
+        numberRequirement.classList.remove('valid');
+    }
+    
+    // If repeat password field has value, check match
+    const repeatPassword = document.getElementById('Repeat-Password').value;
+    if (repeatPassword) {
+        validatePasswordMatch();
+    }
+}
+
+function validatePasswordMatch() {
+    const password = document.getElementById('Password').value;
+    const repeatPassword = document.getElementById('Repeat-Password').value;
+    const matchRequirement = document.getElementById('passwordMatch');
+    
+    if (password === repeatPassword) {
+        matchRequirement.classList.add('valid');
+        matchRequirement.classList.remove('invalid');
+    } else {
+        matchRequirement.classList.add('invalid');
+        matchRequirement.classList.remove('valid');
+    }
+}
+
+// Create function to add error messages at the top
+function displayErrorsAtTop(errors) {
+    // Clear previous error messages
+    const existingErrors = document.querySelectorAll('.error');
+    existingErrors.forEach(error => error.remove());
+    
+    // Get login-header to insert errors after it
+    const loginHeader = document.querySelector('.login-header');
+    
+    // Create and insert error messages
+    errors.forEach(errorMsg => {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = errorMsg;
+        loginHeader.insertAdjacentElement('afterend', errorDiv);
+    });
+    
+    // Scroll to top to show errors
+    window.scrollTo(0, 0);
+}
+
+// Form submission validation
+document.getElementById('SignupForm').addEventListener('submit', function(event) {
+    // Array to collect error messages
+    const errorMessages = [];
+    
+    // Validate username
+    const username = document.getElementById('Username').value;
+    if (username.length < 3) {
+        errorMessages.push("Username must be at least 3 characters long");
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        errorMessages.push("Username can only contain letters, numbers, and underscores");
+    }
+    
+    // Validate email
+    const email = document.getElementById('Email').value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorMessages.push("Email is not valid");
+    }
+    
+    // Validate phone
+    const phone = document.getElementById('phone').value;
+    if (!/^[0-9]{10}$/.test(phone)) {
+        errorMessages.push("Phone number must be exactly 10 digits");
+    }
+    
+    // Validate password
+    const password = document.getElementById('Password').value;
+    if (password.length < 8) {
+        errorMessages.push("Password must be at least 8 characters long");
+    }
+    if (!/[A-Z]/.test(password)) {
+        errorMessages.push("Password must contain at least one uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+        errorMessages.push("Password must contain at least one lowercase letter");
+    }
+    if (!/[0-9]/.test(password)) {
+        errorMessages.push("Password must contain at least one number");
+    }
+    
+    // Validate password match
+    const repeatPassword = document.getElementById('Repeat-Password').value;
+    if (password !== repeatPassword) {
+        errorMessages.push("Passwords do not match");
+    }
+    
+    // If there are errors, prevent form submission and display them
+    if (errorMessages.length > 0) {
+        event.preventDefault(); // Prevent form submission
+        displayErrorsAtTop(errorMessages);
+    }
+});
     </script>
 </body>
 </html>

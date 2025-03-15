@@ -35,42 +35,26 @@ if(isset($_POST["submit"])){
     
     // If no validation errors, proceed with login
     if(count($errors) == 0){
-        // Prepare SQL statement to fetch user by email
-        $sql = "SELECT * FROM user WHERE email = ?";
+        // Prepare SQL statement to fetch admin by email
+        $sql = "SELECT * FROM admin WHERE email = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
         
-        // Check if user exists
+        // Check if admin exists
         if($result->num_rows == 1){
-            $user = $result->fetch_assoc();
+            $admin = $result->fetch_assoc();
             
             // Verify password
-            if(password_verify($password, $user["password"])){
-                // Password is correct, create session
-                $_SESSION["user_email"] = $email; // Email is now the primary identifier
-                $_SESSION["username"] = $user["user_name"];
-                $_SESSION["user_type"] = $user["user_type"];
+            if(password_verify($password, $admin["password"])){
+                // Password is correct, create admin session
+                $_SESSION["admin_id"] = $admin["admin_id"];
+                $_SESSION["admin_name"] = $admin["name"];
+                $_SESSION["admin_email"] = $email;
                 
-                // Redirect based on user type
-                switch($user["user_type"]) {
-                    case "admin":
-                        header("Location: admin-dashboard.php");
-                        break;
-                    case "v_owner":
-                        header("Location: venue-dashboard.php");
-                        break;
-                    case "a_owner":
-                        header("Location: academy-dashboard.php");
-                        break;
-                    case "v_a_owner":
-                        // For users who own both venue and academy, redirect to a selection page
-                        header("Location: owner-selection.php");
-                        break;
-                    default: // normal users
-                        header("Location: homepage.php");
-                }
+                // Redirect to admin dashboard
+                header("Location: admin-dashboard.php");
                 exit();
             } else {
                 array_push($errors, "Invalid email or password");
@@ -91,24 +75,63 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAME DAY - Login</title>
+    <title>GAME DAY - Admin Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="CSS\main.css">
     <link rel="stylesheet" href="CSS\login.css">
+    <style>
+        .admin-login-card {
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 20px rgba(185, 255, 0, 0.3);
+        }
+        
+        .admin-icon {
+            color: var(--neon-green);
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .admin-title {
+            color: var(--neon-green);
+        }
+        
+        .admin-warning {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .back-to-main {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--neon-green);
+            text-decoration: none;
+        }
+        
+        .back-to-main:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<?php include 'header.php'; ?>
+    <nav class="navbar">
+        <div class="logo">GAME DAY</div>
+    </nav>
     
-    <!-- Login Container -->
+    <!-- Admin Login Container -->
     <div class="login-container">
-        <div class="login-card">
+        <div class="login-card admin-login-card">
             <div class="login-header">
-                <i class="fas fa-user-shield user-icon"></i>
-                <div class="login-title">WELCOME BACK</div>
-                <div class="login-subtitle">Login to your account.</div>
+                <i class="fas fa-user-shield admin-icon"></i>
+                <div class="login-title admin-title">ADMIN LOGIN</div>
+                <div class="login-subtitle">Access administrator panel</div>
             </div>
 
             <!-- Display errors if any -->
@@ -118,14 +141,14 @@ $conn->close();
                 <?php endforeach; ?>
             <?php endif; ?>
 
-            <form id="LoginForm" method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+            <form id="AdminLoginForm" method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                 
                 <div class="form-group">
-                    <label for="Email">Email</label>
+                    <label for="Email">Admin Email</label>
                     <div class="input-with-icon">
                         <i class="fa-solid fa-envelope left-icon"></i>
                         <input type="email" id="Email" name="email" class="form-input" 
-                               placeholder="Enter your email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
+                               placeholder="Enter admin email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
                     </div>
                 </div>
 
@@ -134,22 +157,21 @@ $conn->close();
                     <div class="input-with-icon">
                         <i class="fas fa-lock lock-icon left-icon"></i>
                         <input type="password" id="Password" name="password" class="form-input" 
-                               placeholder="Enter your password" required>
+                               placeholder="Enter admin password" required>
                         <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('Password')"></i>
                     </div>
                 </div>
 
-                <div class="remember-me">
-                    <input type="checkbox" id="rememberMe" name="remember">
-                    <label for="rememberMe">Remember me</label>
-                </div>
-
-                <button type="submit" name="submit" class="login-button">Login to GameDay</button>
+                <button type="submit" name="submit" class="login-button">Login to Admin Panel</button>
             </form>
 
-            <div class="forgot-password">
-                <a href="signup.php">Don't have an Account? Sign Up</a>
+            <div class="admin-warning">
+                <i class="fas fa-exclamation-triangle"></i> This area is restricted to authorized personnel only.
             </div>
+            
+            <a href="login.php" class="back-to-main">
+                <i class="fas fa-arrow-left"></i> Back to User Login
+            </a>
         </div>
     </div>
 
@@ -175,7 +197,7 @@ $conn->close();
             }
         }
 
-        document.getElementById('LoginForm').addEventListener('submit', function(event) {
+        document.getElementById('AdminLoginForm').addEventListener('submit', function(event) {
             let hasErrors = false;
             const email = document.getElementById('Email');
             const password = document.getElementById('Password');

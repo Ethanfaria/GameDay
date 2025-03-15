@@ -1,3 +1,81 @@
+<?php
+session_start();
+include 'db.php'; // Ensure this file contains the database connection
+
+if ($stmt->execute()) {
+    $_SESSION['booking_successful'] = true;
+    header("Location: payment-ground-success.php?email=$email&venue_id=$venue_id&date=$booking_date&time=$booking_time");
+    exit();
+} else {
+    // Log the error
+    error_log("Database insertion failed: " . $stmt->error);
+    echo "<script>alert('Booking failed: " . $stmt->error . "');</script>";
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Retrieve data from session
+    $email = $_SESSION['user_email'];
+    $booking_date = date('Y-m-d', strtotime($_SESSION['booking_date'])); // Convert to MySQL format
+    $booking_time = (string)$_SESSION['booking_time']; // Ensure this is a string
+    $venue_name = $_SESSION['venue_name'];
+    $price = $_SESSION['price'];
+    $venue_id = $_SESSION['venue_id'];
+
+    // Check if required session variables are set
+    if (!isset($email, $booking_date, $booking_time, $venue_id)) {
+        die("Error: Missing required booking details.");
+    }
+
+    // Check if the user exists
+    $checkUser = $conn->prepare("SELECT email FROM user WHERE email = ?");
+    $checkUser->bind_param("s", $email);
+    $checkUser->execute();
+    $result = $checkUser->get_result();
+
+    if ($result->num_rows === 0) {
+        die("Error: The user email does not exist in the database.");
+    }
+
+    // Check if booking already exists
+    $checkBooking = $conn->prepare("SELECT bk_dur FROM book WHERE email = ? AND venue_id = ? AND bk_date = ?");
+    $checkBooking->bind_param("sss", $email, $venue_id, $booking_date);
+    $checkBooking->execute();
+    $bookingResult = $checkBooking->get_result();
+    
+    // Fetch all booked slots
+    $booked_slots = [];
+    while ($row = $bookingResult->fetch_assoc()) {
+        $booked_slots[] = $row['bk_dur']; // Store booked time slots
+    }
+    
+    if (in_array($booking_time, $booked_slots)) {
+        echo "<script>alert('You have already booked this slot.');</script>";
+    } else {
+        // Insert booking into the database
+        $sql = "INSERT INTO book (email, bk_date, bk_dur, venue_id) VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if ($stmt === false) {
+            die("Error preparing statement: " . $conn->error);
+        }
+
+        $stmt->bind_param("ssss", $email, $booking_date, $booking_time, $venue_id);
+
+        if ($stmt->execute()) {
+
+            $_SESSION['booking_successful'] = true;
+
+            header("Location: payment-ground-success.php?email=$email&venue_id=$venue_id&date=$booking_date&time=$booking_time");
+            exit();
+        }    
+
+        $stmt->close();
+    }
+    $checkBooking->close();
+    $checkUser->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +89,33 @@
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
+
+<?php 
+    // Try to get venue_id from session first, then from GET parameters as fallback
+    $venue_id = isset($_SESSION['venue_id']) ? $_SESSION['venue_id'] : 
+                (isset($_GET['venue_id']) ? $_GET['venue_id'] : '');
+    
+    $sql = "SELECT * FROM venue WHERE venue_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $venue_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $ground = $result->fetch_assoc();
+        
+        // Retrieve booking details from session or fall back to available data
+        $venue_name = isset($_SESSION['venue_name']) ? $_SESSION['venue_name'] : $ground['venue_nm'];
+        $booking_date = isset($_SESSION['booking_date']) ? $_SESSION['booking_date'] : 
+                        (isset($_GET['date']) ? $_GET['date'] : 'Date Not Available');
+        $booking_time = isset($_SESSION['booking_time']) ? $_SESSION['booking_time'] : 
+                        (isset($_GET['time']) ? $_GET['time'] : 'Time Not Available');
+        $price = isset($_SESSION['price']) ? $_SESSION['price'] : $ground['price'];
+    } else {
+        echo "<p>Ground not found.</p>";
+        exit();
+    }
+?>
     <div class="payment-container">
         <a href="javascript:history.back()" class="back-button">
             <i class="fas fa-arrow-left"></i> Back
@@ -21,15 +126,15 @@
             <div class="order-details">
                 <p>
                     <span id="booking-type">Turf Booking</span>
-                    <span id="booking-name">Don Bosco Turf</span>
+                    <span id="booking-name"><?php echo htmlspecialchars($venue_name); ?></span>
                 </p>
                 <p>
                     <span>Date & Time</span>
-                    <span id="booking-datetime">May 15, 2024 | 18:00 - 19:00</span>
+                    <span id="booking-datetime"><?php echo htmlspecialchars($booking_date . ' | ' . $booking_time); ?></span>
                 </p>
                 <p class="total-amount">
                     <span>Total Amount</span>
-                    <span id="total-amount">₹1200</span>
+                    <span id="total-amount">₹<?php echo htmlspecialchars($price); ?></span>
                 </p>
             </div>
         </div>
@@ -52,13 +157,15 @@
 
         <div class="qr-section" id="qrSection">
             <h3>Scan QR Code to Pay</h3>
-            <p class="qr-amount" id="qrAmount">₹1200</p>
+            <p class="qr-amount" id="qrAmount">₹<?php echo htmlspecialchars($price); ?></p>
             <div id="qrcode"></div>
             <p class="upi-id">UPI ID: gameday@ybl</p>
             <p>Or click below to pay using other UPI apps</p>
         </div>
 
-        <button id="pay-button" class="payment-button" onclick="window.location.href='payment-ground-success.php?venue_id=<?php echo $ground['venue_id']; ?>'">Proceed to Pay</button>
+        <form method="POST" action="">
+            <button type="submit" id="pay-button" class="payment-button">Proceed to Pay</button>
+        </form>
     </div>
 
     <div class="success-popup" id="successPopup">
@@ -71,21 +178,25 @@
         <i class="fas fa-times-circle"></i>
         <h2>Payment Failed</h2>
         <p>Your payment could not be processed. Please try a different payment method.</p>
-        <button>Try Again</button>
+        <button onclick="closeErrorPopup()">Try Again</button>
     </div>
 
     <div class="overlay" id="overlay"></div>
 
     <script>
-        // Function to get URL parameters
+
+        // Get URL parameters
         function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                type: params.get('type') || 'turf',
-                amount: parseInt(params.get('amount')) || 1200,
-                name: params.get('name') || 'Don Bosco Turf',
-                datetime: params.get('datetime') || 'May 15, 2024 | 18:00 - 19:00'
-            };
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const pairs = queryString.split('&');
+            
+            for (const pair of pairs) {
+                const [key, value] = pair.split('=');
+                params[key] = decodeURIComponent(value || '');
+            }
+            
+            return params;
         }
 
         // Generate QR Code
@@ -114,25 +225,13 @@
             });
         }
 
-        // Update page with booking details
-        function updateBookingDetails() {
-            const params = getUrlParams();
-            document.getElementById('booking-type').textContent = 
-                params.type === 'academy' ? 'Academy Enrollment' : 'Turf Booking';
-            document.getElementById('booking-name').textContent = params.name;
-            document.getElementById('booking-datetime').textContent = params.datetime;
-            document.getElementById('total-amount').textContent = `₹${params.amount}`;
-            document.getElementById('qrAmount').textContent = `₹${params.amount}`;
-            generateQRCode(params.amount);
-        }
-
         // Show success popup
         function showSuccessPopup() {
             document.getElementById('successPopup').classList.add('show');
             document.getElementById('overlay').classList.add('show');
             
             setTimeout(() => {
-                window.location.href = 'payment-ground-success.php';
+                window.location.href = 'payment-ground-success.php?venue_id=<?php echo htmlspecialchars($venue_id); ?>&booking_success=true';
             }, 2000);
         }
 
@@ -146,6 +245,16 @@
         function closeErrorPopup() {
             document.getElementById('errorPopup').classList.remove('show');
             document.getElementById('overlay').classList.remove('show');
+        }
+
+         // Update booking details
+        function updateBookingDetails() {
+            // No need to update anything as we're using PHP to set these values
+            // This function is now just a placeholder
+            
+            // Generate QR code on page load
+            const amount = <?php echo json_encode($price); ?>;
+            generateQRCode(amount);
         }
 
         // Handle payment method selection
@@ -177,7 +286,7 @@
                 amount: params.amount * 100,
                 currency: 'INR',
                 name: 'GAME DAY',
-                description: `Payment for ${params.type === 'academy' ? 'Academy Enrollment' : 'Turf Booking'}`,
+                description: `Payment for Turf Booking`,
                 image: 'your-logo-url.png',
                 handler: function(response) {
                     showSuccessPopup();
@@ -194,7 +303,9 @@
 
             const rzp = new Razorpay(options);
             
-            document.getElementById('pay-button').onclick = function() {
+            document.getElementById('pay-button').onclick = function(e) {
+                e.preventDefault();
+
                 const selectedMethod = document.querySelector('.payment-method.selected');
                 if (!selectedMethod) {
                     alert('Please select a payment method');
@@ -212,6 +323,7 @@
                         setTimeout(showErrorPopup, 1500);
                         break;
                 }
+                return false;
             };
         }
 

@@ -55,7 +55,7 @@
     position: relative;
 }
 
-.input-with-icon i {
+.left-icon {
     position: absolute;
     left: 15px;
     top: 50%;
@@ -63,9 +63,41 @@
     color: var(--dark-gray);
 }
 
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    z-index: 10;
+}
+
+.error {
+    color: #ff0000;
+    background-color: #ffe6e6;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ff9999;
+}
+
+.success {
+    color: #006600;
+    background-color: #e6ffe6;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #99ff99;
+}
+
+.input-error {
+    border: 1px solid #ff0000 !important;
+}
+
 .form-input {
     width: 100%;
-    padding: 15px 15px 15px 45px;
+    padding: 15px 50px 15px 45px;
     border: none;
     border-radius: 12px;
     background-color: rgba(255, 255, 255, 0.9);

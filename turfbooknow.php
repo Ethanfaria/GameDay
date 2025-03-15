@@ -1,3 +1,23 @@
+<?php
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Store date, time, and venue details in session
+    $_SESSION['booking_date'] = $_POST['selectedDate'];
+    $_SESSION['booking_time'] = $_POST['selectedTime'];
+    $_SESSION['venue_name'] = $_POST['venueName'];
+    $_SESSION['price'] = $_POST['price'];
+    $_SESSION['venue_id'] = $_POST['venue_id'];
+    
+    // For debugging
+    echo "Setting venue_id in session: " . $_POST['venue_id']; 
+    
+    // Redirect to the payment page
+    header('Location: payment-ground.php');
+    exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +30,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="CSS\turfbooknow.css">
     <link rel="stylesheet" href="CSS\main.css">
+    <style>
+        /* Add this CSS for booked time slots */
+        .time-slot.booked {
+            background-color: #ffdddd; /* Light red background */
+            border-color: #ff0000; /* Red border */
+            cursor: not-allowed; /* Change cursor to indicate not clickable */
+        }
+
+        .time-slot.booked .booking-status {
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .time-slot.selected {
+            background-color: #d4ffcc; /* Light green when selected */
+            border-color: #00cc00;
+        }
+    </style>
 </head>
 <body>
 <?php 
@@ -36,7 +74,7 @@ if ($result->num_rows > 0) {
     exit();
 }
 
-// Fetch booked slots for the venue
+// Fetch booked slots and venue availability
 $booked_slots = array();
 $sql = "SELECT bk_date, bk_dur FROM book WHERE venue_id = ?";
 $stmt = $conn->prepare($sql);
@@ -53,21 +91,25 @@ while ($booking = $bookings_result->fetch_assoc()) {
     $booked_slots[$date][] = $duration;
 }
 
-// Pass booked slots to JavaScript
-echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) . ";</script>";
+// Pass booked slots and venue availability to JavaScript
+echo "<script>
+    const bookedSlots = " . json_encode($booked_slots) . ";
+    const venueAvailability = " . $ground['availability'] . ";
+</script>";
 ?>
 
     <!-- Booking Container -->
     <div class="booking-container">
         <!-- Turf Details -->
         <div class="turf-details">
-            <img src="/api/placeholder/600/400" alt="Don Bosco Turf" class="turf-image">
+            <img src="https://content.jdmagicbox.com/comp/goa/q3/0832px832.x832.230913204513.f7q3/catalogue/kicks-n-flicks-goa-mini-football-fields-9soy7roh71.jpg" alt="Don Bosco Turf" class="turf-image">
             <div class="turf-info">
                 <h2><?php echo htmlspecialchars($ground['venue_nm']); ?></h2>
                 <p>Location:<?php echo htmlspecialchars($ground['location']); ?></p>
                 <div class="rating">
                     <i class="fas fa-star" style="color: var(--neon-green);"></i>
                     <span>4.9 (120 Reviews)</span>
+                    <button id="showReviewsBtn" class="review-link">(120 Reviews)</button>
                 </div>
                 <p class="description mt-3">Premium futsal ground with high-quality artificial turf. Perfect for professional and amateur players.</p>
                 <div class="amenities mt-3">
@@ -99,20 +141,154 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | 
         </div>
 
         <!-- Time Slots -->
-        <div class="time-slots" id="timeSlots">
-            <!-- Slots will be dynamically added -->
+        <div class="time-slots-container">
+            <button class="time-slots-nav-btn prev" onclick="scrollTimeSlots('prev')">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="time-slots" id="timeSlots">
+                <!-- Slots will be dynamically added -->
+            </div>
+            <button class="time-slots-nav-btn next" onclick="scrollTimeSlots('next')">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
 
         <!-- Booking Summary -->
-        <div class="booking-summary">
-            <h3>Booking Summary</h3>
-            <div id="bookingSummary">
-                <p>Select a date and time slot</p>
+        <form id="bookingForm" action="turfbooknow.php" method="POST">
+            <div class="booking-summary">
+                <h3>Booking Summary</h3>
+                <div id="bookingSummary">
+                    <p>Select a date and time slot</p>
+                </div>
+                <input type="hidden" name="selectedDate" id="selectedDate">
+                <input type="hidden" name="selectedTime" id="selectedTime">
+                <input type="hidden" name="venueName" id="venueName">
+                <input type="hidden" name="price" id="price">
+                <input type="hidden" name="venue_id" value="<?php echo htmlspecialchars($venue_id); ?>">
+                <button type="submit" class="confirm-button" id="confirmBooking" >Next</button>
             </div>
-            <button class="confirm-button" id="confirmBooking" onclick="window.location.href='payment-ground.php?venue_id=<?php echo $ground['venue_id']; ?>'">Confirm Booking</button>
+        </form>
+    
+        <div id="reviewsPopup" class="reviews-popup">
+            <div class="reviews-popup-content">
+                <span class="close-popup">&times;</span>
+                <h2>Reviews for <?php echo htmlspecialchars($ground['venue_nm']); ?></h2>
+                <div class="overall-rating">
+                    <div class="rating-number">4.9</div>
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <div class="total-reviews">Based on 120 reviews</div>
+                </div>
+                
+                <div class="reviews-list">
+                    <!-- Sample reviews - in a real implementation, you would fetch these from the database -->
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-name">John D.</div>
+                            <div class="review-date">March 10, 2025</div>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="review-content">
+                            Amazing turf! Perfect condition and the staff was very friendly. Will definitely book again.
+                        </div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-name">Sarah M.</div>
+                            <div class="review-date">March 5, 2025</div>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="review-content">
+                            One of the best grounds I've played on. Great turf quality and excellent facilities.
+                        </div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-name">Mike P.</div>
+                            <div class="review-date">February 28, 2025</div>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="review-content">
+                            Very good quality turf and well-maintained. The only downside was the limited parking space.
+                        </div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-name">Rachel T.</div>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="review-content">
+                            This is our team's favorite place to practice! Great lighting for evening games and the turf is always in excellent condition.
+                        </div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-name">Alex W.</div>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                        <div class="review-content">
+                            Clean facilities and good quality turf. Changing rooms are spacious and well-maintained. Would recommend!
+                        </div>
+                    </div>
+                    
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-name">David L.</div>
+                            <div class="review-rating">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="review-content">
+                            Best turf in the area by far! The staff is super helpful and the booking process is very straightforward.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
     <script>
         // Add this new function for date slider navigation
         function scrollDates(direction) {
@@ -180,9 +356,14 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | 
             const dateString = selectedDate.toISOString().split('T')[0];
             const bookedHours = bookedSlots[dateString] || [];
 
-            // Create a container for all time slots
-            const timeSlotsContainer = document.createElement('div');
-            timeSlotsContainer.className = 'time-slots-grid';
+            // Only generate time slots if venue is available
+            if (venueAvailability === 0) {
+                const unavailableMessage = document.createElement('div');
+                unavailableMessage.className = 'venue-unavailable-message';
+                unavailableMessage.innerHTML = '<p>This venue is currently unavailable for booking.</p>';
+                timeSlots.appendChild(unavailableMessage);
+                return;
+            }
             
             for (let hour = startHour; hour < endHour; hour++) {
                 const timeSlot = document.createElement('div');
@@ -191,7 +372,7 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | 
                 const startTime = formatTime(hour);
                 const endTime = formatTime(hour + 1);
                 
-                const isBooked = bookedHours.includes(hour);
+                const isBooked = bookedHours.includes(hour.toString()) || bookedHours.includes(hour);
                 if (isBooked) {
                     timeSlot.classList.add('booked');
                 }
@@ -210,19 +391,15 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | 
                     timeSlot.addEventListener('click', () => {
                         document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
                         timeSlot.classList.add('selected');
-                        updateBookingSummary(startTime, endTime, selectedDate);
+                        updateBookingSummary(startTime, endTime, selectedDate, hour);
                     });
                 }
 
-                timeSlotsContainer.appendChild(timeSlot);
+                timeSlots.appendChild(timeSlot);
             }
-
-            // Add the time slots container to the main container
-            timeSlots.appendChild(timeSlotsContainer);
         }
 
-        // Update Booking Summary
-        function updateBookingSummary(startTime, endTime, selectedDate) {
+        function updateBookingSummary(startTime, endTime, selectedDate, hour) {
             const bookingSummary = document.getElementById('bookingSummary');
             const formattedDate = selectedDate.toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -230,6 +407,9 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | 
                 month: 'long',
                 day: 'numeric'
             });
+    
+            // Format date as YYYY-MM-DD for database storage
+            const dbDateFormat = selectedDate.toISOString().split('T')[0];
             
             bookingSummary.innerHTML = `
                 <p>Date: ${formattedDate}</p>
@@ -237,23 +417,57 @@ echo "<script>const bookedSlots = " . json_encode($booked_slots, JSON_HEX_TAG | 
                 <p>Location: ${<?php echo json_encode(htmlspecialchars($ground['venue_nm'])); ?>}</p>
                 <p>Price: ₹${<?php echo json_encode(htmlspecialchars($ground['price'])); ?>}</p>
             `;
-        }
 
-        // Confirm Booking
-        document.getElementById('confirmBooking').addEventListener('click', () => {
-            const selectedDate = document.querySelector('.date-day.selected');
-            const selectedTime = document.querySelector('.time-slot.selected');
-            
-            if (selectedDate && selectedTime) {
-                // Send the booking data to the server
-                alert('Booking Confirmed! You will be redirected to payment.');
-            } else {
-                alert('Please select a date and time slot');
-            }
-        });
+            // Set hidden form fields
+            document.getElementById('selectedDate').value = dbDateFormat; // Use database format
+            document.getElementById('selectedTime').value = hour; // Store the hour number for backend processing
+            document.getElementById('venueName').value = <?php echo json_encode(htmlspecialchars($ground['venue_nm'])); ?>;
+            document.getElementById('price').value = <?php echo json_encode(htmlspecialchars($ground['price'])); ?>;
+        }
 
         // Initialize
         generateDateSlider();
+
+        function scrollTimeSlots(direction) {
+            const slider = document.getElementById('timeSlots');
+            const scrollAmount = 150; // Adjust this value as needed
+            
+            if (direction === 'prev') {
+                slider.scrollBy({
+                    left: -scrollAmount,
+                    behavior: 'smooth'
+                });
+            } else {
+                slider.scrollBy({
+                    left: scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        // Add this to your existing script or create a new script section
+        document.addEventListener('DOMContentLoaded', function() {
+            const reviewsBtn = document.getElementById('showReviewsBtn');
+            const reviewsPopup = document.getElementById('reviewsPopup');
+            const closePopup = document.querySelector('.close-popup');
+            
+            reviewsBtn.addEventListener('click', function() {
+                reviewsPopup.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent body scrolling when popup is open
+            });
+            
+            closePopup.addEventListener('click', function() {
+                reviewsPopup.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restore body scrolling
+            });
+            
+            // Close popup when clicking outside of it
+            window.addEventListener('click', function(event) {
+                if (event.target === reviewsPopup) {
+                    reviewsPopup.style.display = 'none';
+                    document.body.style.overflow = 'auto'; // Restore body scrolling
+                }
+            });
+        });
     </script>
 </body>
 </html>

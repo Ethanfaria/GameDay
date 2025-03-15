@@ -16,6 +16,9 @@
   include 'header.php'; 
   include 'db.php';
 
+  // Make sure user_email is defined
+  $user_email = $_SESSION['email'] ?? '';
+
   // Query to fetch upcoming bookings with venue details
   $bookings_sql = "SELECT b.*, v.venue_nm, v.location 
           FROM book b 
@@ -31,11 +34,10 @@
 
   // Get user stats
   $stats_sql = "SELECT 
-                  COUNT(DISTINCT b.bk_date) as matches_played,
-                  COUNT(DISTINCT b.venue_id) as grounds_visited,
-                  SUM(b.bk_dur) as total_hours
-                FROM book b 
-                WHERE b.email = ? AND b.bk_date <= CURDATE()";
+                COUNT(DISTINCT booking_id) as matches_played,
+                COUNT(DISTINCT venue_id) as grounds_visited
+              FROM book 
+              WHERE email = ? AND bk_date <= CURDATE()";
   $stats_stmt = $conn->prepare($stats_sql);
   $stats_stmt->bind_param("s", $user_email);
   $stats_stmt->execute();
@@ -62,7 +64,19 @@
                          LIMIT 1";
   $next_tournament_result = $conn->query($next_tournament_sql);
   $next_tournament = $next_tournament_result->fetch_assoc();
-  ?>
+
+  $registered_tournaments_sql = "SELECT t.tr_name, t.start_date 
+                             FROM register r
+                             JOIN tournaments t ON r.tr_id = t.tr_id
+                             WHERE r.email = ? AND t.start_date > CURDATE()
+                             ORDER BY t.start_date ASC
+                             LIMIT 1";
+  $registered_stmt = $conn->prepare($registered_tournaments_sql);
+  $registered_stmt->bind_param("s", $user_email);
+  $registered_stmt->execute();
+  $registered_tournament = $registered_stmt->get_result()->fetch_assoc();
+  $registered_stmt->close();
+    ?>
   
   <div class="dashboard">
     <div class="welcome">
@@ -76,25 +90,23 @@
           <h2><i class="fas fa-futbol section-icon"></i> Upcoming Matches</h2>
         </div>
         <div class="scroll-container">
-          <?php
-          if ($bookings_result->num_rows > 0) {
-              while($row = $result->fetch_assoc()) {
-                  $booking_date = new DateTime($row['bk_date']);
-                  $today = new DateTime('today');
-                  $date_badge = $booking_date == $today ? 'today-badge' : '';
-                  $formatted_date = $booking_date == $today ? 'TODAY' : $booking_date->format('M d');
-                  
-                  // Calculate end time based on duration
-                  $duration_hours = $row['bk_dur'];
-                  $start_time = date('g:i A', strtotime($row['bk_time']));
-                  $end_time = date('g:i A', strtotime($row['bk_time'] . ' + ' . $duration_hours . ' hours'));
-          ?>
-          <div class="match-item">
-            <div class="match-info">
-              <div><span class="date-badge <?php echo $date_badge; ?>"><?php echo $formatted_date; ?></span> <?php echo $start_time . ' - ' . $end_time; ?></div>
-              <div class="match-location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['venue_nm']); ?></div>
-            </div>
+        <?php
+if ($bookings_result->num_rows > 0) {
+    while($row = $bookings_result->fetch_assoc()) {
+        $booking_date = new DateTime($row['bk_date']);
+        $today = new DateTime('today');
+        $date_badge = $booking_date == $today ? 'today-badge' : '';
+        $formatted_date = $booking_date == $today ? 'TODAY' : $booking_date->format('M d');
+        
+        // Just display the duration string directly since it's already in the format "10:00 AM - 11:00 AM"
+        $time_range = $row['bk_dur'];
+        ?>
+        <div class="match-item">
+          <div class="match-info">
+            <div><span class="date-badge <?php echo $date_badge; ?>"><?php echo $formatted_date; ?></span> <?php echo $time_range; ?></div>
+            <div class="match-location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['venue_nm']); ?></div>
           </div>
+        </div>
           <?php
               }
           } else {
@@ -167,12 +179,16 @@
         <div class="bento-header">
           <h2><i class="fas fa-trophy section-icon"></i> Tournament Registration</h2>
         </div>
-        <div class="tournament-item">
-          <div class="tournament-info">
-            <div>City League Tournament</div>
-            <div class="tournament-location"><i class="far fa-calendar-alt"></i> Starting Mar 20, 2025</div>
-          </div>
-        </div>
+        <?php if ($registered_tournament): ?>
+<div class="tournament-item">
+  <div class="tournament-info">
+    <div><?php echo htmlspecialchars($registered_tournament['tr_name']); ?></div>
+    <div class="tournament-location"><i class="far fa-calendar-alt"></i> Starting <?php echo date('M d, Y', strtotime($registered_tournament['start_date'])); ?></div>
+  </div>
+</div>
+<?php else: ?>
+<p>No tournament registrations</p>
+<?php endif; ?>
       </div>
       
       <div class="bento-item profile-actions">
@@ -286,7 +302,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Animate the countdown number
       const countdownEl = document.querySelector('.countdown-number');
-      const startValue = parseInt(countdownEl.textContent);
+      if (countdownEl) {
+        const startValue = parseInt(countdownEl.textContent);
+      }
     });
   </script>
 </body>

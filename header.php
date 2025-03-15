@@ -6,7 +6,25 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Function to check if user is logged in
 function isLoggedIn() {
-    return isset($_SESSION["user_id"]) && !empty($_SESSION["user_id"]);
+    return isset($_SESSION["user_email"]) && !empty($_SESSION["user_email"]);
+}
+
+// Function to get user type
+function getUserType() {
+    if (isset($_SESSION["user_type"]) && !empty($_SESSION["user_type"])) {
+        return $_SESSION["user_type"];
+    }
+    return null; // Return null if user type is not set
+}
+
+// Function to check if user is admin
+function isAdmin() {
+    return getUserType() === "admin";
+}
+
+// Function to check if user is normal user
+function isNormalUser() {
+    return getUserType() === "normal";
 }
 ?>
 
@@ -26,10 +44,12 @@ function isLoggedIn() {
         <a href="faq.php">FAQ</a>
         
         <?php if (isLoggedIn()): ?>
-            <!-- Show account link if logged in -->
-            <a href="userdashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
+        <?php if (isAdmin()): ?>
+            <a href="admin-dashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
         <?php else: ?>
-            <!-- Show login/signup if not logged in -->
+            <a href="userdashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
+        <?php endif; ?>
+        <?php else: ?>
             <a href="login.php">Login</a>
             <a href="signup.php" class="cta-button">Get started</a>
         <?php endif; ?>

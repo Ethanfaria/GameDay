@@ -26,7 +26,7 @@
     color: white;
 }
 .hero{
-    background-image: url('https://images.unsplash.com/photo-1577741314755-048d8525d31e');
+    background-image: url('https://www.vecteezy.com/photo/7180513-top-view-fresh-green-grass-or-lawn-for-football-and-soccer-fields-or-golf-courses-or-grassland-for-use-to-make-background-or-wallpaper-garden-or-turf-the-fresh-field-for-a-ground');
     background-size: cover;
     background-position: center;
     height: 200px;
@@ -154,7 +154,7 @@
 .rating{
     position: absolute; 
     top: 10px; 
-    right: 42px; 
+    right: 10px; 
     display: flex; 
     align-items: center; 
     background-color: rgba(0, 0, 0, 0.5);
@@ -165,14 +165,7 @@
     color: var(--neon-green);
     margin-right: 5px;
 }
-.heart-icon{
-    position: absolute;
-    top: 11px;
-    right: 10px;
-    color: white;
-    font-size: 26px;
-    cursor: pointer;
-}
+
 .top-icons{
     display: flex;
     justify-content: space-between;   
@@ -203,4 +196,31 @@
     padding: 5px 10px; 
     width: 100%; 
     outline: none;
+}
+.location-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    flex-direction: column;
+}
+
+.location-btn {
+    min-width: 100px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px dashed var(--neon-green);
+    background-color: transparent;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.location-btn:hover {
+    background-color: rgba(185, 255, 0, 0.1);
+}
+
+.location-btn.active {
+    background-color: var(--neon-green);
+    color: var(--dark-green);
 }

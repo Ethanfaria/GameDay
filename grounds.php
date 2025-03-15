@@ -37,30 +37,14 @@
             <div class="filter-type">
                 <h3>
                     Location
-                    <i class="fas fa-chevron-up filter-icon" ></i>
-                </h3>
-                <div>
-                    <div class="location-option">
-                        <input type="checkbox" id="north-goa">
-                        <label for="north-goa" class="location-name">North Goa</label>
-                    </div>
-                    <div class="location-option">
-                        <input type="checkbox" id="south-goa">
-                        <label for="south-goa" class="location-name">South Goa</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Price Range -->
-            <div class="filter-type">
-                <h3>
-                    Price Range
                     <i class="fas fa-chevron-up filter-icon"></i>
                 </h3>
-                <input type="range" min="0" max="10000" value="10000" class="price-range">
-                <div class="price-values">
-                    <span>₹0</span>
-                    <span>₹10000</span>
+                <div class="location-toggle">
+                    <button class="location-btn" data-location="all">All</button>
+                    <button class="location-btn" data-location="north-goa">Panjim</button>
+                    <button class="location-btn" data-location="south-goa">Mapusa</button>
+                    <button class="location-btn" data-location="south-goa">Margao</button>
+                    <button class="location-btn" data-location="south-goa">Other</button>
                 </div>
             </div>
         </div>
@@ -95,7 +79,6 @@
                                 <i class="fas fa-star star-icon"></i>
                                 <span><?php echo $rating; ?></span>
                             </div>
-                            <i class="far fa-heart heart-icon"></i>
                         </div>
                     </div>
                     <div class="academy-info">
@@ -193,6 +176,49 @@
                 });
             });
         });
+
+        // Add this to your existing script at the bottom of the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Location filter functionality
+    const locationButtons = document.querySelectorAll('.location-btn');
+    
+    // Set "All" as default active
+    document.querySelector('.location-btn[data-location="all"]').classList.add('active');
+    
+    locationButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            locationButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get selected location
+            const location = this.getAttribute('data-location');
+            
+            // Filter academies based on location
+            filterAcademies(location);
+        });
+    });
+    
+    function filterAcademies(location) {
+        const academies = document.querySelectorAll('.academy');
+        
+        academies.forEach(academy => {
+            const academyLocation = academy.querySelector('.turf-details:nth-child(2)').textContent.toLowerCase();
+            
+            if (location === 'all') {
+                academy.style.display = 'block';
+            } else if (location === 'north-goa' && academyLocation.includes('north goa')) {
+                academy.style.display = 'block';
+            } else if (location === 'south-goa' && academyLocation.includes('south goa')) {
+                academy.style.display = 'block';
+            } else {
+                academy.style.display = 'none';
+            }
+        });
+    }
+});
     </script>
 </body>
 </html>

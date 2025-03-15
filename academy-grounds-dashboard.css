@@ -1,0 +1,121 @@
+.admin-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.add-venue-btn {
+    background-color: var(--neon-green);
+    color: var(--dark-green);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.edit-btn, .delete-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.edit-btn {
+    background-color: #3498db;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    background-color: var(--dark-green);
+    border: 1px solid var(--neon-green);
+    border-radius: 20px;
+    width: 60%;
+    max-width: 700px;
+    margin: 5% auto;
+    padding: 20px;
+    position: relative;
+    color: white;
+}
+
+.close-btn {
+    color: var(--neon-green);
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.submit-btn {
+    background-color: var(--neon-green);
+    color: var(--dark-green);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.admin-badge {
+    background-color: var(--neon-green);
+    color: var(--dark-green);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 15px;
+}

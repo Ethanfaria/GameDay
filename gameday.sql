@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 13, 2025 at 07:44 AM
+-- Generation Time: Mar 15, 2025 at 07:53 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -77,10 +77,31 @@ INSERT INTO `academys` (`ac_id`, `aca_nm`, `ac_location`, `ac_charges`, `venue_i
 
 CREATE TABLE `academy_reviews` (
   `a_review_id` varchar(255) NOT NULL,
-  `a_review` text DEFAULT NULL,
-  `a_rating` tinyint(4) DEFAULT NULL,
-  `ac_id` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+  `a_reviews` mediumtext NOT NULL,
+  `a_ratings` int(1) NOT NULL,
+  `ac_id` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin`
+--
+
+CREATE TABLE `admin` (
+  `admin_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` varchar(50) NOT NULL DEFAULT 'admin'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin`
+--
+
+INSERT INTO `admin` (`admin_id`, `name`, `email`, `password`, `role`) VALUES
+(1, 'Admin', 'admin@gameday.com', '$2y$10$vJYy3AlvT3rrJ4ZQkxVbZ.5UtQbuBCd.zKcCaI7SwJaESw6wSJM4O', 'super_admin');
 
 -- --------------------------------------------------------
 
@@ -103,19 +124,28 @@ CREATE TABLE `announcement` (
 --
 
 CREATE TABLE `book` (
-  `bk_date` date DEFAULT NULL,
-  `bk_dur` double DEFAULT NULL,
-  `venue_id` varchar(10) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `Availability` tinyint(4) NOT NULL
+  `booking_id` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `venue_id` varchar(50) NOT NULL,
+  `bk_date` date NOT NULL,
+  `bk_dur` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `book`
 --
 
-INSERT INTO `book` (`bk_date`, `bk_dur`, `venue_id`, `email`, `Availability`) VALUES
-('2025-03-13', 9, 'ven_001', 'ss@gmail.com', 0);
+INSERT INTO `book` (`booking_id`, `email`, `venue_id`, `bk_date`, `bk_dur`) VALUES
+(13, 'Ethanfaria@gmail.com', 'ven_001', '2025-03-14', '10:00 AM - 11:00 AM'),
+(7, 'Ethanfaria@gmail.com', 'ven_001', '2025-03-14', '11:00 AM - 12:00 PM'),
+(4, 'Ethanfaria@gmail.com', 'ven_001', '2025-03-14', '12:00 PM - 1:00 PM'),
+(9, 'Ethanfaria@gmail.com', 'ven_001', '2025-03-14', '3:00 PM - 4:00 PM'),
+(1, 'Ethanfaria@gmail.com', 'ven_001', '2025-03-14', '8:00 AM - 9:00 AM'),
+(29, 'Ethanfaria@gmail.com', 'ven_001', '2025-03-17', '3:00 PM - 4:00 PM'),
+(18, 'Ethanfaria@gmail.com', 'ven_002', '2025-03-14', '11:00 AM - 12:00 PM'),
+(22, 'Ethanfaria@gmail.com', 'ven_002', '2025-03-14', '1:00 PM - 2:00 PM'),
+(28, 'Ethanfaria@gmail.com', 'ven_002', '2025-03-14', '8:00 AM - 9:00 AM'),
+(26, 'Ethanfaria@gmail.com', 'ven_002', '2025-03-15', '11:00 AM - 12:00 PM');
 
 -- --------------------------------------------------------
 
@@ -272,7 +302,7 @@ CREATE TABLE `user` (
 INSERT INTO `user` (`user_name`, `user_ph`, `email`, `password`) VALUES
 ('ghdghdhgdhhgh_com', 1111111111, 'dhdghdh@gdgd.gdg', '$2y$10$EKOwOe/HrvID1f/hwLgoou8E5rZFLT.ZDn3/kEw0jSvCiEZgRHgV6'),
 ('dkamat', 2147483647, 'dk@gmail.com', '$2y$10$CO0sxgnyLKPs88lvG0cnjufocDI432HHv.1f24HA4yPC5KSZKP6sK'),
-('Ethan', 2147483647, 'ethanfaria14@gmail.com', '$2y$10$xcEjseBkqBHVwRwshj8z..VuxIoY9FfxPUWZqvn3oiYvz0zoZ41/K'),
+('Ethan', 2147483647, 'ethanfaria@gmail.com', '$2y$10$eLnCUgSgfEpCFvsc1lngpup.8pr/n9GcZOJkFUIR8C3x6DzaR1EbO'),
 ('sairajsirsat', 1234567890, 'ss@gmail.com', '$2y$10$lMdNsgNUkEUeikXDM5iB6eOKgSJ3zuS3O3vgSuY2GNLAR.V.mVMW2'),
 ('ved', 2147483647, 'vedk2004@gmail.com', '$2y$10$Q/dVhIsvopjl.mmvAfkHnOSlLGHCGXMi22Jp77ESh0.KRFcZB0AQy');
 
@@ -286,6 +316,7 @@ CREATE TABLE `venue` (
   `venue_id` varchar(255) NOT NULL,
   `venue_nm` varchar(255) DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
+  `availability` tinyint(1) DEFAULT NULL,
   `price` double DEFAULT NULL,
   `size` varchar(255) DEFAULT NULL,
   `turf_img` varchar(255) DEFAULT NULL,
@@ -299,51 +330,51 @@ CREATE TABLE `venue` (
 -- Dumping data for table `venue`
 --
 
-INSERT INTO `venue` (`venue_id`, `venue_nm`, `location`, `price`, `size`, `turf_img`, `description`, `amenity1`, `amenity2`, `amenity3`) VALUES
-('ven_001', 'Play Goa', 'Panjim', 800, '25m x 15m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj3Fi_lngrUiWu0ZvFmV_0xxmYYf7Smo29Tw&s', 'A top-tier futsal arena with high-quality turf and professional lighting.', 'Floodlights', 'Synthetic Grass', 'Flexible Booking Options'),
-('ven_002', 'Don Bosco Futsal', 'Panjim', 1200, '30m x 18m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNOYRVk51Qqqmi2ZIaDA2WcD44jcGBkb23LQ&s', 'Spacious football ground with well-maintained grass and seating areas.', 'Shaded Spectator Area', 'Locker Rooms', 'Automated Lighting System'),
-('ven_003', 'Dengoa', 'Panjim', 1000, '28m x 16m', 'https://media.hudle.in/venues/5a267275-be88-494f-ada8-6716f90c3330/photo/b14d2548aa603e410eee9dee60386f4f9507ecc5', 'A compact and fast-paced futsal turf ideal for small-sided games.', 'Artificial Turf', 'LED Scoreboard', 'Weekly Tournaments Hosted'),
-('ven_004', 'Kicks N\' Flicks', 'Panjim', 1400, '35m x 20m', 'https://content.jdmagicbox.com/comp/goa/q3/0832px832.x832.230913204513.f7q3/catalogue/kicks-n-flicks-goa-mini-football-fields-9soy7roh71.jpg', 'Popular football ground with a great atmosphere for local matches.', 'CCTV Security', 'Live Streaming Available', 'Music System'),
-('ven_005', 'Campal New Ground', 'Panjim', 900, '32m x 18m', 'https://www.mappls.com/place/PJK11A_1662036443317_0.png', 'Floodlit futsal arena designed for intense 5-a-side matches.', 'Team Dugouts', 'Seating for 200+', 'Kids Play Area'),
-('ven_006', 'Dr Alvero Pinto Ground', 'Panjim', 1600, '40m x 20m', 'https://content.jdmagicbox.com/comp/goa/i5/0832px832.x832.220317225912.u4i5/catalogue/nfa-nagoa-futsal-arena-saligao-goa-stadiums-xpsn1xzfdi.jpg', 'Well-kept football ground perfect for tournaments and training.', 'Scoreboard', 'On-site Cafeteria', 'Discounted Group Booking'),
-('ven_007', 'Bambolim Stadium', 'Panjim', 2000, '42m x 22m', 'https://content.jdmagicbox.com/v2/comp/goa/f2/0832px832.x832.230430224856.w6f2/catalogue/agnel-futsal-arena-mapusa-goa-futsal-courts-mn568d6b4h-250.jpg', 'A multipurpose ground offering excellent playability for all skill levels.', 'Drinking Water Station', 'Ice Pack Availability', 'Night Matches Allowed'),
-('ven_008', 'Merces Football Ground', 'Panjim', 2500, '38m x 18m', 'https://goemkarponn.com/wp-content/uploads/2024/09/Dnyanprassarak-Mandals-College.jpg', 'Premium futsal turf with soft padding to reduce player fatigue.', 'First Aid Kit', 'Surround Sound System', 'Fan Stand with TV Screen'),
-('ven_009', 'Santa Cruz Futsal Ground', 'Panjim', 2200, '36m x 20m', 'https://media.hudle.in/venues/8e1f1ce9-b9e0-4142-a3a7-301044ba2c61/photo/e304c997efff4a22a6d4e7d4d4df3f5cfec153f9', 'A scenic football ground located in a peaceful setting.', 'Seating Area', 'Dedicated Warm-up Zone', 'Full-Sized Goals'),
-('ven_010', 'Duler Football Stadium', 'Mapusa', 1100, '34m x 17m', 'https://content.jdmagicbox.com/comp/goa/a4/0832px832.x832.200930011201.j2a4/catalogue/poriat-football-ground-calangute-goa-sports-clubs-63186pzta2.jpg', 'Artificial turf with state-of-the-art drainage for all-weather play.', 'Changing Rooms', 'Artificial Grass Maintenance', 'No Footwear Restriction'),
-('ven_011', 'Ganeshpuri Football Ground', 'Mapusa', 1700, '39m x 19m', 'https://www.mappls.com/place/48FD3D_1662033457955_0.png', 'Compact futsal ground with a vibrant atmosphere and spectator seating.', 'Restrooms', 'Mini Goalposts for Training', 'Freestyle Football Zone'),
-('ven_012', 'St Xavier Football Ground', 'Mapusa', 1800, '41m x 21m', 'https://content3.jdmagicbox.com/comp/goa/i3/0832px832.x832.190517102700.g1i3/catalogue/o-jogo-goa-futsal-turf-porvorim-goa-sports-clubs-ovvewjbgnc.jpg', 'A community-friendly ground known for its weekend football tournaments.', 'Ball Rental Service', 'Family Seating Area', 'Exclusive Club Membership'),
-('ven_013', 'St Sabastiean Sports', 'Mapusa', 1950, '37m x 20m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzuWZUZQieiQ93uNrPza0gBjGxrpOLHasNRg&s', 'A well-lit and spacious futsal ground suited for intense matches.', 'Canteen', 'Turf Shoe Rental', 'Custom Jerseys Available'),
-('ven_014', 'Nagao Futsal Arena', 'Mapusa', 1300, '31m x 17m', 'https://content.jdmagicbox.com/comp/goa/l5/0832px832.x832.220612020300.r8l5/catalogue/rosa-arena-airport-dabolim-goa-futsal-courts-df4jr2j21v.jpg', 'A traditional football ground with a history of hosting major local games.', 'Shower Facility', 'Floodlight Control Panel', 'Player Lockers'),
-('ven_015', 'Agnel Futsal Arena', 'Mapusa', 2100, '40m x 22m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR__nhbZf-Wa_K-C2hbZipmtnKwlrCFzjcsCw&s', 'An advanced futsal facility with superior turf and modern amenities.', 'Footwear Cleaning Area', 'Energy Drinks on Sale', 'Private Parking'),
-('ven_016', 'Calangute Futsal', 'Calangute', 600, '26m x 14m', 'https://content.jdmagicbox.com/comp/goa/d1/0832px832.x832.171225191400.a5d1/catalogue/sangolda-football-ground-sangolda-goa-sports-ground-rg4fpw2x5b.jpg', 'A football ground ideal for both casual and competitive matches.', 'Music System', 'Player Lounge', 'Live Score Updates'),
-('ven_017', 'Poriaot Football Ground', 'Calangute', 750, '27m x 15m', 'https://content.jdmagicbox.com/comp/goa/e4/0832px832.x832.140222122030.f1e4/catalogue/duler-stadium-mapusa-goa-stadiums-2gcrdhafwj.jpg', 'State-of-the-art futsal pitch with enclosed walls for high-speed gameplay.', 'Free Wi-Fi', 'Security Personnel On-Site', 'Tournament Hosting Facilities'),
-('ven_018', 'Dr. Gustavo Monteiro Football Ground', 'Candolim', 1450, '33m x 18m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgQFJj8jmDQMi-0giVqqQMXU4jaA_0PAWi_A&s', 'A football ground known for its great maintenance and sports culture.', 'Storage Lockers', 'Premium Sound System', 'Rest & Recovery Zone'),
-('ven_019', 'O Jogo, Goa Futsal', 'Porvorim', 2300, '41m x 23m', 'https://campsouza.com/wp-content/uploads/2022/12/Untitled-design-2022-12-11T171410.858.jpg', 'A modern futsal arena equipped with high-tech goal-line technology.', 'Coaching Available', 'Dedicated Rest Area', 'Free Entry for Spectators'),
-('ven_020', 'First Strike Arena Football', 'Porvorim', 1250, '29m x 16m', 'https://encryptedtbn0.gstatic.com/images?q=tbn:ANd9GcSzuWZUZQieiQ93uNrPza0gBjGxrpOLHasNRg&s', 'A professional training ground for serious football enthusiasts.', 'Umbrella Rentals', 'Extra Ball Storage', 'Vending Machines'),
-('ven_021', 'ATB Ground', 'Porvorim', 2700, '42m x 25m', 'https://content.jdmagicbox.com/v2/comp/kottayam/y6/9999px481.x481.240418230251.f6y6/catalogue/tigers-turf-puthenangady-kottayam-football-clubs-d5qvkvlu1t-250.jpg', 'A multi-use futsal turf with excellent visibility and seating arrangements.', 'Private Lounge', 'High-Quality Turf Surface', 'Kids Training Camps'),
-('ven_022', 'Shriram Shrimati Siolim Futsal Arena', 'Siolim', 1500, '34m x 18m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkSk4xHNTdeo6hyGnU9IvVYqC64Y3CbmzGkw&s', 'A competitive futsal ground featuring international standard turf.', 'VIP Seating', 'Social Media Streaming', 'Mobile App Booking'),
-('ven_023', 'St. Anthony\'s Church Ground', 'Siolim', 1200, '30m x 17m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzccj3ebRH_d39cWv-tymcHb9qLLRdv9kyeQ&s', 'A church-owned football ground fostering youth sports development.', 'Equipment Rental', 'Coach Viewing Stand', 'Climate Controlled Hall'),
-('ven_024', 'Chapora Football Ground', 'Siolim', 1300, '31m x 18m', 'https://content.jdmagicbox.com/comp/goa/a8/0832px832.x832.190912205053.b3a8/catalogue/mpt-grounds-vasco-da-gama-goa-sports-ground-k0676h6bsl.jpg', 'A football ground with a beautiful view and smooth grass surface.', 'Drinking Water Facility', 'Picnic Area Nearby', 'Premium Turf Grass'),
-('ven_025', 'Morjim Football Ground', 'Siolim', 1400, '36m x 20m', 'https://1.bp.blogspot.com/-YMOFUZcP8LY/UQCVac-f1SI/AAAAAAAAI8k/ExuKlrchsZw/s1600/Cortalim-23-%232-2.jpg', 'A beachside football ground offering a unique playing experience.', 'Food Stalls', 'Automated Sprinklers', 'FIFA Standard Goalposts'),
-('ven_026', 'Siolim Turf Ground', 'Siolim', 1100, '28m x 15m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJpPfZiSBJiqaSsmjQhJkBo8HpaPEzD1gWJA&s', 'A modern synthetic turf designed for optimal ball control and speed.', 'Ice Bath Facility', 'Team Dugout with Fans', 'Advanced Sprinkler System'),
-('ven_027', 'Siolim Football Turf', 'Siolim', 1250, '32m x 17m', 'https://content3.jdmagicbox.com/comp/goa/s1/0832px832.x832.220131235659.g4s1/catalogue/ella-ground-carambolim-goa-hlslvm5cr7.jpg', 'A neighborhood futsal turf known for friendly matches and leagues.', 'Hydration Station', 'Water Dispenser', 'Tactical Video Analysis'),
-('ven_028', 'Chowgule Sports Ground', 'Margao', 1600, '39m x 21m', 'https://content.jdmagicbox.com/comp/goa/s4/0832px832.x832.221218202837.w2s4/catalogue/majestic-futsal-turf-goa-futsal-courts-14pvsitj0m-250.jpg', 'A large sports complex accommodating multiple sports disciplines.', 'Kids Play Area', 'Multi-Sport Compatibility', 'Ball Return Nets'),
-('ven_029', 'First Strike Arena', 'Margao', 1350, '35m x 19m', 'https://encryptedtbn0.gstatic.com/images?q=tbn:ANd9GcTj3Fi_lngrUiWu0ZvFmV_0xxmYYf7Smo29Tw&s', 'A compact and well-lit futsal arena, perfect for night matches.', 'Live Streaming Setup', 'Goalkeeper Training Net', 'Coach Viewing Platform'),
-('ven_030', 'Don Bosco Ground', 'Margao', 1450, '33m x 17m', 'https://encryptedtbn0.gstatic.com/images?q=tbn:ANd9GcQNOYRVk51Qqqmi2ZIaDA2WcD44jcGBkb23LQ&s', 'A historic football ground that has hosted legendary local matches.', 'Backup Generator', 'Tactical Discussion Board', 'Player Lounge Access'),
-('ven_031', 'Camp Souza Futsal Turf', 'Margao', 1550, '38m x 20m', 'https://campsouza.com/wp-content/uploads/2022/12/Untitled-design-2022-12-11T171410.858.jpg', 'A spacious futsal ground with professional-grade artificial grass.', 'Dedicated Coaching Area', 'Photo Booth for Players', 'Tactical Video Analysis'),
-('ven_032', 'KICKS - Infinity Futsal', 'Margao', 1650, '40m x 22m', 'https://content.jdmagicbox.com/comp/goa/q3/0832px832.x832.230913204513.f7q3/catalogue/kicks-n-flicks-goa-mini-football-fields-9soy7roh71.jpg', 'A cutting-edge futsal pitch offering an immersive playing experience.', 'On-Site Physiotherapist', 'Power Backup', 'Ball Return Nets'),
-('ven_033', 'Navelim Football Ground', 'Margao', 1700, '37m x 19m', 'https://www.mappls.com/place/PJK11A_1662036443317_0.png', 'A well-designed football ground, ideal for training and friendly games.', 'Parking Area', 'Visitor Restroom', 'Coach Viewing Platform'),
-('ven_034', 'Tiger Turf', 'Margao', 1500, '34m x 18m', 'https://content.jdmagicbox.com/comp/goa/i5/0832px832.x832.220317225912.u4i5/catalogue/nfa-nagoa-futsal-arena-saligao-goa-stadiums-xpsn1xzfdi.jpg', 'A recently renovated futsal turf with high-quality infrastructure.', 'Locker Facility', 'Sports Drinks Available', 'Player Lounge Access'),
-('ven_035', 'Tilak Maidan Stadium', 'Vasco', 1800, '42m x 24m', 'https://content.jdmagicbox.com/v2/comp/goa/f2/0832px832.x832.230430224856.w6f2/catalogue/agnel-futsal-arena-mapusa-goa-futsal-courts-mn568d6b4h-250.jpg', 'A stadium-style football ground with seating and modern facilities.', 'Tournament Management Service', 'Shower Rooms', 'Referee Changing Rooms'),
-('ven_036', 'Rose Circle Ground', 'Vasco', 1250, '30m x 16m', 'https://goemkarponn.com/wp-content/uploads/2024/09/Dnyanprassarak-Mandals-College.jpg', 'A unique circular ground offering a different playing experience.', 'Photo/Video Recording', 'Fast Food Corner', 'Event Live Streaming'),
-('ven_037', 'IMS Football Ground', 'Vasco', 1350, '31m x 17m', 'https://media.hudle.in/venues/8e1f1ce9-b9e0-4142-a3a7-301044ba2c61/photo/e304c997efff4a22a6d4e7d4d4df3f5cfec153f9', 'A popular football training ground used by local teams and academies.', 'Beverage Counter', 'Instant Replay Setup', 'Player Recovery Zone'),
-('ven_038', 'Mpt Ground', 'Vasco', 1400, '35m x 19m', 'https://content.jdmagicbox.com/comp/goa/a4/0832px832.x832.200930011201.j2a4/catalogue/poriat-football-ground-calangute-goa-sports-clubs-63186pzta2.jpg', 'A high-speed futsal turf suited for technical and tactical training.', 'Shaded Seating', 'Drinking Water Filter', 'Multi-Sport Facility'),
-('ven_039', 'Cansaulim Sports Stadium', 'Cansaulim', 1550, '39m x 21m', 'https://www.mappls.com/place/48FD3D_1662033457955_0.png', 'A scenic sports stadium known for hosting annual football tournaments.', 'Waterproof Surface', 'Soft Play Zone', 'Personal Coaching Sessions'),
-('ven_040', 'Lit Arena Futsal', 'Cansaulim', 1150, '28m x 16m', 'https://content3.jdmagicbox.com/comp/goa/i3/0832px832.x832.190517102700.g1i3/catalogue/o-jogo-goa-futsal-turf-porvorim-goa-sports-clubs-ovvewjbgnc.jpg', 'A well-maintained futsal arena with top-class playing conditions.', 'Fan Area', 'Community Football Events', 'High-Speed Wi-Fi'),
-('ven_041', 'Dr Tristao Braganza Da Cunha Sports Complex', 'Cansaulim', 1450, '36m x 20m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzuWZUZQieiQ93uNrPza0gBjGxrpOLHasNRg&s', 'A modern sports complex featuring high-end facilities and seating.', 'Tactical Whiteboard', 'Wall Climbing Facility', 'VIP Spectator Lounge'),
-('ven_042', 'Camorlim Village Football Ground', 'Cansaulim', 1300, '32m x 18m', 'https://content.jdmagicbox.com/comp/goa/l5/0832px832.x832.220612020300.r8l5/catalogue/rosa-arena-airport-dabolim-goa-futsal-courts-df4jr2j21v.jpg', 'A village football ground with a rich history and great community support.', 'Referee Stand', 'Outdoor Benches', 'LED Floodlights'),
-('ven_043', 'Lit Arena Futsal', 'Ponda', 1200, '30m x 17m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR__nhbZf-Wa_K-C2hbZipmtnKwlrCFzjcsCw&s', 'A premium futsal facility equipped with high-speed turf and lighting.', 'Event Hosting Facility', 'Medical Assistance Booth', 'Automated Booking System'),
-('ven_044', 'Majestic Futsal Turf', 'Ponda', 1250, '29m x 16m', 'https://content.jdmagicbox.com/comp/goa/d1/0832px832.x832.171225191400.a5d1/catalogue/sangolda-football-ground-sangolda-goa-sports-ground-rg4fpw2x5b.jpg', 'A small yet professional futsal ground known for competitive leagues.', 'Warm-up Area', 'Gaming Zone Nearby', 'On-Site Physiotherapy');
+INSERT INTO `venue` (`venue_id`, `venue_nm`, `location`, `availability`, `price`, `size`, `turf_img`, `description`, `amenity1`, `amenity2`, `amenity3`) VALUES
+('ven_001', 'Play Goa', 'Panjim', 1, 800, '25m x 15m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj3Fi_lngrUiWu0ZvFmV_0xxmYYf7Smo29Tw&s', 'A top-tier futsal arena with high-quality turf and professional lighting.', 'Floodlights', 'Synthetic Grass', 'Flexible Booking Options'),
+('ven_002', 'Don Bosco Futsal', 'Panjim', 1, 1200, '30m x 18m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNOYRVk51Qqqmi2ZIaDA2WcD44jcGBkb23LQ&s', 'Spacious football ground with well-maintained grass and seating areas.', 'Shaded Spectator Area', 'Locker Rooms', 'Automated Lighting System'),
+('ven_003', 'Dengoa', 'Panjim', 1, 1000, '28m x 16m', 'https://media.hudle.in/venues/5a267275-be88-494f-ada8-6716f90c3330/photo/b14d2548aa603e410eee9dee60386f4f9507ecc5', 'A compact and fast-paced futsal turf ideal for small-sided games.', 'Artificial Turf', 'LED Scoreboard', 'Weekly Tournaments Hosted'),
+('ven_004', 'Kicks N\' Flicks', 'Panjim', 1, 1400, '35m x 20m', 'https://content.jdmagicbox.com/comp/goa/q3/0832px832.x832.230913204513.f7q3/catalogue/kicks-n-flicks-goa-mini-football-fields-9soy7roh71.jpg', 'Popular football ground with a great atmosphere for local matches.', 'CCTV Security', 'Live Streaming Available', 'Music System'),
+('ven_005', 'Campal New Ground', 'Panjim', 1, 900, '32m x 18m', 'https://www.mappls.com/place/PJK11A_1662036443317_0.png', 'Floodlit futsal arena designed for intense 5-a-side matches.', 'Team Dugouts', 'Seating for 200+', 'Kids Play Area'),
+('ven_006', 'Dr Alvero Pinto Ground', 'Panjim', 1, 1600, '40m x 20m', 'https://content.jdmagicbox.com/comp/goa/i5/0832px832.x832.220317225912.u4i5/catalogue/nfa-nagoa-futsal-arena-saligao-goa-stadiums-xpsn1xzfdi.jpg', 'Well-kept football ground perfect for tournaments and training.', 'Scoreboard', 'On-site Cafeteria', 'Discounted Group Booking'),
+('ven_007', 'Bambolim Stadium', 'Panjim', 1, 2000, '42m x 22m', 'https://content.jdmagicbox.com/v2/comp/goa/f2/0832px832.x832.230430224856.w6f2/catalogue/agnel-futsal-arena-mapusa-goa-futsal-courts-mn568d6b4h-250.jpg', 'A multipurpose ground offering excellent playability for all skill levels.', 'Drinking Water Station', 'Ice Pack Availability', 'Night Matches Allowed'),
+('ven_008', 'Merces Football Ground', 'Panjim', 1, 2500, '38m x 18m', 'https://goemkarponn.com/wp-content/uploads/2024/09/Dnyanprassarak-Mandals-College.jpg', 'Premium futsal turf with soft padding to reduce player fatigue.', 'First Aid Kit', 'Surround Sound System', 'Fan Stand with TV Screen'),
+('ven_009', 'Santa Cruz Futsal Ground', 'Panjim', 1, 2200, '36m x 20m', 'https://media.hudle.in/venues/8e1f1ce9-b9e0-4142-a3a7-301044ba2c61/photo/e304c997efff4a22a6d4e7d4d4df3f5cfec153f9', 'A scenic football ground located in a peaceful setting.', 'Seating Area', 'Dedicated Warm-up Zone', 'Full-Sized Goals'),
+('ven_010', 'Duler Football Stadium', 'Mapusa', 1, 1100, '34m x 17m', 'https://content.jdmagicbox.com/comp/goa/a4/0832px832.x832.200930011201.j2a4/catalogue/poriat-football-ground-calangute-goa-sports-clubs-63186pzta2.jpg', 'Artificial turf with state-of-the-art drainage for all-weather play.', 'Changing Rooms', 'Artificial Grass Maintenance', 'No Footwear Restriction'),
+('ven_011', 'Ganeshpuri Football Ground', 'Mapusa', 1, 1700, '39m x 19m', 'https://www.mappls.com/place/48FD3D_1662033457955_0.png', 'Compact futsal ground with a vibrant atmosphere and spectator seating.', 'Restrooms', 'Mini Goalposts for Training', 'Freestyle Football Zone'),
+('ven_012', 'St Xavier Football Ground', 'Mapusa', 1, 1800, '41m x 21m', 'https://content3.jdmagicbox.com/comp/goa/i3/0832px832.x832.190517102700.g1i3/catalogue/o-jogo-goa-futsal-turf-porvorim-goa-sports-clubs-ovvewjbgnc.jpg', 'A community-friendly ground known for its weekend football tournaments.', 'Ball Rental Service', 'Family Seating Area', 'Exclusive Club Membership'),
+('ven_013', 'St Sabastiean Sports', 'Mapusa', 1, 1950, '37m x 20m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzuWZUZQieiQ93uNrPza0gBjGxrpOLHasNRg&s', 'A well-lit and spacious futsal ground suited for intense matches.', 'Canteen', 'Turf Shoe Rental', 'Custom Jerseys Available'),
+('ven_014', 'Nagao Futsal Arena', 'Mapusa', 1, 1300, '31m x 17m', 'https://content.jdmagicbox.com/comp/goa/l5/0832px832.x832.220612020300.r8l5/catalogue/rosa-arena-airport-dabolim-goa-futsal-courts-df4jr2j21v.jpg', 'A traditional football ground with a history of hosting major local games.', 'Shower Facility', 'Floodlight Control Panel', 'Player Lockers'),
+('ven_015', 'Agnel Futsal Arena', 'Mapusa', 1, 2100, '40m x 22m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR__nhbZf-Wa_K-C2hbZipmtnKwlrCFzjcsCw&s', 'An advanced futsal facility with superior turf and modern amenities.', 'Footwear Cleaning Area', 'Energy Drinks on Sale', 'Private Parking'),
+('ven_016', 'Calangute Futsal', 'Calangute', 1, 600, '26m x 14m', 'https://content.jdmagicbox.com/comp/goa/d1/0832px832.x832.171225191400.a5d1/catalogue/sangolda-football-ground-sangolda-goa-sports-ground-rg4fpw2x5b.jpg', 'A football ground ideal for both casual and competitive matches.', 'Music System', 'Player Lounge', 'Live Score Updates'),
+('ven_017', 'Poriaot Football Ground', 'Calangute', 1, 750, '27m x 15m', 'https://content.jdmagicbox.com/comp/goa/e4/0832px832.x832.140222122030.f1e4/catalogue/duler-stadium-mapusa-goa-stadiums-2gcrdhafwj.jpg', 'State-of-the-art futsal pitch with enclosed walls for high-speed gameplay.', 'Free Wi-Fi', 'Security Personnel On-Site', 'Tournament Hosting Facilities'),
+('ven_018', 'Dr. Gustavo Monteiro Football Ground', 'Candolim', 1, 1450, '33m x 18m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgQFJj8jmDQMi-0giVqqQMXU4jaA_0PAWi_A&s', 'A football ground known for its great maintenance and sports culture.', 'Storage Lockers', 'Premium Sound System', 'Rest & Recovery Zone'),
+('ven_019', 'O Jogo, Goa Futsal', 'Porvorim', 1, 2300, '41m x 23m', 'https://campsouza.com/wp-content/uploads/2022/12/Untitled-design-2022-12-11T171410.858.jpg', 'A modern futsal arena equipped with high-tech goal-line technology.', 'Coaching Available', 'Dedicated Rest Area', 'Free Entry for Spectators'),
+('ven_020', 'First Strike Arena Football', 'Porvorim', 1, 1250, '29m x 16m', 'https://encryptedtbn0.gstatic.com/images?q=tbn:ANd9GcSzuWZUZQieiQ93uNrPza0gBjGxrpOLHasNRg&s', 'A professional training ground for serious football enthusiasts.', 'Umbrella Rentals', 'Extra Ball Storage', 'Vending Machines'),
+('ven_021', 'ATB Ground', 'Porvorim', 1, 2700, '42m x 25m', 'https://content.jdmagicbox.com/v2/comp/kottayam/y6/9999px481.x481.240418230251.f6y6/catalogue/tigers-turf-puthenangady-kottayam-football-clubs-d5qvkvlu1t-250.jpg', 'A multi-use futsal turf with excellent visibility and seating arrangements.', 'Private Lounge', 'High-Quality Turf Surface', 'Kids Training Camps'),
+('ven_022', 'Shriram Shrimati Siolim Futsal Arena', 'Siolim', 1, 1500, '34m x 18m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkSk4xHNTdeo6hyGnU9IvVYqC64Y3CbmzGkw&s', 'A competitive futsal ground featuring international standard turf.', 'VIP Seating', 'Social Media Streaming', 'Mobile App Booking'),
+('ven_023', 'St. Anthony\'s Church Ground', 'Siolim', NULL, 1200, '30m x 17m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzccj3ebRH_d39cWv-tymcHb9qLLRdv9kyeQ&s', 'A church-owned football ground fostering youth sports development.', 'Equipment Rental', 'Coach Viewing Stand', 'Climate Controlled Hall'),
+('ven_024', 'Chapora Football Ground', 'Siolim', NULL, 1300, '31m x 18m', 'https://content.jdmagicbox.com/comp/goa/a8/0832px832.x832.190912205053.b3a8/catalogue/mpt-grounds-vasco-da-gama-goa-sports-ground-k0676h6bsl.jpg', 'A football ground with a beautiful view and smooth grass surface.', 'Drinking Water Facility', 'Picnic Area Nearby', 'Premium Turf Grass'),
+('ven_025', 'Morjim Football Ground', 'Siolim', NULL, 1400, '36m x 20m', 'https://1.bp.blogspot.com/-YMOFUZcP8LY/UQCVac-f1SI/AAAAAAAAI8k/ExuKlrchsZw/s1600/Cortalim-23-%232-2.jpg', 'A beachside football ground offering a unique playing experience.', 'Food Stalls', 'Automated Sprinklers', 'FIFA Standard Goalposts'),
+('ven_026', 'Siolim Turf Ground', 'Siolim', NULL, 1100, '28m x 15m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJpPfZiSBJiqaSsmjQhJkBo8HpaPEzD1gWJA&s', 'A modern synthetic turf designed for optimal ball control and speed.', 'Ice Bath Facility', 'Team Dugout with Fans', 'Advanced Sprinkler System'),
+('ven_027', 'Siolim Football Turf', 'Siolim', NULL, 1250, '32m x 17m', 'https://content3.jdmagicbox.com/comp/goa/s1/0832px832.x832.220131235659.g4s1/catalogue/ella-ground-carambolim-goa-hlslvm5cr7.jpg', 'A neighborhood futsal turf known for friendly matches and leagues.', 'Hydration Station', 'Water Dispenser', 'Tactical Video Analysis'),
+('ven_028', 'Chowgule Sports Ground', 'Margao', NULL, 1600, '39m x 21m', 'https://content.jdmagicbox.com/comp/goa/s4/0832px832.x832.221218202837.w2s4/catalogue/majestic-futsal-turf-goa-futsal-courts-14pvsitj0m-250.jpg', 'A large sports complex accommodating multiple sports disciplines.', 'Kids Play Area', 'Multi-Sport Compatibility', 'Ball Return Nets'),
+('ven_029', 'First Strike Arena', 'Margao', NULL, 1350, '35m x 19m', 'https://encryptedtbn0.gstatic.com/images?q=tbn:ANd9GcTj3Fi_lngrUiWu0ZvFmV_0xxmYYf7Smo29Tw&s', 'A compact and well-lit futsal arena, perfect for night matches.', 'Live Streaming Setup', 'Goalkeeper Training Net', 'Coach Viewing Platform'),
+('ven_030', 'Don Bosco Ground', 'Margao', NULL, 1450, '33m x 17m', 'https://encryptedtbn0.gstatic.com/images?q=tbn:ANd9GcQNOYRVk51Qqqmi2ZIaDA2WcD44jcGBkb23LQ&s', 'A historic football ground that has hosted legendary local matches.', 'Backup Generator', 'Tactical Discussion Board', 'Player Lounge Access'),
+('ven_031', 'Camp Souza Futsal Turf', 'Margao', NULL, 1550, '38m x 20m', 'https://campsouza.com/wp-content/uploads/2022/12/Untitled-design-2022-12-11T171410.858.jpg', 'A spacious futsal ground with professional-grade artificial grass.', 'Dedicated Coaching Area', 'Photo Booth for Players', 'Tactical Video Analysis'),
+('ven_032', 'KICKS - Infinity Futsal', 'Margao', NULL, 1650, '40m x 22m', 'https://content.jdmagicbox.com/comp/goa/q3/0832px832.x832.230913204513.f7q3/catalogue/kicks-n-flicks-goa-mini-football-fields-9soy7roh71.jpg', 'A cutting-edge futsal pitch offering an immersive playing experience.', 'On-Site Physiotherapist', 'Power Backup', 'Ball Return Nets'),
+('ven_033', 'Navelim Football Ground', 'Margao', NULL, 1700, '37m x 19m', 'https://www.mappls.com/place/PJK11A_1662036443317_0.png', 'A well-designed football ground, ideal for training and friendly games.', 'Parking Area', 'Visitor Restroom', 'Coach Viewing Platform'),
+('ven_034', 'Tiger Turf', 'Margao', NULL, 1500, '34m x 18m', 'https://content.jdmagicbox.com/comp/goa/i5/0832px832.x832.220317225912.u4i5/catalogue/nfa-nagoa-futsal-arena-saligao-goa-stadiums-xpsn1xzfdi.jpg', 'A recently renovated futsal turf with high-quality infrastructure.', 'Locker Facility', 'Sports Drinks Available', 'Player Lounge Access'),
+('ven_035', 'Tilak Maidan Stadium', 'Vasco', NULL, 1800, '42m x 24m', 'https://content.jdmagicbox.com/v2/comp/goa/f2/0832px832.x832.230430224856.w6f2/catalogue/agnel-futsal-arena-mapusa-goa-futsal-courts-mn568d6b4h-250.jpg', 'A stadium-style football ground with seating and modern facilities.', 'Tournament Management Service', 'Shower Rooms', 'Referee Changing Rooms'),
+('ven_036', 'Rose Circle Ground', 'Vasco', NULL, 1250, '30m x 16m', 'https://goemkarponn.com/wp-content/uploads/2024/09/Dnyanprassarak-Mandals-College.jpg', 'A unique circular ground offering a different playing experience.', 'Photo/Video Recording', 'Fast Food Corner', 'Event Live Streaming'),
+('ven_037', 'IMS Football Ground', 'Vasco', NULL, 1350, '31m x 17m', 'https://media.hudle.in/venues/8e1f1ce9-b9e0-4142-a3a7-301044ba2c61/photo/e304c997efff4a22a6d4e7d4d4df3f5cfec153f9', 'A popular football training ground used by local teams and academies.', 'Beverage Counter', 'Instant Replay Setup', 'Player Recovery Zone'),
+('ven_038', 'Mpt Ground', 'Vasco', NULL, 1400, '35m x 19m', 'https://content.jdmagicbox.com/comp/goa/a4/0832px832.x832.200930011201.j2a4/catalogue/poriat-football-ground-calangute-goa-sports-clubs-63186pzta2.jpg', 'A high-speed futsal turf suited for technical and tactical training.', 'Shaded Seating', 'Drinking Water Filter', 'Multi-Sport Facility'),
+('ven_039', 'Cansaulim Sports Stadium', 'Cansaulim', NULL, 1550, '39m x 21m', 'https://www.mappls.com/place/48FD3D_1662033457955_0.png', 'A scenic sports stadium known for hosting annual football tournaments.', 'Waterproof Surface', 'Soft Play Zone', 'Personal Coaching Sessions'),
+('ven_040', 'Lit Arena Futsal', 'Cansaulim', NULL, 1150, '28m x 16m', 'https://content3.jdmagicbox.com/comp/goa/i3/0832px832.x832.190517102700.g1i3/catalogue/o-jogo-goa-futsal-turf-porvorim-goa-sports-clubs-ovvewjbgnc.jpg', 'A well-maintained futsal arena with top-class playing conditions.', 'Fan Area', 'Community Football Events', 'High-Speed Wi-Fi'),
+('ven_041', 'Dr Tristao Braganza Da Cunha Sports Complex', 'Cansaulim', NULL, 1450, '36m x 20m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzuWZUZQieiQ93uNrPza0gBjGxrpOLHasNRg&s', 'A modern sports complex featuring high-end facilities and seating.', 'Tactical Whiteboard', 'Wall Climbing Facility', 'VIP Spectator Lounge'),
+('ven_042', 'Camorlim Village Football Ground', 'Cansaulim', NULL, 1300, '32m x 18m', 'https://content.jdmagicbox.com/comp/goa/l5/0832px832.x832.220612020300.r8l5/catalogue/rosa-arena-airport-dabolim-goa-futsal-courts-df4jr2j21v.jpg', 'A village football ground with a rich history and great community support.', 'Referee Stand', 'Outdoor Benches', 'LED Floodlights'),
+('ven_043', 'Lit Arena Futsal', 'Ponda', NULL, 1200, '30m x 17m', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR__nhbZf-Wa_K-C2hbZipmtnKwlrCFzjcsCw&s', 'A premium futsal facility equipped with high-speed turf and lighting.', 'Event Hosting Facility', 'Medical Assistance Booth', 'Automated Booking System'),
+('ven_044', 'Majestic Futsal Turf', 'Ponda', NULL, 1250, '29m x 16m', 'https://content.jdmagicbox.com/comp/goa/d1/0832px832.x832.171225191400.a5d1/catalogue/sangolda-football-ground-sangolda-goa-sports-ground-rg4fpw2x5b.jpg', 'A small yet professional futsal ground known for competitive leagues.', 'Warm-up Area', 'Gaming Zone Nearby', 'On-Site Physiotherapy');
 
 -- --------------------------------------------------------
 
@@ -352,10 +383,10 @@ INSERT INTO `venue` (`venue_id`, `venue_nm`, `location`, `price`, `size`, `turf_
 --
 
 CREATE TABLE `venue_reviews` (
-  `v_review_id` varchar(255) NOT NULL,
+  `review_id` varchar(255) NOT NULL,
   `venue_id` varchar(255) DEFAULT NULL,
-  `ratings` tinyint(4) DEFAULT NULL,
-  `v_review` text DEFAULT NULL
+  `ratings` int(11) DEFAULT NULL,
+  `feedback_clm` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -375,7 +406,14 @@ ALTER TABLE `academys`
 --
 ALTER TABLE `academy_reviews`
   ADD PRIMARY KEY (`a_review_id`),
-  ADD KEY `ac_id` (`ac_id`);
+  ADD KEY `fk_academy_reviews_academys` (`ac_id`);
+
+--
+-- Indexes for table `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`admin_id`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Indexes for table `announcement`
@@ -388,8 +426,9 @@ ALTER TABLE `announcement`
 -- Indexes for table `book`
 --
 ALTER TABLE `book`
-  ADD PRIMARY KEY (`venue_id`,`email`),
-  ADD KEY `email` (`email`);
+  ADD PRIMARY KEY (`booking_id`),
+  ADD UNIQUE KEY `unique_booking` (`email`,`venue_id`,`bk_date`,`bk_dur`),
+  ADD KEY `venue_id` (`venue_id`);
 
 --
 -- Indexes for table `enroll`
@@ -451,8 +490,24 @@ ALTER TABLE `venue`
 -- Indexes for table `venue_reviews`
 --
 ALTER TABLE `venue_reviews`
-  ADD PRIMARY KEY (`v_review_id`),
+  ADD PRIMARY KEY (`review_id`),
   ADD KEY `venue_id` (`venue_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `admin`
+--
+ALTER TABLE `admin`
+  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `book`
+--
+ALTER TABLE `book`
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- Constraints for dumped tables
@@ -465,6 +520,12 @@ ALTER TABLE `academys`
   ADD CONSTRAINT `academys_ibfk_1` FOREIGN KEY (`venue_id`) REFERENCES `venue` (`venue_id`);
 
 --
+-- Constraints for table `academy_reviews`
+--
+ALTER TABLE `academy_reviews`
+  ADD CONSTRAINT `fk_academy_reviews_academys` FOREIGN KEY (`ac_id`) REFERENCES `academys` (`ac_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `announcement`
 --
 ALTER TABLE `announcement`
@@ -474,8 +535,8 @@ ALTER TABLE `announcement`
 -- Constraints for table `book`
 --
 ALTER TABLE `book`
-  ADD CONSTRAINT `book_ibfk_1` FOREIGN KEY (`venue_id`) REFERENCES `venue` (`venue_id`),
-  ADD CONSTRAINT `book_ibfk_2` FOREIGN KEY (`email`) REFERENCES `user` (`email`);
+  ADD CONSTRAINT `book_ibfk_1` FOREIGN KEY (`email`) REFERENCES `user` (`email`),
+  ADD CONSTRAINT `book_ibfk_2` FOREIGN KEY (`venue_id`) REFERENCES `venue` (`venue_id`);
 
 --
 -- Constraints for table `enroll`
