@@ -330,7 +330,7 @@ $conn->close();
                     <button class="btn btn-primary" onclick="window.location.href='index.php'">
                         <i class="fas fa-eye"></i> View Site
                     </button>
-                    <button class="btn btn-danger" onclick="window.location.href='admin-logout.php'">
+                    <button class="btn btn-danger" onclick="window.location.href='logout.php'">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>

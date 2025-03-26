@@ -26,11 +26,23 @@ function isAdmin() {
 function isNormalUser() {
     return getUserType() === "normal";
 }
+
+// Function to check if user is owner
+function isOwner() {
+    return getUserType() === "owner";
+}
+
+// Function to check if user is referee
+function isReferee() {
+    return getUserType() === "referee";
+}
+
+// Removed specific venue and academy owner functions
 ?>
 
 <!-- Navigation Bar -->
 <nav class="navbar">
-    <a href="#" class="logo">GAME DAY</a>
+    <a href="homepage.php" ><img src="assets/gameday.png" class="logo" alt="GAMEDAY"></a>
     <button class="mobile-menu-btn">
         <i class="fas fa-bars"></i>
     </button>
@@ -44,11 +56,19 @@ function isNormalUser() {
         <a href="faq.php">FAQ</a>
         
         <?php if (isLoggedIn()): ?>
-        <?php if (isAdmin()): ?>
-            <a href="admin-dashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
-        <?php else: ?>
-            <a href="userdashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>
-        <?php endif; ?>
+            <?php
+            $userType = getUserType();
+            
+            if (isAdmin()) {
+                echo '<a href="admin-dashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>';
+            } elseif (isOwner()) {
+                echo '<a href="admyadmindashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>';
+            } elseif (isReferee()) {
+                echo '<a href="refereedashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>';
+            } else {
+                echo '<a href="userdashboard.php"><i class="fa-solid fa-circle-user acc-icon"></i></a>';
+            }
+            ?>
         <?php else: ?>
             <a href="login.php">Login</a>
             <a href="signup.php" class="cta-button">Get started</a>

@@ -2,16 +2,6 @@
 session_start();
 include 'db.php'; // Ensure this file contains the database connection
 
-if ($stmt->execute()) {
-    $_SESSION['booking_successful'] = true;
-    header("Location: payment-ground-success.php?email=$email&venue_id=$venue_id&date=$booking_date&time=$booking_time");
-    exit();
-} else {
-    // Log the error
-    error_log("Database insertion failed: " . $stmt->error);
-    echo "<script>alert('Booking failed: " . $stmt->error . "');</script>";
-}
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve data from session
     $email = $_SESSION['user_email'];
@@ -299,31 +289,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 theme: {
                     color: '#b9ff00'
                 }
-            };
-
-            const rzp = new Razorpay(options);
-            
-            document.getElementById('pay-button').onclick = function(e) {
-                e.preventDefault();
-
-                const selectedMethod = document.querySelector('.payment-method.selected');
-                if (!selectedMethod) {
-                    alert('Please select a payment method');
-                    return;
-                }
-                
-                switch(selectedMethod.dataset.method) {
-                    case 'upi':
-                    case 'card':
-                        // Simulate payment success after 2 seconds for both UPI and card
-                        setTimeout(showSuccessPopup, 2000);
-                        break;
-                    case 'netbanking':
-                        // Simulate payment failure for net banking
-                        setTimeout(showErrorPopup, 1500);
-                        break;
-                }
-                return false;
             };
         }
 

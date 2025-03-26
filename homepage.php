@@ -70,7 +70,7 @@
                 <h2>Whistle ready?</h2>
                 <p>Referees can now sign up and take charge of the game! Join our platform to get booked for matches, connect with teams, and officiate like a pro</p>
             </div>
-            <a href="hire-referee.php" class="btn btn-large">Register Now</a>
+            <a href="refereeregis.php" class="btn btn-large">Register Now</a>
         </div>
 
         <!-- Facilities Item -->

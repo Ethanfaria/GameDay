@@ -40,8 +40,15 @@ body {
     color: white;
     text-decoration: none;
     letter-spacing: 1px;
+    height: 30px; 
+    width: auto;
+    max-width: 100%;
+    transition: transform 0.3s ease;
 }
 
+.logo:hover {
+    transform: scale(1.1);
+}
 .nav-links {
     display: flex;
     align-items: center;

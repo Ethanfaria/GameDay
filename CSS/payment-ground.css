@@ -6,6 +6,17 @@
     padding: 30px;
     border-radius: 20px;
     backdrop-filter: blur(10px);
+    text-align: center;
+}
+.success-icon {
+    font-size: 80px;
+    color: var(--neon-green);
+    margin-bottom: 20px;
+}
+
+.payment-container h1 {
+    color: var(--neon-green);
+    margin-bottom: 20px;
 }
 
 .order-summary {
@@ -223,12 +234,97 @@
     font-size: 1.2em;
     color: var(--neon-green);
     margin: 10px 0;
+    
+    font-weight: bold;
 }
 
 .upi-id {
     background-color: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 15px auto;
+            display: inline-block;
+            font-family: monospace;
+            font-size: 1.1em;
+}
+
+.enrollment-details {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.enrollment-details h3 {
+    color: var(--neon-green);
+    margin-bottom: 15px;
+}
+
+.enrollment-details ul {
+    list-style: none;
+}
+
+.enrollment-details li {
     margin: 10px 0;
-    font-family: monospace;
+    display: flex;
+    align-items: center;
+}
+
+.enrollment-details li i {
+    color: var(--neon-green);
+    margin-right: 10px;
+}
+
+#qrcode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+
+#qrcode img {
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.enrollment-details p {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid #3e3e3e;
+}
+
+.enrollment-details p:last-child {
+    border-bottom: none;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.action-button {
+    padding: 12px 25px;
+    background-color: var(--neon-green);
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    opacity: 0.9;
+}
+
+.secondary-button {
+    background-color: transparent;
+    border: 2px solid var(--neon-green);
+    color: var(--neon-green);
 }

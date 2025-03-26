@@ -1,405 +1,227 @@
+<?php
+session_start();
+include 'db.php'; // Ensure this file contains the database connection
+
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    if (!isset($_SESSION['user_email'])) {
+        echo "<script>alert('Please log in to complete your enrollment.');</script>";
+        echo "<script>window.location.href = 'login.php';</script>";
+        exit();
+    }
+
+    // Retrieve data from session
+    $email = $_SESSION['user_email'];
+    $ac_id = $_SESSION['academy_id'];
+    $enrollment_duration = 3; 
+    $enrollment_date = date('Y-m-d');
+
+    // Check if required session variables are set
+    if (!isset($email, $ac_id)) {
+        die("Error: Missing required enrollment details.");
+    }
+
+    // Check if the user exists
+    $checkUser = $conn->prepare("SELECT email FROM user WHERE email = ?");
+    $checkUser->bind_param("s", $email);
+    $checkUser->execute();
+    $result = $checkUser->get_result();
+
+    if ($result->num_rows === 0) {
+        die("Error: The user email does not exist in the database.");
+    }
+
+    // Check if enrollment already exists
+    $checkEnrollment = $conn->prepare("SELECT * FROM enroll WHERE email = ? AND ac_id = ?");
+    $checkEnrollment->bind_param("ss", $email, $ac_id);
+    $checkEnrollment->execute();
+    $enrollmentResult = $checkEnrollment->get_result();
+    
+    if ($enrollmentResult->num_rows > 0) {
+        echo "<script>alert('You are already enrolled in this academy.');</script>";
+    } else {
+        // Insert enrollment into the database
+        $sql = "INSERT INTO enroll (ac_id, en_dur, en_date, email) VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if ($stmt === false) {
+            die("Error preparing statement: " . $conn->error);
+        }
+
+        $stmt->bind_param("siis", $ac_id, $enrollment_duration, $enrollment_date, $email);
+
+        if ($stmt->execute()) {
+            $_SESSION['enrollment_successful'] = true;
+            header("Location: payment-academy-success.php?ac_id=$ac_id&enrollment_success=true");
+            exit();
+        } else {
+            // Handle error quietly or with a more appropriate message
+            die("Error: " . $stmt->error);
+        }
+        $stmt->close();
+    }
+    $checkEnrollment->close();
+    $checkUser->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAME DAY - Academy Enrollment Payment</title>
+    <title>GAME DAY - Academy Payment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <style>
-        :root {
-            --dark-green: #0a2e1a;
-            --neon-green: #b9ff00;
-            --dark-gray: #333;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', 'Arial', sans-serif;
-        }
-
-        body {
-            background-color: var(--dark-green);
-            color: white;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .payment-container {
-            max-width: 600px;
-            margin: 50px auto;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .order-summary {
-            margin-bottom: 30px;
-        }
-
-        .order-summary h2 {
-            color: var(--neon-green);
-            margin-bottom: 20px;
-        }
-
-        .order-details {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .order-details p {
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .enrollment-details {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-        .enrollment-details h3 {
-            color: var(--neon-green);
-            margin-bottom: 15px;
-        }
-
-        .enrollment-details ul {
-            list-style: none;
-        }
-
-        .enrollment-details li {
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .enrollment-details li i {
-            color: var(--neon-green);
-            margin-right: 10px;
-        }
-
-        .total-amount {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: var(--neon-green);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-
-        .payment-button {
-            background-color: var(--neon-green);
-            color: var(--dark-green);
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .payment-button:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-
-        .back-button {
-            display: inline-block;
-            color: white;
-            text-decoration: none;
-            margin-bottom: 20px;
-        }
-
-        .back-button i {
-            margin-right: 5px;
-        }
-
-        .payment-methods {
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .payment-method {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .payment-method:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .payment-method.selected {
-            background-color: var(--neon-green);
-            color: var(--dark-green);
-        }
-
-        .payment-method i {
-            font-size: 24px;
-            width: 30px;
-            text-align: center;
-        }
-
-        .qr-section {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .qr-section.visible {
-            display: block;
-        }
-
-        #qrcode {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px auto;
-        }
-
-        #qrcode img {
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .qr-amount {
-            font-size: 1.2em;
-            color: var(--neon-green);
-            margin: 15px 0;
-            font-weight: bold;
-        }
-
-        .upi-id {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 25px;
-            margin: 15px auto;
-            display: inline-block;
-            font-family: monospace;
-            font-size: 1.1em;
-        }
-
-        .success-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background-color: var(--dark-green);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-        }
-
-        .success-popup.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
-        .success-popup i {
-            font-size: 50px;
-            color: var(--neon-green);
-            margin-bottom: 20px;
-        }
-
-        .error-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background-color: #420d0d;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-        }
-
-        .error-popup.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
-        .error-popup i {
-            font-size: 50px;
-            color: #ff4444;
-            margin-bottom: 20px;
-        }
-
-        .error-popup button {
-            background-color: #ff4444;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .error-popup button:hover {
-            opacity: 0.9;
-            transform: scale(1.05);
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+    <link rel="stylesheet" href="CSS\payment-ground.css">
+    <link rel="stylesheet" href="CSS\payment.css">
+    <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
-    <?php
-    // Get parameters from URL
-    $academy_id = isset($_GET['ac_id']) ? $_GET['ac_id'] : '';
-    $academy_name = isset($_GET['name']) ? $_GET['name'] : '';
-    $academy_location = isset($_GET['location']) ? $_GET['location'] : '';
-    $monthly_fee = isset($_GET['amount']) ? intval($_GET['amount']) : 0;
 
-    // Calculate total amount (3 months)
-    $total_amount = $monthly_fee * 3;
+<?php 
+    // Try to get academy_id from session first, then from GET parameters as fallback
+    $ac_id = isset($_SESSION['academy_id']) ? $_SESSION['academy_id'] : 
+             (isset($_GET['ac_id']) ? $_GET['ac_id'] : '');
+    
+    $sql = "SELECT * FROM academys WHERE ac_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $ac_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    // Format amounts for display
-    $formatted_monthly_fee = number_format($monthly_fee);
-    $formatted_total = number_format($total_amount);
-    ?>
+    if ($result->num_rows > 0) {
+        $academy = $result->fetch_assoc();
+        
+        // Retrieve enrollment details from session or fall back to available data
+        $academy_name = isset($_SESSION['academy_name']) ? $_SESSION['academy_name'] : $academy['aca_nm'];
+        $academy_location = isset($_SESSION['academy_location']) ? $_SESSION['academy_location'] : $academy['ac_location'];
+        $academy_charges = isset($_SESSION['academy_charges']) ? $_SESSION['academy_charges'] : $academy['ac_charges'];
+        $enrollment_duration = 3; // Default enrollment duration in months
+    } else {
+        echo "<p>Academy not found.</p>";
+        exit();
+    }
+?>
     <div class="payment-container">
         <a href="javascript:history.back()" class="back-button">
             <i class="fas fa-arrow-left"></i> Back
         </a>
         
+        <h1  class="summary-title">Order Summary</h1>
         <div class="order-summary">
-            <h2>Enrollment Summary</h2>
-            <div class="order-details">
-                <p>
-                    <span>Academy</span>
-                    <span id="academy-name"><?php echo htmlspecialchars($academy_name); ?></span>
-                </p>
-                <p>
-                    <span>Location</span>
-                    <span id="academy-location"><?php echo htmlspecialchars($academy_location); ?></span>
-                </p>
-            </div>
-
-            <div class="enrollment-details">
-                <h3>Program Details</h3>
-                <ul>
-                    <li><i class="fas fa-calendar"></i> 5 sessions per week</li>
-                    <li><i class="fas fa-clock"></i> 2 hours per session</li>
-                    <li><i class="fas fa-users"></i> Maximum 15 students per batch</li>
-                    <li><i class="fas fa-certificate"></i> Professional UEFA licensed coaches</li>
-                </ul>
-            </div>
-
-            <div class="order-details">
-                <p>
-                    <span>Monthly Fee</span>
-                    <span id="monthly-fee">₹<?php echo $formatted_monthly_fee; ?></span>
-                </p>
-                <p>
-                    <span>Duration</span>
-                    <span>3 months</span>
-                </p>
-                <p class="total-amount">
-                    <span>Total Amount</span>
-                    <span id="total-amount">₹<?php echo $formatted_total; ?></span>
-                </p>
-            </div>
+                <div class="summary-row">
+                    <div id="booking-type" class="summary-label">Academy Enrollment</div>
+                    <div id="booking-name" class="summary-value"><?php echo htmlspecialchars($academy_name); ?></div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Location</div>
+                    <div id="booking-location" class="summary-value"><?php echo htmlspecialchars($academy_location); ?></div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Duration</div>
+                    <div id="enrollment-duration" class="summary-value"><?php echo htmlspecialchars($enrollment_duration); ?> months</div>
+                </div>
+                <div class="total-row" >
+                    <div class="total-label">Total Amount</div>
+                    <div id="total-amount" class="total-value">₹<?php echo htmlspecialchars($academy_charges * $enrollment_duration); ?></div>
+                </div>
         </div>
 
-        <div class="payment-methods">
-            <h3>Select Payment Method</h3>
-            <div class="payment-method" data-method="upi">
+        <h3 class="payment-section-title">Select Payment Method</h3>
+        
+        <div class="payment-option" id="upiOption" data-method="upi">
+            <div class="payment-icon">
                 <i class="fas fa-mobile-alt"></i>
-                <span>UPI / QR Code</span>
             </div>
-            <div class="payment-method" data-method="card">
+            <div class="payment-label">UPI / QR Code</div>
+        </div>
+        
+        <div class="payment-option" id="cardOption" data-method="card">
+            <div class="payment-icon">
                 <i class="fas fa-credit-card"></i>
-                <span>Credit / Debit Card</span>
             </div>
-            <div class="payment-method" data-method="netbanking">
+            <div class="payment-label">Credit / Debit Card</div>
+        </div>
+        
+        <div class="payment-option" id="bankingOption" data-method="netbanking">
+            <div class="payment-icon">
                 <i class="fas fa-university"></i>
-                <span>Net Banking</span>
+            </div>
+            <div class="payment-label">Net Banking</div>
+        </div>
+        
+        <!-- UPI Payment Details -->
+        <div class="payment-details" id="upiDetails">
+            <div class="qr-section">
+                <div class="qr-code" id="qrcode">
+                    <!-- QR code will be generated here -->
+                </div>
+                <div class="payment-instructions">
+                    <h3>Scan to Pay</h3>
+                    <p>Use any UPI app to scan this QR code and make your payment</p>
+                    <div class="payment-upi-id">gameday@ybl</div>
+                    <p>Or use UPI ID to pay directly through your UPI app</p>
+                </div>
             </div>
         </div>
 
-        <div class="qr-section" id="qrSection">
-            <h3>Scan QR Code to Pay</h3>
-            <p class="qr-amount" id="qrAmount">₹<?php echo $formatted_total; ?></p>
-            <div id="qrcode"></div>
-            <p class="upi-id">gameday@ybl</p>
+        <!-- Card Payment Form -->
+        <div class="payment-details" id="cardDetails">
+            <div class="qr-section">
+                <div class="payment-instructions">
+                    <h3>Card Payment</h3>
+                    <p>You will be redirected to secure payment gateway</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Net Banking Form -->
+        <div class="payment-details" id="bankingDetails">
+            <div class="qr-section">
+                <div class="payment-instructions">
+                    <h3>Net Banking</h3>
+                    <p>You will be redirected to your bank's secure login page</p>
+                </div>
+            </div>
         </div>
 
-        <button id="pay-button" class="payment-button">Complete Enrollment</button>
+        <form method="POST" action="">
+            <button type="submit" class="proceed-button" id="proceedButton">Proceed to Pay</button>
+        </form>
     </div>
 
-    <div class="success-popup" id="successPopup">
-        <i class="fas fa-check-circle"></i>
-        <h2>Enrollment Successful!</h2>
-        <p>Welcome to the academy. You will receive a confirmation email shortly.</p>
+    <div id="overlay">
+        <div class="popup" id="successPopup">
+            <h3>Payment Successful!</h3>
+            <p>Thank you for your payment. You will be redirected shortly.</p>
+        </div>
+        <div class="popup" id="errorPopup">
+            <h3>Payment Failed</h3>
+            <p>Something went wrong with your payment. Please try again.</p>
+            <button class="popup-button" onclick="closeErrorPopup()">Close</button>
+        </div>
     </div>
-
-    <div class="error-popup" id="errorPopup">
-        <i class="fas fa-times-circle"></i>
-        <h2>Payment Failed</h2>
-        <p>Your payment could not be processed. Please try a different payment method.</p>
-        <button id="retry-button">Try Again</button>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
 
     <script>
-        // Function to get URL parameters
+        // Get URL parameters
         function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                ac_id: params.get('ac_id') || '',
-                name: params.get('name') || '',
-                location: params.get('location') || '',
-                amount: parseInt(params.get('amount')) || 0
-            };
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const pairs = queryString.split('&');
+            
+            for (const pair of pairs) {
+                const [key, value] = pair.split('=');
+                params[key] = decodeURIComponent(value || '');
+            }
+            
+            return params;
         }
 
         // Generate QR Code
@@ -414,7 +236,10 @@
             
             const upiUrl = `upi://pay?${new URLSearchParams(qrData).toString()}`;
             
+            // Clear previous QR code if any
             document.getElementById('qrcode').innerHTML = '';
+            
+            // Generate new QR code
             new QRCode(document.getElementById('qrcode'), {
                 text: upiUrl,
                 width: 200,
@@ -425,27 +250,13 @@
             });
         }
 
-        // Update page with enrollment details
-        function updateEnrollmentDetails() {
-            const params = getUrlParams();
-            const monthlyFee = params.amount;
-            const totalAmount = monthlyFee * 3; // 3 months
-
-            document.getElementById('academy-name').textContent = params.name;
-            document.getElementById('academy-location').textContent = params.location;
-            document.getElementById('monthly-fee').textContent = `₹${monthlyFee.toLocaleString()}`;
-            document.getElementById('total-amount').textContent = `₹${totalAmount.toLocaleString()}`;
-            document.getElementById('qrAmount').textContent = `₹${totalAmount.toLocaleString()}`;
-            generateQRCode(totalAmount);
-        }
-
         // Show success popup
         function showSuccessPopup() {
             document.getElementById('successPopup').classList.add('show');
             document.getElementById('overlay').classList.add('show');
             
             setTimeout(() => {
-                window.location.href = 'payment-academy-success.php';
+                window.location.href = 'payment-academy-success.php?ac_id=<?php echo htmlspecialchars($ac_id); ?>&enrollment_success=true';
             }, 2000);
         }
 
@@ -454,58 +265,79 @@
             document.getElementById('errorPopup').classList.add('show');
             document.getElementById('overlay').classList.add('show');
         }
-
+        
         // Close error popup
         function closeErrorPopup() {
             document.getElementById('errorPopup').classList.remove('show');
             document.getElementById('overlay').classList.remove('show');
         }
 
-        // Handle payment method selection
-        document.querySelectorAll('.payment-method').forEach(method => {
-            method.addEventListener('click', () => {
-                document.querySelectorAll('.payment-method').forEach(m => 
-                    m.classList.remove('selected'));
-                method.classList.add('selected');
-                
-                const qrSection = document.getElementById('qrSection');
-                if (method.dataset.method === 'upi') {
-                    qrSection.classList.add('visible');
-                } else {
-                    qrSection.classList.remove('visible');
-                }
-            });
-        });
+        // Get elements
+        const upiOption = document.getElementById('upiOption');
+        const cardOption = document.getElementById('cardOption');
+        const bankingOption = document.getElementById('bankingOption');
+        
+        const upiDetails = document.getElementById('upiDetails');
+        const cardDetails = document.getElementById('cardDetails');
+        const bankingDetails = document.getElementById('bankingDetails');
+        const proceedButton = document.getElementById('proceedButton');
 
-        // Handle retry button click
-        document.getElementById('retry-button').addEventListener('click', function() {
-            closeErrorPopup();
+        // Show card details when card option is clicked
+        cardOption.addEventListener('click', function() {
+            hideAllDetails();
+            cardDetails.style.display = 'block';
+            cardOption.classList.add('selected');
         });
+        
+        // Show banking details when banking option is clicked
+        bankingOption.addEventListener('click', function() {
+            hideAllDetails();
+            bankingDetails.style.display = 'block';
+            bankingOption.classList.add('selected');
+        });
+        upiOption.addEventListener('click', function() {
+    hideAllDetails();
+    upiDetails.style.display = 'block';
+    upiOption.classList.add('selected');
+});
 
-        // Initialize payment
-        document.getElementById('pay-button').addEventListener('click', function() {
-            const selectedMethod = document.querySelector('.payment-method.selected');
-            if (!selectedMethod) {
-                alert('Please select a payment method');
-                return;
-            }
+// Define the hideAllDetails function
+function hideAllDetails() {
+    // Hide all payment details
+    upiDetails.style.display = 'none';
+    cardDetails.style.display = 'none';
+    bankingDetails.style.display = 'none';
+    
+    // Remove selected class from all options
+    upiOption.classList.remove('selected');
+    cardOption.classList.remove('selected');
+    bankingOption.classList.remove('selected');
+}
+        // Initialize Razorpay payment
+        function initializePayment() {
+            // Amount calculation
+            const amount = <?php echo json_encode($academy_charges * $enrollment_duration); ?>;
             
-            const params = getUrlParams();
+            // Generate QR code for UPI payment
+            generateQRCode(amount);
             
-            switch(selectedMethod.dataset.method) {
-                case 'upi':
-                    // Simulate UPI payment success
-                    setTimeout(showSuccessPopup, 2000);
-                    break;
-                case 'card':
-                    // Initialize Razorpay for card payment
+            // Setup proceed button action
+            proceedButton.addEventListener('click', function() {
+                if (upiOption.classList.contains('selected')) {
+                    // For UPI, just show success message after a delay to simulate payment
+                    setTimeout(() => {
+                        showSuccessPopup();
+                    }, 1500);
+                } else if (cardOption.classList.contains('selected') || bankingOption.classList.contains('selected')) {
+                    // For card and netbanking, initialize Razorpay
                     const options = {
-                        key: 'YOUR_RAZORPAY_KEY', // Replace with actual key
-                        amount: params.amount * 3 * 100, // Amount in paise
+                        key: 'YOUR_RAZORPAY_KEY',
+                        amount: amount * 100,
                         currency: 'INR',
                         name: 'GAME DAY',
-                        description: 'Academy Enrollment Payment',
-                        handler: function() {
+                        description: `Payment for Academy Enrollment`,
+                        image: 'your-logo-url.png',
+                        handler: function(response) {
                             showSuccessPopup();
                         },
                         prefill: {
@@ -515,27 +347,22 @@
                         },
                         theme: {
                             color: '#b9ff00'
-                        },
-                        modal: {
-                            ondismiss: function() {
-                                console.log('Payment cancelled');
-                            }
                         }
                     };
                     
-                    const rzp = new Razorpay(options);
-                    rzp.open();
-                    break;
-                case 'netbanking':
-                    // Simulate error for netbanking (for demonstration)
-                    setTimeout(showErrorPopup, 1500);
-                    break;
-            }
-        });
+                    // This is where you would typically initialize Razorpay
+                    // For demonstration, we'll just simulate success
+                    setTimeout(() => {
+                        showSuccessPopup();
+                    }, 1500);
+                }
+            });
+        }
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            updateEnrollmentDetails();
+            upiOption.click();
+            initializePayment();
         });
     </script>
 </body>

@@ -50,7 +50,7 @@ if(isset($_POST["submit"])){
             if(password_verify($password, $user["password"])){
                 // Password is correct, create session
                 $_SESSION["user_email"] = $email; // Email is now the primary identifier
-                $_SESSION["username"] = $user["user_name"];
+                $_SESSION["user_name"] = $user["user_name"];
                 $_SESSION["user_type"] = $user["user_type"];
                 
                 // Redirect based on user type
@@ -58,15 +58,11 @@ if(isset($_POST["submit"])){
                     case "admin":
                         header("Location: admin-dashboard.php");
                         break;
-                    case "v_owner":
-                        header("Location: venue-dashboard.php");
-                        break;
-                    case "a_owner":
-                        header("Location: academy-dashboard.php");
-                        break;
-                    case "v_a_owner":
-                        // For users who own both venue and academy, redirect to a selection page
-                        header("Location: owner-selection.php");
+                    case "owner":
+                            header("Location: admyadmindashboard.php");
+                            break;
+                    case "referee":
+                        header("Location: refereedashboard.php");
                         break;
                     default: // normal users
                         header("Location: homepage.php");

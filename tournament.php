@@ -1,3 +1,22 @@
+<?php
+session_start();
+
+// Check if the request is a POST request
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Store tournament data in session
+    $_SESSION['tournament_id'] = $_POST['tr_id'];
+    $_SESSION['tournament_name'] = $_POST['tr_name'];
+    $_SESSION['tournament_venue'] = $_POST['venue_nm'];
+    $_SESSION['tournament_location'] = $_POST['location'];
+    $_SESSION['tournament_date'] = $_POST['start_date'];
+    $_SESSION['tournament_fee'] = $_POST['entry_fee'];
+    $_SESSION['venue_id'] = $_POST['venue_id'];
+    
+    // Redirect to tournaments page if accessed directly
+    header("Location: tournregispage.php?tr_id=" . $_SESSION['tournament_id']);
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,10 +35,14 @@
     include 'header.php';
     include 'db.php';  // Include the database connection
 
-    // Query to fetch tournaments with venue details
-    $sql = "SELECT t.tr_id, t.tr_name, t.img_url, v.venue_nm, v.location 
+    // Get current date for comparison
+    $current_date = date('Y-m-d');
+
+    // Query to fetch only tournaments that have not started yet with venue details
+    $sql = "SELECT t.tr_id, t.tr_name, t.img_url, t.start_date, t.entry_fee, v.venue_nm, v.location, v.venue_id 
             FROM tournaments t 
-            LEFT JOIN venue v ON t.venue_id = v.venue_id";
+            LEFT JOIN venue v ON t.venue_id = v.venue_id
+            WHERE t.start_date > '$current_date'";
     $result = $conn->query($sql);
     ?>
     
@@ -49,26 +72,41 @@
             <?php
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
+                    $tr_id = $row['tr_id'];
+                    $tr_name = $row['tr_name'];
+                    $venue_nm = $row['venue_nm'];
+                    $location = $row['location'];
+                    $start_date = $row['start_date'];
+                    $entry_fee = $row['entry_fee'];
+                    $venue_id = $row['venue_id'];
             ?>
             <div class="tournament-card">
-                <img src="<?php echo htmlspecialchars($row['img_url']); ?>" alt="<?php echo htmlspecialchars($row['tr_name']); ?>" class="tournament-image">
+                <img src="<?php echo htmlspecialchars($row['img_url']); ?>" alt="<?php echo htmlspecialchars($tr_name); ?>" class="tournament-image">
                 <div class="tournament-info">
-                    <div class="tournament-name"><?php echo htmlspecialchars($row['tr_name']); ?></div>
+                    <div class="tournament-name"><?php echo htmlspecialchars($tr_name); ?></div>
                     <div class="tournament-details">
                         <div class="tournament-detail">
                             <i class="fas fa-map-marker-alt"></i>
-                            <?php echo htmlspecialchars($row['venue_nm']) . ', ' . htmlspecialchars($row['location']); ?>
+                            <?php echo htmlspecialchars($venue_nm) . ', ' . htmlspecialchars($location); ?>
+                        </div>
+                        <div class="tournament-detail">
+                            <i class="fas fa-calendar-alt"></i>
+                            Starts: <?php echo date('d M Y', strtotime($start_date)); ?>
+                        </div>
+                        <div class="tournament-detail">
+                            <i class="fas fa-money-bill-wave"></i>
+                            Entry Fee: ₹<?php echo htmlspecialchars($entry_fee); ?>
                         </div>
                     </div>
                     <div class="tournament-actions">
-                        <button class="register-button" onclick="window.location.href='tournregispage.php?tr_id=<?php echo $row['tr_id']; ?>'">Register Now</button>
+                        <button class="register-button" onclick="registerForTournament('<?php echo $tr_id; ?>', '<?php echo $tr_name; ?>', '<?php echo $venue_nm; ?>', '<?php echo $location; ?>', '<?php echo $start_date; ?>', '<?php echo $entry_fee; ?>', '<?php echo $venue_id; ?>')">Register Now</button>
                     </div>
                 </div>
             </div>
             <?php
                 }
             } else {
-                echo "<p>No tournaments found</p>";
+                echo "<p class='no-tournaments'>No upcoming tournaments available at the moment. Check back later!</p>";
             }
             $conn->close();
             ?>
@@ -76,6 +114,39 @@
     </div>
 
     <script>
+        function registerForTournament(trId, trName, venueName, location, startDate, entryFee, venueId) {
+            // Create a form element
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'tournament.php';
+            form.style.display = 'none';
+            
+            // Create input fields for tournament data
+            const fields = {
+                'tr_id': trId,
+                'tr_name': trName,
+                'venue_nm': venueName,
+                'location': location,
+                'start_date': startDate,
+                'entry_fee': entryFee,
+                'venue_id': venueId
+            };
+            
+            // Add fields to form
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+            
+            // Add form to document and submit
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Rest of the existing JavaScript for hero slider remains the same
         document.addEventListener('DOMContentLoaded', function() {
             const heroSlider = document.getElementById('heroSlider');
             const prevBtn = document.getElementById('prevBtn');
@@ -144,6 +215,5 @@
             </div>
         </div>
     </footer>
-
 </body>
 </html>
