@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ac_id = $_SESSION['academy_id'];
     $enrollment_duration = 3; 
     $enrollment_date = date('Y-m-d');
+    $en_id = uniqid('en_');
 
     // Check if required session variables are set
     if (!isset($email, $ac_id)) {
@@ -43,18 +44,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "<script>alert('You are already enrolled in this academy.');</script>";
     } else {
         // Insert enrollment into the database
-        $sql = "INSERT INTO enroll (ac_id, en_dur, en_date, email) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO enroll (en_id, ac_id, en_dur, en_date, email) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
 
         if ($stmt === false) {
             die("Error preparing statement: " . $conn->error);
         }
 
-        $stmt->bind_param("siis", $ac_id, $enrollment_duration, $enrollment_date, $email);
+        $stmt->bind_param("ssiss", $en_id, $ac_id, $enrollment_duration, $enrollment_date, $email);
 
         if ($stmt->execute()) {
             $_SESSION['enrollment_successful'] = true;
-            header("Location: payment-academy-success.php?ac_id=$ac_id&enrollment_success=true");
+            header("Location: payment-academy-success.php?ac_id=$ac_id&enrollment_success=true&en_id=$en_id");
             exit();
         } else {
             // Handle error quietly or with a more appropriate message

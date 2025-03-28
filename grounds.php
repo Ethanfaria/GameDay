@@ -66,7 +66,7 @@
                     while($row = $result->fetch_assoc()) {
                         // Get average rating from venue_reviews table
                         $venue_id = $row['venue_id'];
-                        $rating_sql = "SELECT AVG(ratings) as avg_rating FROM venue_reviews WHERE venue_id = '$venue_id'";
+                        $rating_sql = "SELECT AVG(v_ratings) as avg_rating FROM venue_reviews WHERE venue_id = '$venue_id'";
                         $rating_result = $conn->query($rating_sql);
                         $rating_row = $rating_result->fetch_assoc();
                         $rating = number_format($rating_row['avg_rating'] ?? 4.5, 1); // Default to 4.5 if no ratings

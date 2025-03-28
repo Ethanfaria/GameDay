@@ -42,12 +42,12 @@ function isReferee() {
 
 <!-- Navigation Bar -->
 <nav class="navbar">
-    <a href="homepage.php" ><img src="assets/gameday.png" class="logo" alt="GAMEDAY"></a>
+    <a href="index.php" ><img src="assets/gameday.png" class="logo" alt="GAMEDAY"></a>
     <button class="mobile-menu-btn">
         <i class="fas fa-bars"></i>
     </button>
     <div class="nav-links">
-        <a href="homepage.php">Home</a>
+        <a href="index.php">Home</a>
         <a href="grounds.php">Grounds</a>
         <a href="academy.php">Academy</a>
         <a href="tournament.php">Tournament</a>

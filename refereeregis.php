@@ -1,6 +1,6 @@
 <?php
-include 'db.php';
-session_start();
+include 'db.php'; // Include the database connection file
+session_start(); // Make sure to start the session to access user data
 
 if (!isset($_SESSION['user_email'])) {
     // Redirect to login if user is not logged in

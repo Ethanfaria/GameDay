@@ -23,7 +23,7 @@ $user_result = $user_stmt->get_result();
 $user = $user_result->fetch_assoc();
 
 // Get tournament details using tr_id
-$tournament_sql = "SELECT t.tr_id, t.tr_name, t.start_date, t.end_date, t.tr_schedule, 
+$tournament_sql = "SELECT t.tr_id, t.tr_name, t.start_date, t.end_date, t.tr_time, 
                          t.entry_fee, t.description, t.img_url, t.players_per_team, t.max_teams,
                          v.venue_nm, v.location 
                   FROM tournaments t
@@ -149,7 +149,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 <div class="detail-content">
                                     <h3>Match Times</h3>
-                                    <p><?php echo htmlspecialchars($tournament['tr_schedule']); ?></p>
+                                    <p><?php echo htmlspecialchars($tournament['tr_time']); ?></p>
                                 </div>
                             </div>
                         </div>

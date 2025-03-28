@@ -38,7 +38,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $venue_id = $_POST['venue_id'] ?? '';
     $start_date = $_POST['start_date'] ?? '';
     $end_date = $_POST['end_date'] ?? '';
-    $tr_schedule = $_POST['tr_schedule'] ?? '';
+    $startTime = date("h A", strtotime($_POST['start_time'] . ':00'));
+    $endTime = date("h A", strtotime($_POST['end_time'] . ':00'));
+    $tr_time = $startTime . ' - ' . $endTime;
     $entry_fee = $_POST['entry_fee'] ?? 0;
     $prize = $_POST['prize'] ?? 0;
     $description = $_POST['description'] ?? '';
@@ -53,15 +55,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($venue_id)) $errors[] = "Venue is required";
     if (empty($start_date)) $errors[] = "Start date is required";
     if (empty($end_date)) $errors[] = "End date is required";
-    if (empty($tr_schedule)) $errors[] = "Tournament schedule is required";
+    if (empty($tr_time)) $errors[] = "Tournament time is required";
     if (empty($players_per_team) || !is_numeric($players_per_team)) $errors[] = "Number of players per team is required and must be a number";
-    
+    if ($_POST['start_time'] >= $_POST['end_time']) {
+        $errors[] = "End time must be after start time";
+    }
     if (empty($errors)) {
         // Insert tournament data
-        $insert_sql = "INSERT INTO tournaments (tr_id, tr_name, venue_id, start_date, end_date, tr_schedule, entry_fee, prize, description, img_url, players_per_team, max_teams) 
+        $insert_sql = "INSERT INTO tournaments (tr_id, tr_name, venue_id, start_date, end_date, tr_time, entry_fee, prize, description, img_url, players_per_team, max_teams) 
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $insert_stmt = $conn->prepare($insert_sql);
-        $insert_stmt->bind_param("ssssssddssii", $tr_id, $tr_name, $venue_id, $start_date, $end_date, $tr_schedule, $entry_fee, $prize, $description, $img_url, $players_per_team, $max_teams);
+        $insert_stmt->bind_param("ssssssddssii", $tr_id, $tr_name, $venue_id, $start_date, $end_date, $tr_time, $entry_fee, $prize, $description, $img_url, $players_per_team, $max_teams);
         
         if ($insert_stmt->execute()) {
             echo '<div class="success-message">Tournament created successfully!</div>';
@@ -136,9 +140,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="tr_schedule" class="form-label"><i class="fas fa-clock"></i> Tournament Schedule</label>
-                    <input type="text" id="tr_schedule" name="tr_schedule" class="form-input" placeholder="E.g., Every Saturday and Sunday, 10:00 AM - 5:00 PM" required>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="start_time" class="form-label"><i class="fas fa-clock"></i> Tournament Start Time</label>
+                            <select id="start_time" name="start_time" class="form-input" required>
+                                <option value="">Select Start Hour</option>
+                                <?php 
+                                for ($i = 6; $i <= 22; $i++) {
+                                    $hour = $i % 12;
+                                    $hour = $hour == 0 ? 12 : $hour;
+                                    $ampm = $i >= 12 ? 'PM' : 'AM';
+                                    echo "<option value=\"$i\">$hour $ampm</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="end_time" class="form-label"><i class="fas fa-clock"></i> Tournament End Time</label>
+                            <select id="end_time" name="end_time" class="form-input" required>
+                                <option value="">Select End Hour</option>
+                                <?php 
+                                for ($i = 7; $i <= 23; $i++) {
+                                    $hour = $i % 12;
+                                    $hour = $hour == 0 ? 12 : $hour;
+                                    $ampm = $i >= 12 ? 'PM' : 'AM';
+                                    echo "<option value=\"$i\">$hour $ampm</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-row">

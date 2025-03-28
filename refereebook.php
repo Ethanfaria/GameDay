@@ -13,6 +13,8 @@
 </head>
 <body>
     <?php 
+
+    session_start();
     include 'header.php'; 
     include 'db.php';
 
@@ -21,12 +23,15 @@
         die("No referee selected");
     }
 
-    $ref_id = intval($_GET['ref_id']);
+    $ref_id = $_GET['ref_id'];
 
     // Fetch referee details
-    $sql = "SELECT ref_id, ref_name, ref_location, charges, yrs_exp, ref_pic FROM referee WHERE ref_id = ?";
+    $sql = "SELECT r.ref_id, r.ref_location, r.charges, r.yrs_exp, r.ref_pic, u.user_name, r.referee_email 
+            FROM referee r
+            JOIN user u ON r.referee_email = u.email
+            WHERE r.ref_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $ref_id);
+    $stmt->bind_param("s", $ref_id);  
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -35,16 +40,43 @@
     }
 
     $referee = $result->fetch_assoc();
+
+    // Fetch all venues for dropdown
+    $venue_sql = "SELECT venue_id, venue_nm FROM venue";
+    $venue_result = $conn->query($venue_sql);
+    $venues = [];
+    if ($venue_result->num_rows > 0) {
+        while($row = $venue_result->fetch_assoc()) {
+            $venues[] = $row;
+        }
+    }
+
+    // Process form submission
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $match_date = $_POST['match_date'];
+        $start_time = $_POST['start_time'];
+        $end_time = $_POST['end_time'];
+        $venue_id = $_POST['match_location'];
+        $referee_email = $referee['referee_email'];
+        $user_email = $_SESSION['email'] ?? ''; // Assuming user is logged in and email is in session
+        
+        // Combine start and end time for bk_dur
+        $bk_dur = date("g:i A", strtotime($start_time)) . " - " . date("g:i A", strtotime($end_time));
+        
+        // Insert booking into database
+        $insert_sql = "INSERT INTO book (email, venue_id, bk_date, bk_dur, referee_email, status) 
+                        VALUES (?, ?, ?, ?, ?, 'pending')";
+        $stmt = $conn->prepare($insert_sql);
+        $stmt->bind_param("sssss", $user_email, $venue_id, $match_date, $bk_dur, $referee_email);
+        
+        if ($stmt->execute()) {
+            echo "<script>alert('Referee request submitted successfully!');</script>";
+        } else {
+            echo "<script>alert('Error submitting request: " . $conn->error . "');</script>";
+        }
+    }
     ?>
 
-    <!-- Hero Section -->
-    <div class="hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>Book Your Referee</h1>
-            <p>Confirm booking details for your match</p>
-        </div>
-    </div>
 
     <!-- Booking Bento Grid -->
     <div class="content-wrapper">
@@ -55,7 +87,7 @@
                     <img src="<?php echo htmlspecialchars($referee['ref_pic']); ?>" alt="Referee Profile">
                 </div>
                 <div class="referee-info">
-                    <div class="referee-name"><?php echo htmlspecialchars($referee['ref_name']); ?></div>
+                    <div class="referee-name"><?php echo htmlspecialchars($referee['user_name']); ?></div>
                     <div class="referee-experience"><?php echo htmlspecialchars($referee['yrs_exp']); ?> years of experience</div>
                     <div class="referee-badges">
                         <span class="badge">Location: <?php echo htmlspecialchars($referee['ref_location']); ?></span>
@@ -65,7 +97,7 @@
             </div>
 
             <!-- Booking Form -->
-            <form class="bento-booking-form" id="refereeBookingForm" method="POST" action="process-booking.php">
+            <form class="bento-booking-form" id="refereeBookingForm" method="POST" action="">
                 <input type="hidden" name="ref_id" value="<?php echo $referee['ref_id']; ?>">
                 
                 <div class="form-group">
@@ -85,7 +117,14 @@
 
                 <div class="form-group">
                     <label for="match_location">Match Venue</label>
-                    <input type="text" id="match_location" name="match_location" placeholder="Enter match venue" required>
+                    <select id="match_location" name="match_location" required>
+                        <option value="">Select a venue</option>
+                        <?php foreach ($venues as $venue): ?>
+                            <option value="<?php echo htmlspecialchars($venue['venue_id']); ?>">
+                                <?php echo htmlspecialchars($venue['venue_nm']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <button type="submit" class="book-now-button">Request Referee</button>
@@ -103,30 +142,22 @@
             const matchDate = new Date(document.getElementById('match_date').value);
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
-
+            
             // Date validation
             if (matchDate < new Date()) {
                 alert('Please select a future date for the match.');
                 e.preventDefault();
                 return;
             }
-
+            
             // Time validation
             if (startTime >= endTime) {
                 alert('End time must be after start time.');
                 e.preventDefault();
                 return;
             }
-
-            // Phone number validation (basic)
-            const phoneInput = document.getElementById('contact_phone');
-            const phoneRegex = /^[6-9]\d{9}$/;
-            if (!phoneRegex.test(phoneInput.value)) {
-                alert('Please enter a valid 10-digit Indian mobile number.');
-                e.preventDefault();
-                return;
-            }
         });
     </script>
+
 </body>
 </html>

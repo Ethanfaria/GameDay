@@ -115,7 +115,7 @@ unset($_SESSION['academy_charges']);
         <p>A confirmation email has been sent to your registered email address.</p>
         
         <div class="action-buttons">
-            <a href="homepage.php" class="action-button">Go to Home</a>
+            <a href="index.php" class="action-button">Go to Home</a>
             <a href="profile.php" class="action-button secondary-button">View Profile</a>
         </div>
     </div>

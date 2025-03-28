@@ -15,9 +15,16 @@
 <?php include 'header.php'; 
 include 'db.php';
 
-// Fetch referees from the database
-$sql = "SELECT ref_id, ref_name, ref_location, ref_contact, charges, yrs_exp, ref_pic FROM referee";
+// Fetch referees with their user names from the database
+$sql = "SELECT r.ref_id, r.ref_location, r.charges, r.yrs_exp, r.ref_pic, u.user_name 
+        FROM referee r
+        JOIN user u ON r.referee_email = u.email";
 $result = $conn->query($sql);
+
+// Check for query errors
+if ($result === false) {
+    die("Database error: " . $conn->error);
+}
 ?>
 
     <!-- Hero Section -->
@@ -47,18 +54,18 @@ $result = $conn->query($sql);
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                 ?>
-                <div class="referee-card regular" data-contact="<?php echo htmlspecialchars($row['ref_contact']); ?>">
+                <div class="referee-card">
                     <div class="referee-image">
                         <img src="<?php echo htmlspecialchars($row['ref_pic']); ?>" alt="Referee">
                     </div>
                     <div class="referee-info">
-                        <div class="referee-name"><?php echo htmlspecialchars($row['ref_name']); ?></div>
+                        <div class="referee-name"><?php echo htmlspecialchars($row['user_name']); ?></div>
                         <div class="referee-experience"><?php echo htmlspecialchars($row['yrs_exp']); ?> years of experience</div>
                         <div class="referee-badges">
                             <span class="badge">Location: <?php echo htmlspecialchars($row['ref_location']); ?></span>
                         </div>
                         <div class="price">₹<?php echo htmlspecialchars($row['charges']); ?> per match</div>
-                        <button class="hire-button">HIRE NOW</button>
+                        <button class="hire-button" onclick="window.location.href='refereebook.php?ref_id=<?php echo $row['ref_id']; ?>'">HIRE NOW</button>
                     </div>
                 </div>
                 <?php 

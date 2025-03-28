@@ -324,7 +324,7 @@ $conn->close();
         <div class="content">
             <div class="header">
             <div class="welcome-message">
-                Welcome back, <span class="admin-name"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                Welcome back, <span class="admin-name"><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
             </div>
                 <div class="header-buttons">
                     <button class="btn btn-primary" onclick="window.location.href='index.php'">
@@ -429,23 +429,11 @@ $conn->close();
                 <div class="quick-links">
                     <a href="admin-grounds.php" class="quick-link">
                         <i class="fas fa-plus-circle"></i>
-                        <div class="quick-link-title">Add New Ground</div>
-                        <div class="quick-link-desc">Add a new ground to the system</div>
+                        <div class="quick-link-title">Manage Ground</div>
+                        <div class="quick-link-desc">View and manage academies</div>
                     </a>
                     
-                    <a href="admin-bookings.php" class="quick-link">
-                        <i class="fas fa-calendar-alt"></i>
-                        <div class="quick-link-title">Manage Bookings</div>
-                        <div class="quick-link-desc">View and update booking status</div>
-                    </a>
-                    
-                    <a href="admin-users.php" class="quick-link">
-                        <i class="fas fa-user-plus"></i>
-                        <div class="quick-link-title">Manage Users</div>
-                        <div class="quick-link-desc">View and manage user accounts</div>
-                    </a>
-                    
-                    <a href="admin-reviews.php" class="quick-link">
+                    <a href="admin-academy.php" class="quick-link">
                         <i class="fas fa-graduation-cap"></i>
                         <div class="quick-link-title">Manage Academies</div>
                         <div class="quick-link-desc">View and manage academies</div>

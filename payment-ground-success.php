@@ -126,7 +126,7 @@ $booking_time = $_GET['time'] ?? 'Unknown';
         </div>
 
         <div class="buttons">
-            <a href="homepage.php" class="button primary-button">Back to Home</a>
+            <a href="index.php" class="button primary-button">Back to Home</a>
             <a href="#" class="button secondary-button" onclick="window.print()">Download Receipt</a>
         </div>
     </div>

@@ -9,6 +9,6 @@ $_SESSION = array();
 session_destroy();
 
 // Redirect to homepage
-header("Location: homepage.php");
+header("Location: index.php");
 exit();
 ?>

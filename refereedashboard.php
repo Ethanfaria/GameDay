@@ -14,67 +14,69 @@ $ref_email = $_SESSION['user_email'];
 
 // Fetch referee profile
 function fetchRefereeProfile($conn, $email) {
-    $query = "SELECT * FROM referee WHERE email = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $referee = mysqli_fetch_assoc($result);
-    mysqli_stmt_close($stmt);
+    $query = "SELECT r.*, u.user_name 
+              FROM referee r
+              JOIN user u ON r.referee_email = u.email 
+              WHERE r.referee_email = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $referee = $result->fetch_assoc();
+    $stmt->close();
     return $referee;
 }
 
 // Fetch referee statistics
 function fetchRefereeStats($conn, $email) {
-  // Modify the query to use existing columns
-  $stats_sql = "SELECT 
-      COUNT(DISTINCT r.ref_id) as matches_officiated,
-      COUNT(DISTINCT MONTH(b.bk_date)) as months_active,
-      COALESCE(r.charges, 0) as hourly_rate,
-      COALESCE(r.charges * COUNT(DISTINCT b.booking_id), 0) as total_earnings
-  FROM referee r
-  LEFT JOIN book b ON r.email = ?
-  WHERE r.email = ? 
-  AND b.bk_date <= CURDATE()";
-  
-  $stats_stmt = $conn->prepare($stats_sql);
-  $stats_stmt->bind_param("ss", $email, $email);
-  $stats_stmt->execute();
-  $stats = $stats_stmt->get_result()->fetch_assoc();
-  $stats_stmt->close();
-  
-  return $stats;
-}
+    $stats_sql = "SELECT 
+        COUNT(DISTINCT b.booking_id) as matches_officiated,
+        COUNT(DISTINCT MONTH(b.bk_date)) as months_active,
+        COALESCE(r.charges, 0) as hourly_rate,
+        COALESCE(r.charges * COUNT(DISTINCT b.booking_id), 0) as total_earnings
+    FROM referee r
+    LEFT JOIN book b ON r.referee_email = b.referee_email
+    WHERE r.referee_email = ? 
+    AND b.bk_date <= CURDATE()";
+    
+    $stats_stmt = $conn->prepare($stats_sql);
+    $stats_stmt->bind_param("s", $email);
+    $stats_stmt->execute();
+    $stats = $stats_stmt->get_result()->fetch_assoc();
+    $stats_stmt->close();
+    
+    return $stats;
+  }
 
 // Fetch upcoming matches
 function fetchUpcomingMatches($conn, $email) {
-  $matches_sql = "SELECT 
-      b.booking_id,
-      b.bk_date,
-      b.bk_dur AS time_slot,
-      v.venue_nm AS venue_name,
-      v.location,
-      b.venue_id,
-      'pending' AS status,
-      r.charges
-  FROM book b
-  LEFT JOIN venue v ON b.venue_id = v.venue_id
-  LEFT JOIN referee r ON r.email = ?
-  WHERE b.bk_date >= ?
-  ORDER BY b.bk_date ASC";
-
-  $matches_stmt = $conn->prepare($matches_sql);
-  $matches_stmt->bind_param("ss", $email, $current_date);
-  $matches_stmt->execute();
-  $matches_result = $matches_stmt->get_result();
-  $matches_stmt->close();
+    $matches_sql = "SELECT 
+        b.booking_id,
+        b.bk_date,
+        b.bk_dur AS time_slot,
+        v.venue_nm AS venue_name,
+        v.location,
+        b.venue_id,
+        b.status,
+        r.charges
+    FROM book b
+    LEFT JOIN venue v ON b.venue_id = v.venue_id
+    LEFT JOIN referee r ON r.referee_email = b.referee_email
+    WHERE b.referee_email = ? AND b.bk_date >= ?
+    ORDER BY b.bk_date ASC";
   
-  return $matches_result;
-}
+    $matches_stmt = $conn->prepare($matches_sql);
+    $matches_stmt->bind_param("ss", $email, $current_date);
+    $matches_stmt->execute();
+    $matches_result = $matches_stmt->get_result();
+    $matches_stmt->close();
+    
+    return $matches_result;
+  }
 
 // Handle booking status updates
 function updateBookingStatus($conn, $booking_id, $email, $action) {
-    $new_status = ($action == 'accept') ? 'confirmed' : 'declined';
+    $new_status = ($action == 'accept') ? 'accepted' : 'declined';
     
     $update_sql = "UPDATE book SET status = ? WHERE booking_id = ? AND referee_email = ?";
     $update_stmt = $conn->prepare($update_sql);
@@ -130,7 +132,7 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
                     <div class="referee-detail-icon"><i class="fas fa-id-card"></i></div>
                     <div class="referee-detail-content">
                         <div class="referee-detail-label">Name</div>
-                        <div class="referee-detail-value"><?php echo htmlspecialchars($referee['ref_name']); ?></div>
+                        <div class="referee-detail-value"><?php echo htmlspecialchars($referee['user_name']); ?></div>
                     </div>
                 </div>
                 
@@ -157,8 +159,8 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
                         <div class="referee-detail-value"><?php echo htmlspecialchars($referee['ref_location']); ?></div>
                     </div>
                 </div>
-                
-                <button class="signout-button">
+               
+                <button onclick="window.location.href='logout.php'" class="signout-button">
                     <i class="fas fa-sign-out-alt"></i> Sign Out
                 </button>
             </div>
@@ -392,6 +394,20 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
       });
     });
 
+    // Match card status badge
+$badge_class = '';
+switch($match['status']) {
+    case 'accepted':
+        $badge_class = 'badge-confirmed';
+        break;
+    case 'pending':
+        $badge_class = 'badge-upcoming';
+        break;
+    case 'declined':
+        $badge_class = 'badge-declined';
+        break;
+}
+
     // Edit profile button
     document.querySelector('.edit-button').addEventListener('click', function() {
       alert('Profile edit feature coming soon!');
@@ -400,9 +416,10 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
     // Sign out button
     document.querySelector('.signout-button').addEventListener('click', function() {
       if (confirm('Are you sure you want to sign out?')) {
-        window.location.href = 'login.php';
+        window.location.href = 'logout.php';
       }
     });
+
   </script>
 </body>
 </html>

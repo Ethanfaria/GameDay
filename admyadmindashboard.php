@@ -504,7 +504,7 @@ $defaultDashboard = ($userType == 'owner' || $userType == 'admin') ? 'turf' : ''
                   <?php echo date("d M", strtotime($tournament['start_date'])); ?> - 
                   <?php echo date("d M Y", strtotime($tournament['end_date'])); ?>
                 </p>
-                <p class="tournament-schedule"><?php echo htmlspecialchars($tournament['tr_schedule']); ?></p>
+                <p class="tournament-time"><?php echo htmlspecialchars($tournament['tr_time']); ?></p>
                 <p class="tournament-prize">Prize Pool: ₹<?php echo number_format($tournament['prize']); ?></p>
               </div>
             </div>
@@ -853,8 +853,8 @@ $defaultDashboard = ($userType == 'owner' || $userType == 'admin') ? 'turf' : ''
       <h3>Quick Links</h3>
       <ul>
         <li><a href="index.php">Home</a></li>
-        <li><a href="venues.php">Find Grounds</a></li>
-        <li><a href="academies.php">Join Academy</a></li>
+        <li><a href="ground.php">Find Grounds</a></li>
+        <li><a href="academy.php">Join Academy</a></li>
         <li><a href="tournaments.php">Tournaments</a></li>
         <li><a href="about.php">About Us</a></li>
       </ul>

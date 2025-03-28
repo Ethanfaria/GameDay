@@ -57,6 +57,17 @@ if(isset($_POST["submit"])){
         array_push($errors, "Phone number is required");
     } elseif (!preg_match("/^[0-9]{10}$/", $number)) {
         array_push($errors, "Phone number must be 10 digits");
+    } else {
+        // Check if phone number already exists in database
+        $sql = "SELECT * FROM user WHERE user_ph = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $number);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            array_push($errors, "Phone number is already registered. Please use a different number.");
+        }
+        $stmt->close();
     }
 
     // Validate password
@@ -81,14 +92,13 @@ if(isset($_POST["submit"])){
     if (count($errors) == 0) {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
         
-        // Convert phone number to integer for the database
-        $phone_int = (int)$number;
+        // Store phone number as string to prevent conversion issues
+        $phone_str = $number;
         
         // Prepare and bind parameters to prevent SQL injection
-        // Include user_type in the INSERT statement
         $sql = "INSERT INTO user (user_name, user_ph, email, password, user_type) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sisss", $fullname, $phone_int, $email, $passwordHash, $user_type);
+        $stmt->bind_param("sssss", $fullname, $phone_str, $email, $passwordHash, $user_type);
         
         // Execute the query
         if ($stmt->execute()) {
@@ -149,6 +159,7 @@ $conn->close();
         }
     </style>
 </head>
+<body>
 <?php include 'header.php'; ?>
 
     <!-- Login Container -->
@@ -335,7 +346,7 @@ $conn->close();
         function validateEmail() {
             const email = document.getElementById('Email').value;
             const emailFormat = document.getElementById('emailFormat');
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const emailPattern = /^[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             
             if (emailPattern.test(email)) {
                 emailFormat.classList.add('valid');
@@ -428,156 +439,80 @@ $conn->close();
             }
         }
 
+        // Create function to add error messages at the top
+        function displayErrorsAtTop(errors) {
+            // Clear previous error messages
+            const existingErrors = document.querySelectorAll('.error');
+            existingErrors.forEach(error => error.remove());
+            
+            // Get login-header to insert errors after it
+            const loginHeader = document.querySelector('.login-header');
+            
+            // Create and insert error messages
+            errors.forEach(errorMsg => {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = errorMsg;
+                loginHeader.insertAdjacentElement('afterend', errorDiv);
+            });
+            
+            // Scroll to top to show errors
+            window.scrollTo(0, 0);
+        }
+
         // Form submission validation
         document.getElementById('SignupForm').addEventListener('submit', function(event) {
-            // Validate all fields before submission
-            validateUsername();
-            validateEmail();
-            validatePhone();
-            validatePassword();
-            validatePasswordMatch();
+            // Array to collect error messages
+            const errorMessages = [];
             
-            // Check if any requirements are invalid
-            const invalidRequirements = document.querySelectorAll('.requirements .invalid');
-            if (invalidRequirements.length > 0) {
+            // Validate username
+            const username = document.getElementById('Username').value;
+            if (username.length < 3) {
+                errorMessages.push("Username must be at least 3 characters long");
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                errorMessages.push("Username can only contain letters, numbers, and underscores");
+            }
+            
+            // Validate email
+            const email = document.getElementById('Email').value;
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorMessages.push("Email is not valid");
+            }
+            
+            // Validate phone
+            const phone = document.getElementById('phone').value;
+            if (!/^[0-9]{10}$/.test(phone)) {
+                errorMessages.push("Phone number must be exactly 10 digits");
+            }
+            
+            // Validate password
+            const password = document.getElementById('Password').value;
+            if (password.length < 8) {
+                errorMessages.push("Password must be at least 8 characters long");
+            }
+            if (!/[A-Z]/.test(password)) {
+                errorMessages.push("Password must contain at least one uppercase letter");
+            }
+            if (!/[a-z]/.test(password)) {
+                errorMessages.push("Password must contain at least one lowercase letter");
+            }
+            if (!/[0-9]/.test(password)) {
+                errorMessages.push("Password must contain at least one number");
+            }
+            
+            // Validate password match
+            const repeatPassword = document.getElementById('Repeat-Password').value;
+            if (password !== repeatPassword) {
+                errorMessages.push("Passwords do not match");
+            }
+            
+            // If there are errors, prevent form submission and display them
+            if (errorMessages.length > 0) {
                 event.preventDefault(); // Prevent form submission
-                alert('Please correct the form errors before submitting.');
+                displayErrorsAtTop(errorMessages);
             }
         });
-        function validatePassword() {
-    const password = document.getElementById('Password').value;
-    const lengthRequirement = document.getElementById('passwordLength');
-    const upperRequirement = document.getElementById('passwordUpper');
-    const lowerRequirement = document.getElementById('passwordLower');
-    const numberRequirement = document.getElementById('passwordNumber');
-    
-    if (password.length >= 8) {
-        lengthRequirement.classList.add('valid');
-        lengthRequirement.classList.remove('invalid');
-    } else {
-        lengthRequirement.classList.add('invalid');
-        lengthRequirement.classList.remove('valid');
-    }
-    
-    if (/[A-Z]/.test(password)) {
-        upperRequirement.classList.add('valid');
-        upperRequirement.classList.remove('invalid');
-    } else {
-        upperRequirement.classList.add('invalid');
-        upperRequirement.classList.remove('valid');
-    }
-    
-    if (/[a-z]/.test(password)) {
-        lowerRequirement.classList.add('valid');
-        lowerRequirement.classList.remove('invalid');
-    } else {
-        lowerRequirement.classList.add('invalid');
-        lowerRequirement.classList.remove('valid');
-    }
-    
-    if (/[0-9]/.test(password)) {
-        numberRequirement.classList.add('valid');
-        numberRequirement.classList.remove('invalid');
-    } else {
-        numberRequirement.classList.add('invalid');
-        numberRequirement.classList.remove('valid');
-    }
-    
-    // If repeat password field has value, check match
-    const repeatPassword = document.getElementById('Repeat-Password').value;
-    if (repeatPassword) {
-        validatePasswordMatch();
-    }
-}
-
-function validatePasswordMatch() {
-    const password = document.getElementById('Password').value;
-    const repeatPassword = document.getElementById('Repeat-Password').value;
-    const matchRequirement = document.getElementById('passwordMatch');
-    
-    if (password === repeatPassword) {
-        matchRequirement.classList.add('valid');
-        matchRequirement.classList.remove('invalid');
-    } else {
-        matchRequirement.classList.add('invalid');
-        matchRequirement.classList.remove('valid');
-    }
-}
-
-// Create function to add error messages at the top
-function displayErrorsAtTop(errors) {
-    // Clear previous error messages
-    const existingErrors = document.querySelectorAll('.error');
-    existingErrors.forEach(error => error.remove());
-    
-    // Get login-header to insert errors after it
-    const loginHeader = document.querySelector('.login-header');
-    
-    // Create and insert error messages
-    errors.forEach(errorMsg => {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error';
-        errorDiv.textContent = errorMsg;
-        loginHeader.insertAdjacentElement('afterend', errorDiv);
-    });
-    
-    // Scroll to top to show errors
-    window.scrollTo(0, 0);
-}
-
-// Form submission validation
-document.getElementById('SignupForm').addEventListener('submit', function(event) {
-    // Array to collect error messages
-    const errorMessages = [];
-    
-    // Validate username
-    const username = document.getElementById('Username').value;
-    if (username.length < 3) {
-        errorMessages.push("Username must be at least 3 characters long");
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-        errorMessages.push("Username can only contain letters, numbers, and underscores");
-    }
-    
-    // Validate email
-    const email = document.getElementById('Email').value;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        errorMessages.push("Email is not valid");
-    }
-    
-    // Validate phone
-    const phone = document.getElementById('phone').value;
-    if (!/^[0-9]{10}$/.test(phone)) {
-        errorMessages.push("Phone number must be exactly 10 digits");
-    }
-    
-    // Validate password
-    const password = document.getElementById('Password').value;
-    if (password.length < 8) {
-        errorMessages.push("Password must be at least 8 characters long");
-    }
-    if (!/[A-Z]/.test(password)) {
-        errorMessages.push("Password must contain at least one uppercase letter");
-    }
-    if (!/[a-z]/.test(password)) {
-        errorMessages.push("Password must contain at least one lowercase letter");
-    }
-    if (!/[0-9]/.test(password)) {
-        errorMessages.push("Password must contain at least one number");
-    }
-    
-    // Validate password match
-    const repeatPassword = document.getElementById('Repeat-Password').value;
-    if (password !== repeatPassword) {
-        errorMessages.push("Passwords do not match");
-    }
-    
-    // If there are errors, prevent form submission and display them
-    if (errorMessages.length > 0) {
-        event.preventDefault(); // Prevent form submission
-        displayErrorsAtTop(errorMessages);
-    }
-});
     </script>
 </body>
 </html>

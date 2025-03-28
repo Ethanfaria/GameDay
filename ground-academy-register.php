@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $duration = $_POST['academyDuration'];
         
         // Process the time inputs
-        $startTime = date("h:i A", strtotime($_POST['startTime']));
-        $endTime = date("h:i A", strtotime($_POST['endTime']));
+        $startTime = date("h A", strtotime($_POST['startTime'] . ':00'));
+        $endTime = date("h A", strtotime($_POST['endTime'] . ':00'));
         $timings = $startTime . ' - ' . $endTime;
         
         // Process the days checkboxes
@@ -323,12 +323,32 @@ if ($venues_result->num_rows > 0) {
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="startTime">Start Time</label>
-                                <input type="time" id="startTime" name="startTime" required>
+                                <label for="startTime">Start Hour</label>
+                                <select id="startTime" name="startTime" required>
+                                    <option value="">Select Start Hour</option>
+                                    <?php 
+                                    for ($i = 6; $i <= 22; $i++) {
+                                        $hour = $i % 12;
+                                        $hour = $hour == 0 ? 12 : $hour;
+                                        $ampm = $i >= 12 ? 'PM' : 'AM';
+                                        echo "<option value=\"$i\">$hour $ampm</option>";
+                                    }
+                                    ?>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label for="endTime">End Time</label>
-                                <input type="time" id="endTime" name="endTime" required>
+                                <label for="endTime">End Hour</label>
+                                <select id="endTime" name="endTime" required>
+                                    <option value="">Select End Hour</option>
+                                    <?php 
+                                    for ($i = 7; $i <= 23; $i++) {
+                                        $hour = $i % 12;
+                                        $hour = $hour == 0 ? 12 : $hour;
+                                        $ampm = $i >= 12 ? 'PM' : 'AM';
+                                        echo "<option value=\"$i\">$hour $ampm</option>";
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                     </div>
