@@ -558,83 +558,56 @@ if ($bookings_result->num_rows > 0) {
         <?php endif; ?>
     </div>
 </div>
-  <!-- Footer -->
-  <footer>
-    <div class="footer-col">
-        <div class="footer-logo">GAME DAY</div>
-        <p class="footer-text">The #1 platform for booking futsal grounds and finding the best playing experiences in your area.</p>
-    </div>
+<?php include 'footer.php'; ?>
 
-    <div class="footer-col footer-links">
-        <h3>Quick Links</h3>
-        <ul>
-            <li><a href="#">Find Grounds</a></li>
-            <li><a href="#">Join Academy</a></li>
-            <li><a href="#">Partner With Us</a></li>
-            <li><a href="#">About Us</a></li>
-            <li><a href="#">FAQs</a></li>
-        </ul>
-    </div>
-
-    <div class="footer-col">
-        <div class="contact">
-            <h3>Contact Us</h3>
-            <div class="contact-info">
-                <p><i class="fas fa-envelope"></i> info@gameday.com</p>
-                <p><i class="fas fa-phone"></i> +1 234 567 8900</p>
-            </div>
-        </div>
-        <div class="social">
-            <h3>Follow Us</h3>
-            <div class="social-icons">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-youtube"></i></a>
-            </div>
-        </div>
-    </div>
-</footer> 
-  
   <script>
-    document.querySelector('.quick-action .fa-star').parentElement.addEventListener('click', function() {
-        document.getElementById('groundReviewModal').style.display = 'flex';
-    });
-    // Add some simple animations when the page loads
     document.addEventListener('DOMContentLoaded', function() {
-      // Animate the countdown number
       const countdownEl = document.querySelector('.countdown-number');
       if (countdownEl) {
         const startValue = parseInt(countdownEl.textContent);
       }
     });
 
-    document.querySelector('.quick-action .fa-user-edit').parentElement.addEventListener('click', function() {
-      document.getElementById('profileEditModal').style.display = 'flex';
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Profile Edit Action
+        const editProfileIcon = document.querySelector('.quick-action .fa-user-edit').parentElement;
+        editProfileIcon.style.cursor = 'pointer';
+        editProfileIcon.addEventListener('click', function() {
+            document.getElementById('profileEditModal').style.display = 'flex';
+        });
 
-    function closeModal(modalId) {
-      document.getElementById(modalId).style.display = 'none';
-    }
+        // Invite Friends Action
+        const inviteFriendsIcon = document.querySelector('.quick-action .fa-user-plus').parentElement;
+        inviteFriendsIcon.style.cursor = 'pointer';
+        inviteFriendsIcon.addEventListener('click', function() {
+            const inviteLink = 'https://gameday.com/invite?ref=' + btoa('<?php echo $_SESSION['user_email']; ?>');
+            
+            // Create a temporary textarea to copy the link
+            const tempInput = document.createElement('textarea');
+            tempInput.value = inviteLink;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
 
-    // Invite Friends Functionality
-    document.querySelector('.quick-action .fa-user-plus').parentElement.addEventListener('click', function() {
-      const inviteLink = 'https://gameday.com/invite?ref=<?php echo base64_encode($user_email); ?>';
-      
-      // Create a temporary textarea to copy the link
-      const tempInput = document.createElement('textarea');
-      tempInput.value = inviteLink;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempInput);
+            // Show a notification
+            alert('Invite link copied to clipboard!');
+        });
 
-      // Show a notification
-      alert('Invite link copied to clipboard!');
-    });
-    document.querySelector('.quick-action .fa-graduation-cap').parentElement.addEventListener('click', function() {
-        document.getElementById('academyReviewModal').style.display = 'flex';
-    });
+        // Ground Review Action
+        const groundReviewIcon = document.querySelector('.quick-action .fa-star').parentElement;
+        groundReviewIcon.style.cursor = 'pointer';
+        groundReviewIcon.addEventListener('click', function() {
+            document.getElementById('groundReviewModal').style.display = 'flex';
+        });
+
+        // Academy Review Action
+        const academyReviewIcon = document.querySelector('.quick-action .fa-graduation-cap').parentElement;
+        academyReviewIcon.style.cursor = 'pointer';
+        academyReviewIcon.addEventListener('click', function() {
+            document.getElementById('academyReviewModal').style.display = 'flex';
+        });
+    });    
   </script>
 </body>
 </html>
