@@ -323,9 +323,9 @@ $conn->close();
         <!-- Main Content -->
         <div class="content">
             <div class="header">
-            <div class="welcome-message">
-                Welcome back, <span class="admin-name"><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-            </div>
+                <div class="welcome-message">
+                    Welcome back, <span class="admin-name"><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+                </div>
                 <div class="header-buttons">
                     <button class="btn btn-primary" onclick="window.location.href='index.php'">
                         <i class="fas fa-eye"></i> View Site
