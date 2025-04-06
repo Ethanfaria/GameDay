@@ -134,12 +134,6 @@ $conn->close();
                         <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('Password')"></i>
                     </div>
                 </div>
-
-                <div class="remember-me">
-                    <input type="checkbox" id="rememberMe" name="remember">
-                    <label for="rememberMe">Remember me</label>
-                </div>
-
                 <button type="submit" name="submit" class="login-button">Login to GameDay</button>
             </form>
 

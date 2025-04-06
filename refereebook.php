@@ -13,10 +13,15 @@
 </head>
 <body>
     <?php 
-
     session_start();
     include 'header.php'; 
     include 'db.php';
+
+    // Check if user is logged in
+    if (!isset($_SESSION['user_email'])) {
+        echo "<script>alert('Please login to book a referee.'); window.location.href='login.php';</script>";
+        exit();
+    }
 
     // Check if referee ID is passed
     if (!isset($_GET['ref_id'])) {
@@ -24,6 +29,7 @@
     }
 
     $ref_id = $_GET['ref_id'];
+    $user_email = $_SESSION['user_email'];
 
     // Fetch referee details
     $sql = "SELECT r.ref_id, r.ref_location, r.charges, r.yrs_exp, r.ref_pic, u.user_name, r.referee_email 
@@ -41,42 +47,43 @@
 
     $referee = $result->fetch_assoc();
 
-    // Fetch all venues for dropdown
-    $venue_sql = "SELECT venue_id, venue_nm FROM venue";
-    $venue_result = $conn->query($venue_sql);
-    $venues = [];
-    if ($venue_result->num_rows > 0) {
-        while($row = $venue_result->fetch_assoc()) {
-            $venues[] = $row;
+    // Fetch user's upcoming turf bookings
+    $bookings_sql = "SELECT b.booking_id, b.bk_date, b.bk_dur, v.venue_nm, v.venue_id 
+                    FROM book b 
+                    JOIN venue v ON b.venue_id = v.venue_id 
+                    WHERE b.email = ? 
+                    AND b.referee_email IS NULL 
+                    AND b.bk_date >= CURDATE() 
+                    ORDER BY b.bk_date ASC, b.bk_dur ASC";
+    $stmt = $conn->prepare($bookings_sql);
+    $stmt->bind_param("s", $user_email);
+    $stmt->execute();
+    $bookings_result = $stmt->get_result();
+    $user_bookings = [];
+    
+    if ($bookings_result->num_rows > 0) {
+        while($row = $bookings_result->fetch_assoc()) {
+            $user_bookings[] = $row;
         }
     }
 
     // Process form submission
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $match_date = $_POST['match_date'];
-        $start_time = $_POST['start_time'];
-        $end_time = $_POST['end_time'];
-        $venue_id = $_POST['match_location'];
+        $booking_id = $_POST['booking_id'];
         $referee_email = $referee['referee_email'];
-        $user_email = $_SESSION['email'] ?? ''; // Assuming user is logged in and email is in session
         
-        // Combine start and end time for bk_dur
-        $bk_dur = date("g:i A", strtotime($start_time)) . " - " . date("g:i A", strtotime($end_time));
-        
-        // Insert booking into database
-        $insert_sql = "INSERT INTO book (email, venue_id, bk_date, bk_dur, referee_email, status) 
-                        VALUES (?, ?, ?, ?, ?, 'pending')";
-        $stmt = $conn->prepare($insert_sql);
-        $stmt->bind_param("sssss", $user_email, $venue_id, $match_date, $bk_dur, $referee_email);
+        // Update booking with referee information
+        $update_sql = "UPDATE book SET referee_email = ? WHERE booking_id = ? AND email = ?";
+        $stmt = $conn->prepare($update_sql);
+        $stmt->bind_param("sss", $referee_email, $booking_id, $user_email);
         
         if ($stmt->execute()) {
-            echo "<script>alert('Referee request submitted successfully!');</script>";
+            echo "<script>alert('Referee request submitted successfully!'); window.location.href='userdashboard.php';</script>";
         } else {
             echo "<script>alert('Error submitting request: " . $conn->error . "');</script>";
         }
     }
     ?>
-
 
     <!-- Booking Bento Grid -->
     <div class="content-wrapper">
@@ -96,68 +103,65 @@
                 </div>
             </div>
 
-            <!-- Booking Form -->
-            <form class="bento-booking-form" id="refereeBookingForm" method="POST" action="">
-                <input type="hidden" name="ref_id" value="<?php echo $referee['ref_id']; ?>">
-                
-                <div class="form-group">
-                    <label for="match_date">Match Date</label>
-                    <input type="date" id="match_date" name="match_date" required>
-                </div>
+            <?php if (count($user_bookings) > 0): ?>
+                <!-- Booking Form -->
+                <form class="bento-booking-form" id="refereeBookingForm" method="POST" action="">
+                    <h3>Select a Booked Turf</h3>
+                    <p>You can only book a referee for matches you've already booked.</p>
+                    
+                    <div class="form-group">
+                        <label for="booking_id">Select your booked match:</label>
+                        <select id="booking_id" name="booking_id" required>
+                            <option value="">Select a booked match</option>
+                            <?php foreach ($user_bookings as $booking): ?>
+                                <option value="<?php echo htmlspecialchars($booking['booking_id']); ?>">
+                                    <?php echo htmlspecialchars($booking['venue_nm']); ?> - 
+                                    <?php echo htmlspecialchars(date('d M Y', strtotime($booking['bk_date']))); ?>, 
+                                    <?php echo htmlspecialchars($booking['bk_dur']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="start_time">Start Time</label>
-                    <input type="time" id="start_time" name="start_time" required>
-                </div>
+                    <div class="booking-details" id="bookingDetails">
+                        <p>Select a booking to see details</p>
+                    </div>
 
-                <div class="form-group">
-                    <label for="end_time">End Time</label>
-                    <input type="time" id="end_time" name="end_time" required>
+                    <button type="submit" class="book-now-button">Request Referee</button>
+                </form>
+            <?php else: ?>
+                <div class="no-bookings-message">
+                    <h3>No Turf Bookings Found</h3>
+                    <p>You need to book a turf before you can request a referee.</p>
+                    <a href="grounds.php" class="btn book-turf-btn">Book a Turf First</a>
                 </div>
-
-                <div class="form-group">
-                    <label for="match_location">Match Venue</label>
-                    <select id="match_location" name="match_location" required>
-                        <option value="">Select a venue</option>
-                        <?php foreach ($venues as $venue): ?>
-                            <option value="<?php echo htmlspecialchars($venue['venue_id']); ?>">
-                                <?php echo htmlspecialchars($venue['venue_nm']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <button type="submit" class="book-now-button">Request Referee</button>
-            </form>
+            <?php endif; ?>
         </div>
     </div>
 
     <script>
-        // Set minimum date to today
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('match_date').setAttribute('min', today);
-
-        // Form validation
-        document.getElementById('refereeBookingForm').addEventListener('submit', function(e) {
-            const matchDate = new Date(document.getElementById('match_date').value);
-            const startTime = document.getElementById('start_time').value;
-            const endTime = document.getElementById('end_time').value;
+        document.addEventListener('DOMContentLoaded', function() {
+            const bookingSelect = document.getElementById('booking_id');
+            const bookingDetails = document.getElementById('bookingDetails');
             
-            // Date validation
-            if (matchDate < new Date()) {
-                alert('Please select a future date for the match.');
-                e.preventDefault();
-                return;
-            }
-            
-            // Time validation
-            if (startTime >= endTime) {
-                alert('End time must be after start time.');
-                e.preventDefault();
-                return;
+            if (bookingSelect) {
+                bookingSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const bookingText = selectedOption.text;
+                        const refereeCharge = <?php echo json_encode(htmlspecialchars($referee['charges'])); ?>;
+                        
+                        bookingDetails.innerHTML = `
+                            <p><strong>Selected Match:</strong> ${bookingText}</p>
+                            <p><strong>Referee Charge:</strong> ₹${refereeCharge}</p>
+                            <p><strong>Referee:</strong> ${<?php echo json_encode(htmlspecialchars($referee['user_name'])); ?>}</p>
+                        `;
+                    } else {
+                        bookingDetails.innerHTML = '<p>Select a booking to see details</p>';
+                    }
+                });
             }
         });
     </script>
-
 </body>
 </html>

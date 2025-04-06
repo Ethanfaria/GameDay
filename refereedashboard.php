@@ -13,13 +13,13 @@ $current_date = date('Y-m-d');
 $ref_email = $_SESSION['user_email'];
 
 // Fetch referee profile
-function fetchRefereeProfile($conn, $email) {
+function fetchRefereeProfile($conn, $ref_email) {
     $query = "SELECT r.*, u.user_name 
               FROM referee r
               JOIN user u ON r.referee_email = u.email 
               WHERE r.referee_email = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("s", $email);
+    $stmt->bind_param("s", $ref_email);
     $stmt->execute();
     $result = $stmt->get_result();
     $referee = $result->fetch_assoc();
@@ -28,7 +28,7 @@ function fetchRefereeProfile($conn, $email) {
 }
 
 // Fetch referee statistics
-function fetchRefereeStats($conn, $email) {
+function fetchRefereeStats($conn, $ref_email) {
     $stats_sql = "SELECT 
         COUNT(DISTINCT b.booking_id) as matches_officiated,
         COUNT(DISTINCT MONTH(b.bk_date)) as months_active,
@@ -40,7 +40,7 @@ function fetchRefereeStats($conn, $email) {
     AND b.bk_date <= CURDATE()";
     
     $stats_stmt = $conn->prepare($stats_sql);
-    $stats_stmt->bind_param("s", $email);
+    $stats_stmt->bind_param("s", $ref_email);
     $stats_stmt->execute();
     $stats = $stats_stmt->get_result()->fetch_assoc();
     $stats_stmt->close();
@@ -49,7 +49,7 @@ function fetchRefereeStats($conn, $email) {
   }
 
 // Fetch upcoming matches
-function fetchUpcomingMatches($conn, $email) {
+function fetchUpcomingMatches($conn, $ref_email) {
     $matches_sql = "SELECT 
         b.booking_id,
         b.bk_date,
@@ -66,7 +66,7 @@ function fetchUpcomingMatches($conn, $email) {
     ORDER BY b.bk_date ASC";
   
     $matches_stmt = $conn->prepare($matches_sql);
-    $matches_stmt->bind_param("ss", $email, $current_date);
+    $matches_stmt->bind_param("ss", $ref_email, $current_date);
     $matches_stmt->execute();
     $matches_result = $matches_stmt->get_result();
     $matches_stmt->close();
@@ -75,12 +75,12 @@ function fetchUpcomingMatches($conn, $email) {
   }
 
 // Handle booking status updates
-function updateBookingStatus($conn, $booking_id, $email, $action) {
+function updateBookingStatus($conn, $booking_id, $ref_email, $action) {
     $new_status = ($action == 'accept') ? 'accepted' : 'declined';
     
     $update_sql = "UPDATE book SET status = ? WHERE booking_id = ? AND referee_email = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("sis", $new_status, $booking_id, $email);
+    $update_stmt->bind_param("sis", $new_status, $booking_id, $ref_email);
     $update_stmt->execute();
     $update_stmt->close();
 }
@@ -240,7 +240,7 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
                                     <?php echo htmlspecialchars($match['location']); ?>
                                 </div>
                                 
-                                <div>Duration: <?php echo $match['duration']; ?> mins</div>
+                                <div>Time: <?php echo $match['time_slot']; ?></div>
                                 <div>Payment: ₹<?php echo number_format($match['charges'], 2); ?></div>
                                 
                                 <?php if($match['status'] == 'pending'): ?>

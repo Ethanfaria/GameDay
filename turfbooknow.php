@@ -1,6 +1,7 @@
 <?php
+include 'db.php';
 session_start();
-
+date_default_timezone_set('Asia/Kolkata');
 // Handle review submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review'])) {
     // Review submission logic
@@ -64,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['selectedDate'])) {
 <body>
     <?php 
         include 'header.php'; 
-        include 'db.php';
 
         $venue_id = isset($_GET['venue_id']) ? $_GET['venue_id'] : null;
 

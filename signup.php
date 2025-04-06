@@ -81,8 +81,10 @@ if(isset($_POST["submit"])){
         array_push($errors, "Password must contain at least one lowercase letter");
     } elseif (!preg_match("/[0-9]/", $password)) {
         array_push($errors, "Password must contain at least one number");
-    }
-
+    } elseif (!preg_match("/[\W_]/", $password)) {
+        array_push($errors, "Password must contain at least one special character");
+    }    
+    
     // Confirm passwords match
     if ($password !== $passwordRepeat) {
         array_push($errors, "Passwords do not match");
@@ -222,6 +224,7 @@ $conn->close();
                         <ul>
                             <li id="phoneDigits">Must be exactly 10 digits</li>
                             <li id="phoneNumbers">Must contain only numbers</li>
+                            <li id="phoneNumbers">Number cannot be zero</li>
                         </ul>
                     </div>
                 </div>
@@ -239,6 +242,7 @@ $conn->close();
                             <li id="passwordUpper">At least one uppercase letter</li>
                             <li id="passwordLower">At least one lowercase letter</li>
                             <li id="passwordNumber">At least one number</li>
+                            <li id="passwordSpecial">At least one special character</li>
                         </ul>
                     </div>
                 </div>
@@ -256,12 +260,6 @@ $conn->close();
                         </ul>
                     </div>
                 </div>
-
-                <div class="remember-me">
-                    <input type="checkbox" id="rememberMe">
-                    <label for="rememberMe">Remember me</label>
-                </div>
-
                 <button type="submit" name="submit" class="login-button">Sign up to GameDay</button>
             </form>
 

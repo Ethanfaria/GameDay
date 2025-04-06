@@ -1,13 +1,14 @@
-
 .payment-container {
     max-width: 600px;
     margin: 50px auto;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--translucent-bg);
     padding: 30px;
     border-radius: 20px;
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     text-align: center;
 }
+
 .success-icon {
     font-size: 80px;
     color: var(--neon-green);
@@ -168,6 +169,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+    z-index: 999;
 }
 
 .overlay.show {
@@ -226,26 +228,34 @@
     background-color: white;
     padding: 15px;
     border-radius: 10px;
-    display: inline-block;
-    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+}
+
+#qrcode img {
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .qr-amount {
     font-size: 1.2em;
     color: var(--neon-green);
     margin: 10px 0;
-    
     font-weight: bold;
 }
 
 .upi-id {
     background-color: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 25px;
-            margin: 15px auto;
-            display: inline-block;
-            font-family: monospace;
-            font-size: 1.1em;
+    padding: 10px 20px;
+    border-radius: 25px;
+    margin: 15px auto;
+    display: inline-block;
+    font-family: monospace;
+    font-size: 1.1em;
 }
 
 .enrollment-details {
@@ -275,19 +285,6 @@
     margin-right: 10px;
 }
 
-#qrcode {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px auto;
-}
-
-#qrcode img {
-    padding: 15px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
 .enrollment-details p {
     display: flex;
     justify-content: space-between;
@@ -327,4 +324,89 @@
     background-color: transparent;
     border: 2px solid var(--neon-green);
     color: var(--neon-green);
+}
+
+/* Payment result page styles */
+.payment-result-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: var(--translucent-bg);
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: white;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.payment-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 40px;
+}
+
+.result-button {
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45%;
+}
+
+.success-button {
+    background-color: var(--neon-green);
+    color: var(--dark-green);
+}
+
+.success-button:hover {
+    background-color: #9edb00;
+}
+
+.failure-button {
+    background-color: #ff5252;
+    color: white;
+}
+
+.failure-button:hover {
+    background-color: #ff3636;
+}
+
+.payment-info {
+    margin-bottom: 30px;
+}
+
+.payment-info p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+.payment-method-label {
+    text-transform: uppercase;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-block;
+    margin-top: 15px;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .payment-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .result-button {
+        width: 100%;
+    }
 }

@@ -200,18 +200,18 @@
 				<div class="bento-header">
 				<h2><i class="fas fa-futbol section-icon"></i> Turf Details</h2>
 				<button class="edit-button" onclick="openVenueEditModal(
-					'<?php echo $venue['venue_id']; ?>',
-					'<?php echo htmlspecialchars($venue['venue_nm']); ?>',
-					'<?php echo htmlspecialchars($venue['location']); ?>',
-					'<?php echo $venue['price']; ?>',
-					'<?php echo htmlspecialchars($venue['size']); ?>',
-					'<?php echo $venue['availability']; ?>',
-					'<?php echo htmlspecialchars($venue['amenity1'] ?? ''); ?>',
-					'<?php echo htmlspecialchars($venue['amenity2'] ?? ''); ?>',
-					'<?php echo htmlspecialchars($venue['amenity3'] ?? ''); ?>'
-				)">
-					<i class="fas fa-edit"></i> Edit Details
-				</button> 
+				'<?php echo $venue['venue_id']; ?>',
+				'<?php echo urlencode(htmlspecialchars($venue['venue_nm'])); ?>',
+				'<?php echo urlencode(htmlspecialchars($venue['location'])); ?>',
+				'<?php echo $venue['price']; ?>',
+				'<?php echo urlencode(htmlspecialchars($venue['size'])); ?>',
+				'<?php echo $venue['availability']; ?>',
+				'<?php echo urlencode(htmlspecialchars($venue['amenity1'] ?? '')); ?>',
+				'<?php echo urlencode(htmlspecialchars($venue['amenity2'] ?? '')); ?>',
+				'<?php echo urlencode(htmlspecialchars($venue['amenity3'] ?? '')); ?>'
+			)">
+				<i class="fas fa-edit"></i> Edit Details
+			</button>
 				</div>
 				
 				<div class="detail-item">
@@ -366,7 +366,7 @@
 							amenity2 = ?, 
 							amenity3 = ? 
 							WHERE venue_id = ? AND owner_email = ?";
-						
+
 						$update_stmt = $conn->prepare($update_sql);
 						$update_stmt->bind_param(
 							"ssisisssss", 
@@ -547,14 +547,14 @@
 				<h2><i class="fas fa-graduation-cap section-icon"></i> Academy Details</h2>
 				<button class="edit-button" onclick="openAcademyEditModal(
 					'<?php echo $academy['ac_id']; ?>',
-					'<?php echo htmlspecialchars($academy['aca_nm']); ?>',
-					'<?php echo htmlspecialchars($academy['ac_location']); ?>',
+					'<?php echo urlencode(htmlspecialchars($academy['aca_nm'])); ?>',
+					'<?php echo urlencode(htmlspecialchars($academy['ac_location'])); ?>',
 					'<?php echo $academy['ac_charges']; ?>',
-					'<?php echo htmlspecialchars($academy['level']); ?>',
-					'<?php echo htmlspecialchars($academy['age_group']); ?>',
-					'<?php echo htmlspecialchars($academy['feature1'] ?? ''); ?>',
-					'<?php echo htmlspecialchars($academy['feature2'] ?? ''); ?>',
-					'<?php echo htmlspecialchars($academy['feature3'] ?? ''); ?>'
+					'<?php echo urlencode(htmlspecialchars($academy['level'])); ?>',
+					'<?php echo urlencode(htmlspecialchars($academy['age_group'])); ?>',
+					'<?php echo urlencode(htmlspecialchars($academy['feature1'] ?? '')); ?>',
+					'<?php echo urlencode(htmlspecialchars($academy['feature2'] ?? '')); ?>',
+					'<?php echo urlencode(htmlspecialchars($academy['feature3'] ?? '')); ?>'
 				)">
 					<i class="fas fa-edit"></i> Edit Details
 				</button>
@@ -725,7 +725,7 @@
 							feature2 = ?, 
 							feature3 = ? 
 							WHERE ac_id = ? AND owner_email = ?";
-						
+
 						$update_stmt = $conn->prepare($update_sql);
 						$update_stmt->bind_param(
 							"sssssssis", 
@@ -962,31 +962,31 @@
 		});
 		});
 		function openVenueEditModal(venueId, venueName, location, price, size, availability, amenity1, amenity2, amenity3) {
-		// Populate form fields
+		// Populate form fields with proper decoding
 		document.getElementById('edit_venue_id').value = venueId;
-		document.getElementById('edit_venue_name').value = venueName;
-		document.getElementById('edit_location').value = location;
+		document.getElementById('edit_venue_name').value = decodeURIComponent(venueName.replace(/\+/g, ' '));
+		document.getElementById('edit_location').value = decodeURIComponent(location.replace(/\+/g, ' '));
 		document.getElementById('edit_price').value = price;
-		document.getElementById('edit_size').value = size;
+		document.getElementById('edit_size').value = decodeURIComponent(size.replace(/\+/g, ' '));
 		document.getElementById('edit_availability').value = availability;
-		document.getElementById('edit_amenity1').value = amenity1 || '';
-		document.getElementById('edit_amenity2').value = amenity2 || '';
-		document.getElementById('edit_amenity3').value = amenity3 || '';
+		document.getElementById('edit_amenity1').value = amenity1 ? decodeURIComponent(amenity1.replace(/\+/g, ' ')) : '';
+		document.getElementById('edit_amenity2').value = amenity2 ? decodeURIComponent(amenity2.replace(/\+/g, ' ')) : '';
+		document.getElementById('edit_amenity3').value = amenity3 ? decodeURIComponent(amenity3.replace(/\+/g, ' ')) : '';
 
 		// Show the modal
 		document.getElementById('venueEditModal').style.display = 'flex';
 	}
-	function openAcademyEditModal(academyId, academyName, location, charges, level, ageGroup, feature1, feature2, feature3) {
-		// Populate form fields
+		function openAcademyEditModal(academyId, academyName, location, charges, level, ageGroup, feature1, feature2, feature3) {
+		// Populate form fields with proper decoding
 		document.getElementById('edit_academy_id').value = academyId;
-		document.getElementById('edit_academy_name').value = academyName;
-		document.getElementById('edit_location').value = location;
+		document.getElementById('edit_academy_name').value = decodeURIComponent(academyName.replace(/\+/g, ' '));
+		document.getElementById('edit_location').value = decodeURIComponent(location.replace(/\+/g, ' '));
 		document.getElementById('edit_charges').value = charges;
-		document.getElementById('edit_level').value = level;
-		document.getElementById('edit_age_group').value = ageGroup;
-		document.getElementById('edit_feature1').value = feature1 || '';
-		document.getElementById('edit_feature2').value = feature2 || '';
-		document.getElementById('edit_feature3').value = feature3 || '';
+		document.getElementById('edit_level').value = decodeURIComponent(level.replace(/\+/g, ' '));
+		document.getElementById('edit_age_group').value = decodeURIComponent(ageGroup.replace(/\+/g, ' '));
+		document.getElementById('edit_feature1').value = feature1 ? decodeURIComponent(feature1.replace(/\+/g, ' ')) : '';
+		document.getElementById('edit_feature2').value = feature2 ? decodeURIComponent(feature2.replace(/\+/g, ' ')) : '';
+		document.getElementById('edit_feature3').value = feature3 ? decodeURIComponent(feature3.replace(/\+/g, ' ')) : '';
 
 		// Show the modal
 		document.getElementById('academyEditModal').style.display = 'flex';

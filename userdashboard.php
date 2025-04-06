@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+date_default_timezone_set('Asia/Kolkata');
 // Redirect if not logged in
 if (!isset($_SESSION['user_email'])) {
     header("Location: login.php");
@@ -190,8 +190,7 @@ if (!isset($_SESSION['user_email'])) {
 			FROM book b 
 			LEFT JOIN venue v ON b.venue_id = v.venue_id 
 			WHERE b.email = ? AND b.bk_date >= CURRENT_DATE() 
-			ORDER BY b.bk_date ASC
-			LIMIT 4";
+			ORDER BY b.bk_date ASC";
 
 	$bookings_stmt = $conn->prepare($bookings_sql);
 	$bookings_stmt->bind_param("s", $user_email);
