@@ -1,8 +1,24 @@
 <?php
-$email = $_GET['email'] ?? 'Unknown';
+include 'db.php';
+
+$email = $_GET['user_email'] ?? 'Unknown';
 $venue_id = $_GET['venue_id'] ?? 'Unknown';
 $booking_date = $_GET['date'] ?? 'Unknown';
 $booking_time = $_GET['time'] ?? 'Unknown';
+
+$venue_name = "Unknown Venue";
+if ($venue_id !== 'Unknown') {
+    $stmt = $conn->prepare("SELECT venue_nm FROM venue WHERE venue_id = ?");
+    $stmt->bind_param("s", $venue_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($row = $result->fetch_assoc()) {
+        $venue_name = $row['venue_nm'];
+    }
+    
+    $stmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -113,15 +129,15 @@ $booking_time = $_GET['time'] ?? 'Unknown';
             </p>
             <p>
                 <span>Venue:</span>
-                <span id="venue-name"><?php echo htmlspecialchars($venue_id); ?></span>
+                <span id="venue-name"><?php echo htmlspecialchars($venue_name); ?></span>
             </p>
             <p>
                 <span>Booking Date:</span>
-                <span id="booking-datetime"><?php echo htmlspecialchars($booking_date); ?><</span>
+                <span id="booking-datetime"><?php echo htmlspecialchars($booking_date); ?></span>
             </p>
             <p>
-                <span>Booking <Time></Time>:</span>
-                <span id="amount-paid"><?php echo htmlspecialchars($booking_time); ?></span>
+                <span>Booking Time:</span>
+                <span id="booking-time"><?php echo htmlspecialchars($booking_time); ?></span>
             </p>
         </div>
 
