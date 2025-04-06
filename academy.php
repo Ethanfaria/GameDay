@@ -69,7 +69,7 @@
                         $rating_sql = "SELECT AVG(a_ratings) as avg_rating FROM academy_reviews WHERE ac_id = '$academy_id'";
                         $rating_result = $conn->query($rating_sql);
                         $rating_row = $rating_result->fetch_assoc();
-                        $rating = number_format($rating_row['avg_rating'] ?? 4.5, 1); // Default to 4.5 if no ratings
+                        $rating = number_format($rating_row['avg_rating'] ?? 0, 1);
                 ?>
                 <div class="academy">
                     <div class="academy-card">
