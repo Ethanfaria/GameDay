@@ -37,8 +37,8 @@ if(isset($_POST["submit"])){
     // Validate email
     if (empty($email)) {
         array_push($errors, "Email is required");
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        array_push($errors, "Email is not valid");
+    } elseif (!preg_match("/^[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/", $email)) {
+        array_push($errors, "Email contains invalid characters");
     } else {
         // Check if email already exists in database
         $sql = "SELECT * FROM user WHERE email = ?";
@@ -224,7 +224,7 @@ $conn->close();
                         <ul>
                             <li id="phoneDigits">Must be exactly 10 digits</li>
                             <li id="phoneNumbers">Must contain only numbers</li>
-                            <li id="phoneNumbers">Number cannot be zero</li>
+                            <li id="phoneVal">Number cannot be zero</li>
                         </ul>
                     </div>
                 </div>
@@ -344,7 +344,7 @@ $conn->close();
         function validateEmail() {
             const email = document.getElementById('Email').value;
             const emailFormat = document.getElementById('emailFormat');
-            const emailPattern = /^[a-zA-Z0-9]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const emailPattern = /^[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             
             if (emailPattern.test(email)) {
                 emailFormat.classList.add('valid');
@@ -359,6 +359,7 @@ $conn->close();
             const phone = document.getElementById('phone').value;
             const digitsRequirement = document.getElementById('phoneDigits');
             const numbersRequirement = document.getElementById('phoneNumbers');
+            const valueRequirement = document.getElementById('phoneVal');
             
             if (phone.length === 10) {
                 digitsRequirement.classList.add('valid');
@@ -375,6 +376,13 @@ $conn->close();
                 numbersRequirement.classList.add('invalid');
                 numbersRequirement.classList.remove('valid');
             }
+            if (phone !== '' && parseInt(phone) !== 0) {
+                valueRequirement.classList.add('valid');
+                valueRequirement.classList.remove('invalid');
+            } else {
+                valueRequirement.classList.add('invalid');
+                valueRequirement.classList.remove('valid');
+            }
         }
         
         function validatePassword() {
@@ -383,6 +391,7 @@ $conn->close();
             const upperRequirement = document.getElementById('passwordUpper');
             const lowerRequirement = document.getElementById('passwordLower');
             const numberRequirement = document.getElementById('passwordNumber');
+            const specialRequirement = document.getElementById('passwordSpecial');
             
             if (password.length >= 8) {
                 lengthRequirement.classList.add('valid');
@@ -414,6 +423,14 @@ $conn->close();
             } else {
                 numberRequirement.classList.add('invalid');
                 numberRequirement.classList.remove('valid');
+            }
+            
+            if (/[\W_]/.test(password)) {
+                specialRequirement.classList.add('valid');
+                specialRequirement.classList.remove('invalid');
+            } else {
+                specialRequirement.classList.add('invalid');
+                specialRequirement.classList.remove('valid');
             }
             
             // If repeat password field has value, check match
@@ -498,7 +515,10 @@ $conn->close();
             if (!/[0-9]/.test(password)) {
                 errorMessages.push("Password must contain at least one number");
             }
-            
+            if (!/[\W_]/.test(password)) {
+                errorMessages.push("Password must contain at least one special character");
+            }
+
             // Validate password match
             const repeatPassword = document.getElementById('Repeat-Password').value;
             if (password !== repeatPassword) {
