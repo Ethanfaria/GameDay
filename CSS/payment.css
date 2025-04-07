@@ -127,7 +127,6 @@ body {
 .payment-option.selected {
     border: 1px solid var(--neon-green);
     background-color: rgba(185, 255, 0, 0.1);
-    color: var(--dark-green);
 }
 
 .payment-icon {
