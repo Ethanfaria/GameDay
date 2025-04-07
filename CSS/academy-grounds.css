@@ -5,9 +5,9 @@
     gap: 10px;
 }
 .btn-no{
-    width:40px;
+    min-width:40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,6 +15,12 @@
     color: white;
     border: none;
     cursor: pointer;
+    padding: 0 15px;
+}
+.btn-prev, .btn-next {
+    border-radius: 20px;
+    padding: 0 15px;
+    width: auto;
 }
 .btn-no.active{
     background-color: var(--neon-green);

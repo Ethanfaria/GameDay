@@ -76,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <link rel="stylesheet" href="CSS\payment-ground.css">
     <link rel="stylesheet" href="CSS\payment.css">
     <link rel="stylesheet" href="CSS\main.css">
 </head>
@@ -202,18 +201,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </form>
     </div>
 
-    <div id="overlay">
-        <div class="popup" id="successPopup">
-            <h3>Payment Successful!</h3>
-            <p>Thank you for your payment. You will be redirected shortly.</p>
-        </div>
-        <div class="popup" id="errorPopup">
-            <h3>Payment Failed</h3>
-            <p>Something went wrong with your payment. Please try again.</p>
-            <button class="popup-button" onclick="closeErrorPopup()">Close</button>
-        </div>
-    </div>
-
     <script>
         // Get URL parameters
         function getUrlParams() {
@@ -253,28 +240,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-        }
-
-        // Show success popup
-        function showSuccessPopup() {
-            document.getElementById('successPopup').classList.add('show');
-            document.getElementById('overlay').classList.add('show');
-            
-            setTimeout(() => {
-                window.location.href = 'payment-tournament-success.php?tr_id=<?php echo htmlspecialchars($tr_id); ?>&registration_success=true';
-            }, 2000);
-        }
-
-        // Show error popup
-        function showErrorPopup() {
-            document.getElementById('errorPopup').classList.add('show');
-            document.getElementById('overlay').classList.add('show');
-        }
-        
-        // Close error popup
-        function closeErrorPopup() {
-            document.getElementById('errorPopup').classList.remove('show');
-            document.getElementById('overlay').classList.remove('show');
         }
 
         // Get elements

@@ -97,13 +97,13 @@
             </div>
 
             <div class="pages">
-                <button class="btn-no">Previous</button>
+                <button class="btn-no btn-prev">Previous</button>
                 <button class="btn-no active">1</button>
                 <button class="btn-no">2</button>
                 <button class="btn-no">3</button>
                 <div class="ellipsis">...</div>
                 <button class="btn-no">5</button>
-                <button class="btn-no">Next</button>
+                <button class="btn-no btn-next">Next</button>
             </div>
         </div>
     </div>
