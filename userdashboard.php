@@ -26,62 +26,82 @@ if (!isset($_SESSION['user_email'])) {
 	include 'db.php';
 
 	// Handle Profile Update
-	if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_profile') {
-		$user_email = $_SESSION['user_email'];
-		$name = $_POST['name'] ?? '';
-		$phone = $_POST['phone'] ?? '';
-		$currentPassword = $_POST['currentPassword'] ?? '';
-		$newPassword = $_POST['newPassword'] ?? '';
+	// Handle Profile Update
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_profile') {
+    $user_email = $_SESSION['user_email'];
+    $name = $_POST['name'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $currentPassword = $_POST['currentPassword'] ?? '';
+    $newPassword = $_POST['newPassword'] ?? '';
 
-		// Validate inputs
-		$errors = [];
-		if (empty($name)) $errors[] = 'Name is required';
-		if (empty($phone)) $errors[] = 'Phone is required';
+    // Validate inputs
+    $errors = [];
+    
+    // Name validation
+    if (empty($name)) {
+        $errors[] = 'Name is required';
+    } elseif (strlen($name) < 3) {
+        $errors[] = "Name must be at least 3 characters long";
+    } elseif (!preg_match("/^[a-zA-Z0-9_]+$/", $name)) {
+        $errors[] = "Name can only contain letters, numbers, and underscores";
+    }
+    
+    // Phone validation
+    if (empty($phone)) {
+        $errors[] = 'Phone is required';
+    } elseif (!preg_match("/^[0-9]{10}$/", $phone)) {
+        $errors[] = "Phone number must be 10 digits";
+    } else {
+        // Check if phone number already exists in database (but not for current user)
+        $sql = "SELECT * FROM user WHERE user_ph = ? AND email != ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ss", $phone, $user_email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $errors[] = "Phone number is already registered by another user";
+        }
+        $stmt->close();
+    }
+    
+    // Password validation (only if new password is provided)
+    if (!empty($newPassword)) {
+        if (strlen($newPassword) < 8) {
+            $errors[] = "Password must be at least 8 characters long";
+        } elseif (!preg_match("/[A-Z]/", $newPassword)) {
+            $errors[] = "Password must contain at least one uppercase letter";
+        } elseif (!preg_match("/[a-z]/", $newPassword)) {
+            $errors[] = "Password must contain at least one lowercase letter";
+        } elseif (!preg_match("/[0-9]/", $newPassword)) {
+            $errors[] = "Password must contain at least one number";
+        } elseif (!preg_match("/[\W_]/", $newPassword)) {
+            $errors[] = "Password must contain at least one special character";
+        }
+    }
 
-		// Verify current password
-		$verify_password_sql = "SELECT password FROM user WHERE email = ?";
-		$verify_stmt = $conn->prepare($verify_password_sql);
-		$verify_stmt->bind_param("s", $user_email);
-		$verify_stmt->execute();
-		$result = $verify_stmt->get_result();
-		$user = $result->fetch_assoc();
+    // Verify current password
+    $verify_password_sql = "SELECT password FROM user WHERE email = ?";
+    $verify_stmt = $conn->prepare($verify_password_sql);
+    $verify_stmt->bind_param("s", $user_email);
+    $verify_stmt->execute();
+    $result = $verify_stmt->get_result();
+    $user = $result->fetch_assoc();
 
-		if (!password_verify($currentPassword, $user['password'])) {
-			$errors[] = 'Current password is incorrect';
-		}
+    if (!password_verify($currentPassword, $user['password'])) {
+        $errors[] = 'Current password is incorrect';
+    }
 
-		// If no errors, proceed with update
-		if (empty($errors)) {
-			// Prepare update query
-			if (!empty($newPassword)) {
-				// Update with new password
-				$hashed_password = password_hash($newPassword, PASSWORD_DEFAULT);
-				$update_sql = "UPDATE user SET user_name = ?, user_ph = ?, password = ? WHERE email = ?";
-				$update_stmt = $conn->prepare($update_sql);
-				$update_stmt->bind_param("siss", $name, $phone, $hashed_password, $user_email);
-			} else {
-				// Update without changing password
-				$update_sql = "UPDATE user SET user_name = ?, user_ph = ? WHERE email = ?";
-				$update_stmt = $conn->prepare($update_sql);
-				$update_stmt->bind_param("sis", $name, $phone, $user_email);
-			}
-
-			// Execute update
-			if ($update_stmt->execute()) {
-				// Update session name if changed
-				$_SESSION['user_name'] = $name;
-				$_SESSION['update_success'] = 'Profile updated successfully';
-			} else {
-				$_SESSION['update_error'] = 'Update failed';
-			}
-		} else {
-			$_SESSION['update_errors'] = $errors;
-		}
-
-		// Redirect back to dashboard to prevent form resubmission
-		header("Location: userdashboard.php");
-		exit();
-	}
+    // If no errors, proceed with update
+    if (empty($errors)) {
+        // Rest of your existing update code
+    } else {
+        $_SESSION['update_errors'] = $errors;
+    }
+    
+    // Redirect back to dashboard to prevent form resubmission
+    header("Location: userdashboard.php");
+    exit();
+}
 	
 	function getUserVisitedVenues($conn, $user_email) {
 		$visited_venues_sql = "SELECT DISTINCT v.venue_id, v.venue_nm 
@@ -447,17 +467,62 @@ if (!isset($_SESSION['user_email'])) {
 	</div>
 	<div id="profileEditModal" class="modal">
 		<div class="modal-content">
-		<span class="close-btn" onclick="closeModal('profileEditModal')">&times;</span>
-		<h2>Edit Profile</h2>
-		<form method="POST" action="userdashboard.php">
-			<input type="hidden" name="action" value="update_profile">
-			<input type="text" name="name" class="modal-input" placeholder="Name" value="<?php echo htmlspecialchars($user_details['user_name'] ?? ''); ?>" required>
-			<input type="email" class="modal-input" placeholder="Email" value="<?php echo htmlspecialchars($user_email); ?>" readonly>
-			<input type="tel" name="phone" class="modal-input" placeholder="Phone Number" value="<?php echo htmlspecialchars($user_details['user_ph'] ?? ''); ?>" required>
-			<input type="password" name="currentPassword" class="modal-input" placeholder="Current Password" required>
-			<input type="password" name="newPassword" class="modal-input" placeholder="New Password (leave blank if no change)">
-			<button type="submit" class="modal-submit">Save Changes</button>
-		</form>
+			<span class="close-btn" onclick="closeModal('profileEditModal')">&times;</span>
+			<h2>Edit Profile</h2>
+			
+			<?php if (isset($_SESSION['update_errors'])): ?>
+				<div class="error-message">
+					<?php foreach ($_SESSION['update_errors'] as $error): ?>
+						<p><?php echo htmlspecialchars($error); ?></p>
+					<?php endforeach; ?>
+					<?php unset($_SESSION['update_errors']); ?>
+				</div>
+			<?php endif; ?>
+			
+			<?php if (isset($_SESSION['update_success'])): ?>
+				<div class="success-message">
+					<p><?php echo htmlspecialchars($_SESSION['update_success']); ?></p>
+					<?php unset($_SESSION['update_success']); ?>
+				</div>
+			<?php endif; ?>
+			
+			<form method="POST" action="userdashboard.php" id="profileEditForm">
+				<input type="hidden" name="action" value="update_profile">
+				
+				<div class="form-group">
+					<input type="text" name="name" id="editName" class="modal-input" placeholder="Name" value="<?php echo htmlspecialchars($user_details['user_name'] ?? ''); ?>" required onkeyup="validateEditName()">
+					<div class="requirements">
+						<p id="nameLength" class="requirement">At least 3 characters</p>
+						<p id="nameChars" class="requirement">Only letters, numbers, and underscores</p>
+					</div>
+				</div>
+				
+				<input type="email" class="modal-input" placeholder="Email" value="<?php echo htmlspecialchars($user_email); ?>" readonly>
+				
+				<div class="form-group">
+					<input type="tel" name="phone" id="editPhone" class="modal-input" placeholder="Phone Number" value="<?php echo htmlspecialchars($user_details['user_ph'] ?? ''); ?>" required onkeyup="validateEditPhone()">
+					<div class="requirements">
+						<p id="phoneDigits" class="requirement">Must be 10 digits</p>
+						<p id="phoneNumbers" class="requirement">Numbers only</p>
+						<p id="phoneVal" class="requirement">Valid phone number</p>
+					</div>
+				</div>
+				
+				<input type="password" name="currentPassword" class="modal-input" placeholder="Current Password" required>
+				
+				<div class="form-group">
+					<input type="password" name="newPassword" id="editPassword" class="modal-input" placeholder="New Password (leave blank if no change)" onkeyup="validateEditPassword()">
+					<div class="requirements">
+						<p id="passwordLength" class="requirement">At least 8 characters</p>
+						<p id="passwordUpper" class="requirement">At least one uppercase letter</p>
+						<p id="passwordLower" class="requirement">At least one lowercase letter</p>
+						<p id="passwordNumber" class="requirement">At least one number</p>
+						<p id="passwordSpecial" class="requirement">At least one special character</p>
+					</div>
+				</div>
+				
+				<button type="submit" class="modal-submit">Save Changes</button>
+			</form>
 		</div>
 	</div>
 	<div id="groundReviewModal" class="modal">
@@ -644,7 +709,6 @@ if (!isset($_SESSION['user_email'])) {
 		});
 		});
 		
-		// Modal functions
 		function openModal(modalId) {
 		document.getElementById(modalId).style.display = 'flex';
 		}
@@ -652,6 +716,130 @@ if (!isset($_SESSION['user_email'])) {
 		function closeModal(modalId) {
 		document.getElementById(modalId).style.display = 'none';
 		}
+
+		function validateEditName() {
+			const name = document.getElementById('editName').value;
+			const lengthRequirement = document.getElementById('nameLength');
+			const charsRequirement = document.getElementById('nameChars');
+			
+			if (name.length >= 3) {
+				lengthRequirement.classList.add('valid');
+				lengthRequirement.classList.remove('invalid');
+			} else {
+				lengthRequirement.classList.add('invalid');
+				lengthRequirement.classList.remove('valid');
+			}
+			
+			if (/^[a-zA-Z0-9_]+$/.test(name)) {
+				charsRequirement.classList.add('valid');
+				charsRequirement.classList.remove('invalid');
+			} else {
+				charsRequirement.classList.add('invalid');
+				charsRequirement.classList.remove('valid');
+			}
+		}
+
+		function validateEditPhone() {
+			const phone = document.getElementById('editPhone').value;
+			const digitsRequirement = document.getElementById('phoneDigits');
+			const numbersRequirement = document.getElementById('phoneNumbers');
+			const valueRequirement = document.getElementById('phoneVal');
+			
+			if (phone.length === 10) {
+				digitsRequirement.classList.add('valid');
+				digitsRequirement.classList.remove('invalid');
+			} else {
+				digitsRequirement.classList.add('invalid');
+				digitsRequirement.classList.remove('valid');
+			}
+			
+			if (/^[0-9]+$/.test(phone)) {
+				numbersRequirement.classList.add('valid');
+				numbersRequirement.classList.remove('invalid');
+			} else {
+				numbersRequirement.classList.add('invalid');
+				numbersRequirement.classList.remove('valid');
+			}
+			
+			if (phone !== '' && parseInt(phone) !== 0) {
+				valueRequirement.classList.add('valid');
+				valueRequirement.classList.remove('invalid');
+			} else {
+				valueRequirement.classList.add('invalid');
+				valueRequirement.classList.remove('valid');
+			}
+		}
+
+		function validateEditPassword() {
+			const password = document.getElementById('editPassword').value;
+			
+			// If password is empty, don't validate (since it's optional)
+			if (!password) {
+				document.querySelectorAll('#profileEditForm .requirements p').forEach(el => {
+					el.classList.remove('valid');
+					el.classList.remove('invalid');
+				});
+				return;
+			}
+			
+			const lengthRequirement = document.getElementById('passwordLength');
+			const upperRequirement = document.getElementById('passwordUpper');
+			const lowerRequirement = document.getElementById('passwordLower');
+			const numberRequirement = document.getElementById('passwordNumber');
+			const specialRequirement = document.getElementById('passwordSpecial');
+			
+			if (password.length >= 8) {
+				lengthRequirement.classList.add('valid');
+				lengthRequirement.classList.remove('invalid');
+			} else {
+				lengthRequirement.classList.add('invalid');
+				lengthRequirement.classList.remove('valid');
+			}
+			
+			if (/[A-Z]/.test(password)) {
+				upperRequirement.classList.add('valid');
+				upperRequirement.classList.remove('invalid');
+			} else {
+				upperRequirement.classList.add('invalid');
+				upperRequirement.classList.remove('valid');
+			}
+			
+			if (/[a-z]/.test(password)) {
+				lowerRequirement.classList.add('valid');
+				lowerRequirement.classList.remove('invalid');
+			} else {
+				lowerRequirement.classList.add('invalid');
+				lowerRequirement.classList.remove('valid');
+			}
+			
+			if (/[0-9]/.test(password)) {
+				numberRequirement.classList.add('valid');
+				numberRequirement.classList.remove('invalid');
+			} else {
+				numberRequirement.classList.add('invalid');
+				numberRequirement.classList.remove('valid');
+			}
+			
+			if (/[\W_]/.test(password)) {
+				specialRequirement.classList.add('valid');
+				specialRequirement.classList.remove('invalid');
+			} else {
+				specialRequirement.classList.add('invalid');
+				specialRequirement.classList.remove('valid');
+			}
+		}
+
+		// Add this to your existing DOMContentLoaded event listener
+		document.addEventListener('DOMContentLoaded', function() {
+			// Initialize validation states when modal opens
+			document.getElementById('editProfileAction').addEventListener('click', function() {
+				setTimeout(function() {
+					validateEditName();
+					validateEditPhone();
+					validateEditPassword();
+				}, 100);
+			});
+		});
 		</script>
 	</body>
 </html>

@@ -574,3 +574,49 @@
   border-radius: 8px;
   border: 1px solid rgba(196, 255, 60, 0.3);
 }
+/* Add to your CSS file */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.requirements {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.requirement {
+  margin: 2px 0;
+  color: #777;
+}
+
+.requirement.valid {
+  color: #4CAF50;
+}
+
+.requirement.valid::before {
+  content: "✓ ";
+}
+
+.requirement.invalid {
+  color: #f44336;
+}
+
+.requirement.invalid::before {
+  content: "✕ ";
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #b71c1c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
