@@ -35,6 +35,16 @@ if ($result->num_rows > 0) {
     echo "<p>Ground not found.</p>";
     exit();
 }
+
+// Process the form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Get selected payment method
+    $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'upi';
+    
+    // Redirect to payment result page
+    header("Location: payment-result.php?method=$payment_method");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -50,6 +60,7 @@ if ($result->num_rows > 0) {
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <link rel="stylesheet" href="CSS\payment-ground.css">
+    <link rel="stylesheet" href="CSS\payment.css">
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
@@ -58,52 +69,89 @@ if ($result->num_rows > 0) {
             <i class="fas fa-arrow-left"></i> Back
         </a>
         
+        <h1 class="summary-title">Order Summary</h1>
         <div class="order-summary">
-            <h2>Order Summary</h2>
-            <div class="order-details">
-                <p>
-                    <span id="booking-type">Turf Booking</span>
-                    <span id="booking-name"><?php echo htmlspecialchars($venue_name); ?></span>
-                </p>
-                <p>
-                    <span>Date & Time</span>
-                    <span id="booking-datetime"><?php echo htmlspecialchars($booking_date . ' | ' . $booking_time); ?></span>
-                </p>
-                <p class="total-amount">
-                    <span>Total Amount</span>
-                    <span id="total-amount">₹<?php echo htmlspecialchars($price); ?></span>
-                </p>
+            <div class="summary-row">
+                <div id="booking-type" class="summary-label">Turf Booking</div>
+                <div id="booking-name" class="summary-value"><?php echo htmlspecialchars($venue_name); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Date</div>
+                <div id="booking-date" class="summary-value"><?php echo htmlspecialchars($booking_date); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Time</div>
+                <div id="booking-time" class="summary-value"><?php echo htmlspecialchars($booking_time); ?></div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Total Amount</div>
+                <div id="total-amount" class="total-value">₹<?php echo htmlspecialchars($price); ?></div>
             </div>
         </div>
 
-        <div class="payment-methods">
-            <h3>Select Payment Method</h3>
-            <div class="payment-method" data-method="upi">
+        <h3 class="payment-section-title">Select Payment Method</h3>
+        
+        <div class="payment-option" id="upiOption" data-method="upi">
+            <div class="payment-icon">
                 <i class="fas fa-mobile-alt"></i>
-                <span>UPI / QR Code</span>
             </div>
-            <div class="payment-method" data-method="card">
+            <div class="payment-label">UPI / QR Code</div>
+        </div>
+        
+        <div class="payment-option" id="cardOption" data-method="card">
+            <div class="payment-icon">
                 <i class="fas fa-credit-card"></i>
-                <span>Credit / Debit Card</span>
             </div>
-            <div class="payment-method" data-method="netbanking">
+            <div class="payment-label">Credit / Debit Card</div>
+        </div>
+        
+        <div class="payment-option" id="bankingOption" data-method="netbanking">
+            <div class="payment-icon">
                 <i class="fas fa-university"></i>
-                <span>Net Banking</span>
+            </div>
+            <div class="payment-label">Net Banking</div>
+        </div>
+        
+        <!-- UPI Payment Details -->
+        <div class="payment-details" id="upiDetails">
+            <div class="qr-section">
+                <div class="qr-code" id="qrcode">
+                    <!-- QR code will be generated here -->
+                </div>
+                <div class="payment-instructions">
+                    <h3>Scan to Pay</h3>
+                    <p>Use any UPI app to scan this QR code and make your payment</p>
+                    <div class="payment-upi-id">gameday@ybl</div>
+                    <p>Or use UPI ID to pay directly through your UPI app</p>
+                </div>
             </div>
         </div>
 
-        <div class="qr-section" id="qrSection">
-            <h3>Scan QR Code to Pay</h3>
-            <p class="qr-amount" id="qrAmount">₹<?php echo htmlspecialchars($price); ?></p>
-            <div id="qrcode"></div>
-            <p class="upi-id">UPI ID: gameday@ybl</p>
-            <p>Or click below to pay using other UPI apps</p>
+        <!-- Card Payment Form -->
+        <div class="payment-details" id="cardDetails">
+            <div class="qr-section">
+                <div class="payment-instructions">
+                    <h3>Card Payment</h3>
+                    <p>You will be redirected to secure payment gateway</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Net Banking Form -->
+        <div class="payment-details" id="bankingDetails">
+            <div class="qr-section">
+                <div class="payment-instructions">
+                    <h3>Net Banking</h3>
+                    <p>You will be redirected to your bank's secure login page</p>
+                </div>
+            </div>
         </div>
 
-        <button id="pay-button" class="payment-button">Proceed to Pay</button>
+        <form method="POST" action="">
+            <input type="hidden" name="payment_method" id="paymentMethod" value="upi">
+            <button type="submit" class="proceed-button" id="proceedButton">Proceed to Pay</button>
+        </form>
     </div>
-
-    <div class="overlay" id="overlay"></div>
 
     <script>
         // Generate QR Code
@@ -132,49 +180,64 @@ if ($result->num_rows > 0) {
             });
         }
 
-        // Update booking details
-        function updateBookingDetails() {
-            // Generate QR code on page load
-            const amount = <?php echo json_encode($price); ?>;
-            generateQRCode(amount);
+        // Get elements
+        const upiOption = document.getElementById('upiOption');
+        const cardOption = document.getElementById('cardOption');
+        const bankingOption = document.getElementById('bankingOption');
+        
+        const upiDetails = document.getElementById('upiDetails');
+        const cardDetails = document.getElementById('cardDetails');
+        const bankingDetails = document.getElementById('bankingDetails');
+        const paymentMethod = document.getElementById('paymentMethod');
+
+        // Define the hideAllDetails function
+        function hideAllDetails() {
+            // Hide all payment details
+            upiDetails.style.display = 'none';
+            cardDetails.style.display = 'none';
+            bankingDetails.style.display = 'none';
+            
+            // Remove selected class from all options
+            upiOption.classList.remove('selected');
+            cardOption.classList.remove('selected');
+            bankingOption.classList.remove('selected');
         }
 
-        // Handle payment method selection
-        document.querySelectorAll('.payment-method').forEach(method => {
-            method.addEventListener('click', () => {
-                // Remove selected class from all methods
-                document.querySelectorAll('.payment-method').forEach(m => 
-                    m.classList.remove('selected'));
-                
-                // Add selected class to clicked method
-                method.classList.add('selected');
-                
-                // Show/hide QR section for UPI
-                const qrSection = document.getElementById('qrSection');
-                if (method.dataset.method === 'upi') {
-                    qrSection.classList.add('visible');
-                } else {
-                    qrSection.classList.remove('visible');
-                }
-            });
+        // Show UPI details when UPI option is clicked
+        upiOption.addEventListener('click', function() {
+            hideAllDetails();
+            upiDetails.style.display = 'block';
+            upiOption.classList.add('selected');
+            paymentMethod.value = 'upi';
         });
 
-        // Handle proceed to pay button
-        document.getElementById('pay-button').addEventListener('click', function() {
-            // Get selected payment method
-            const selectedMethod = document.querySelector('.payment-method.selected');
-            
-            if (!selectedMethod) {
-                alert('Please select a payment method');
-                return;
-            }
-            
-            // Redirect to payment result page
-            window.location.href = 'payment-result.php?method=' + selectedMethod.dataset.method;
+        // Show card details when card option is clicked
+        cardOption.addEventListener('click', function() {
+            hideAllDetails();
+            cardDetails.style.display = 'block';
+            cardOption.classList.add('selected');
+            paymentMethod.value = 'card';
+        });
+        
+        // Show banking details when banking option is clicked
+        bankingOption.addEventListener('click', function() {
+            hideAllDetails();
+            bankingDetails.style.display = 'block';
+            bankingOption.classList.add('selected');
+            paymentMethod.value = 'netbanking';
         });
 
         // Initialize page
-        updateBookingDetails();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Amount calculation
+            const amount = <?php echo json_encode($price); ?>;
+            
+            // Generate QR code for UPI payment
+            generateQRCode(amount);
+            
+            // Default to UPI option
+            upiOption.click();
+        });
     </script>
 </body>
 </html>
