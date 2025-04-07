@@ -1,25 +1,25 @@
-	<?php
-	session_start();
-	include 'db.php';
-	$userEmail = $_SESSION['user_email'];
-	$userType = $_SESSION['user_type'];
+<?php
+ session_start();
+ include 'db.php';
+ $userEmail = $_SESSION['user_email'];
+ $userType = $_SESSION['user_type'];
 
-	// Initialize variables
-	$venueDetails = [];
-	$bookings = [];
-	$venueRevenue = 0;
-	$academyRevenue = 0;
-	$totalRevenue = 0;
-	$totalBookings = 0;
-	$totalTournaments = 0;
-	$academyDetails = [];
-	$students = [];
-	$totalTournaments = 0;
-	$totalStudents = 0;
+ // Initialize variables
+ $venueDetails = [];
+ $bookings = [];
+ $venueRevenue = 0;
+ $academyRevenue = 0;
+ $totalRevenue = 0;
+ $totalBookings = 0;
+ $totalTournaments = 0;
+ $academyDetails = [];
+ $students = [];
+ $totalTournaments = 0;
+ $totalStudents = 0;
 
-	// Get venue details if user is an owner
-	if ($userType == 'owner' || $userType == 'admin') {
-		$venueQuery = "SELECT v.*, COUNT(b.booking_id) as booking_count, 
+ // Get venue details if user is an owner
+ if ($userType == 'owner' || $userType == 'admin') {
+     $venueQuery = "SELECT v.*, COUNT(b.booking_id) as booking_count, 
 						COUNT(DISTINCT t.tr_id) as tournament_count,
 						SUM(b.bk_dur LIKE '%AM%') as morning_bookings,
 						SUM(b.bk_dur LIKE '%PM%') as evening_bookings
@@ -28,131 +28,131 @@
 						LEFT JOIN tournaments t ON v.venue_id = t.venue_id
 						WHERE v.owner_email = ?
 						GROUP BY v.venue_id";
-		
-		$stmt = $conn->prepare($venueQuery);
-		$stmt->bind_param("s", $userEmail);
-		$stmt->execute();
-		$venueResult = $stmt->get_result();
-		
-		if ($venueResult->num_rows > 0) {
-			// Store all venues in the array
-			while ($venue = $venueResult->fetch_assoc()) {
-				$venueDetails[] = $venue;
-			}
-			
-			$bookingQuery = "SELECT SUM(v.price) as booking_revenue 
+
+     $stmt = $conn->prepare($venueQuery);
+     $stmt->bind_param("s", $userEmail);
+     $stmt->execute();
+     $venueResult = $stmt->get_result();
+
+     if ($venueResult->num_rows > 0) {
+         // Store all venues in the array
+         while ($venue = $venueResult->fetch_assoc()) {
+             $venueDetails[] = $venue;
+         }
+
+         $bookingQuery = "SELECT SUM(v.price) as booking_revenue 
                     FROM book b 
                     JOIN venue v ON b.venue_id = v.venue_id 
                     WHERE v.owner_email = ?";
-			$stmt = $conn->prepare($bookingQuery);
-			$stmt->bind_param("s", $userEmail);
-			$stmt->execute();
-			$revenueResult = $stmt->get_result();
-			
-			if ($revenueResult->num_rows > 0) {
-				$revenueData = $revenueResult->fetch_assoc();
-				$venueRevenue = $revenueData['booking_revenue'] ?? 0;
-			}
-			
-			// Calculate revenue from tournament registrations
-			$tournamentQuery = "SELECT SUM(t.entry_fee) as tournament_revenue 
+         $stmt = $conn->prepare($bookingQuery);
+         $stmt->bind_param("s", $userEmail);
+         $stmt->execute();
+         $revenueResult = $stmt->get_result();
+
+         if ($revenueResult->num_rows > 0) {
+             $revenueData = $revenueResult->fetch_assoc();
+             $venueRevenue = $revenueData['booking_revenue'] ?? 0;
+         }
+
+         // Calculate revenue from tournament registrations
+         $tournamentQuery = "SELECT SUM(t.entry_fee) as tournament_revenue 
 							FROM register r
 							JOIN tournaments t ON r.tr_id = t.tr_id
 							JOIN venue v ON t.venue_id = v.venue_id
 							WHERE v.owner_email = ?";
-			$stmt = $conn->prepare($tournamentQuery);
-			$stmt->bind_param("s", $userEmail);
-			$stmt->execute();
-			$tournamentResult = $stmt->get_result();
-			
-			if ($tournamentResult->num_rows > 0) {
-				$tournamentData = $tournamentResult->fetch_assoc();
-				$venueRevenue += $tournamentData['tournament_revenue'] ?? 0;
-			}
-			
-			// Get recent bookings
-			$recentBookingsQuery = "SELECT b.*, u.user_name, v.venue_nm 
+         $stmt = $conn->prepare($tournamentQuery);
+         $stmt->bind_param("s", $userEmail);
+         $stmt->execute();
+         $tournamentResult = $stmt->get_result();
+
+         if ($tournamentResult->num_rows > 0) {
+             $tournamentData = $tournamentResult->fetch_assoc();
+             $venueRevenue += $tournamentData['tournament_revenue'] ?? 0;
+         }
+
+         // Get recent bookings
+         $recentBookingsQuery = "SELECT b.*, u.user_name, v.venue_nm 
 									FROM book b 
 									JOIN user u ON b.email = u.email 
 									JOIN venue v ON b.venue_id = v.venue_id 
 									WHERE v.owner_email = ? 
 									ORDER BY b.bk_date DESC LIMIT 5";
-			$stmt = $conn->prepare($recentBookingsQuery);
-			$stmt->bind_param("s", $userEmail);
-			$stmt->execute();
-			$bookingsResult = $stmt->get_result();
-			
-			while ($booking = $bookingsResult->fetch_assoc()) {
-				$bookings[] = $booking;
-			}
-			
-			// Calculate totals from all venues
-			$totalBookings = 0;
-			$totalTournaments = 0;
-			foreach ($venueDetails as $venue) {
-				$totalBookings += $venue['booking_count'];
-				$totalTournaments += $venue['tournament_count'];
-			}
-		}
-	}
+         $stmt = $conn->prepare($recentBookingsQuery);
+         $stmt->bind_param("s", $userEmail);
+         $stmt->execute();
+         $bookingsResult = $stmt->get_result();
 
-	// Get academy details if user is an owner
-	if ($userType == 'owner' || $userType == 'admin') {
-		$academyQuery = "SELECT a.*, COUNT(e.email) as student_count, 
+         while ($booking = $bookingsResult->fetch_assoc()) {
+             $bookings[] = $booking;
+         }
+
+         // Calculate totals from all venues
+         $totalBookings = 0;
+         $totalTournaments = 0;
+         foreach ($venueDetails as $venue) {
+             $totalBookings += $venue['booking_count'];
+             $totalTournaments += $venue['tournament_count'];
+         }
+     }
+ }
+
+ // Get academy details if user is an owner
+ if ($userType == 'owner' || $userType == 'admin') {
+     $academyQuery = "SELECT a.*, COUNT(e.email) as student_count, 
 						COUNT(DISTINCT t.tr_id) as tournament_count
 						FROM academys a
 						LEFT JOIN enroll e ON a.ac_id = e.ac_id
 						LEFT JOIN tournaments t ON a.ac_id = t.ac_id
 						WHERE a.owner_email = ?
 						GROUP BY a.ac_id";
-		
-		$stmt = $conn->prepare($academyQuery);
-		$stmt->bind_param("s", $userEmail);
-		$stmt->execute();
-		$academyResult = $stmt->get_result();
-		
-		if ($academyResult->num_rows > 0) {
-			while ($academy = $academyResult->fetch_assoc()) {
-				$academyDetails[] = $academy;
-			}
-			
-			$enrollmentQuery = "SELECT SUM(a.ac_charges * e.en_dur) as enrollment_revenue 
+
+     $stmt = $conn->prepare($academyQuery);
+     $stmt->bind_param("s", $userEmail);
+     $stmt->execute();
+     $academyResult = $stmt->get_result();
+
+     if ($academyResult->num_rows > 0) {
+         while ($academy = $academyResult->fetch_assoc()) {
+             $academyDetails[] = $academy;
+         }
+
+         $enrollmentQuery = "SELECT SUM(a.ac_charges * e.en_dur) as enrollment_revenue 
                         FROM enroll e 
                         JOIN academys a ON e.ac_id = a.ac_id 
                         WHERE a.owner_email = ?";
-			$stmt = $conn->prepare($enrollmentQuery);
-			$stmt->bind_param("s", $userEmail);
-			$stmt->execute();
-			$enrollmentResult = $stmt->get_result();
-			
-			if ($enrollmentResult->num_rows > 0) {
-				$enrollmentData = $enrollmentResult->fetch_assoc();
-				$academyRevenue = $enrollmentData['enrollment_revenue'] ?? 0;
-			}
-			
-			$studentsQuery = "SELECT e.*, u.user_name, u.user_ph 
+         $stmt = $conn->prepare($enrollmentQuery);
+         $stmt->bind_param("s", $userEmail);
+         $stmt->execute();
+         $enrollmentResult = $stmt->get_result();
+
+         if ($enrollmentResult->num_rows > 0) {
+             $enrollmentData = $enrollmentResult->fetch_assoc();
+             $academyRevenue = $enrollmentData['enrollment_revenue'] ?? 0;
+         }
+
+         $studentsQuery = "SELECT e.*, u.user_name, u.user_ph 
 							FROM enroll e 
 							JOIN user u ON e.email = u.email 
 							JOIN academys a ON e.ac_id = a.ac_id 
 							WHERE a.owner_email = ? 
 							ORDER BY e.en_date DESC LIMIT 5";
-			$stmt = $conn->prepare($studentsQuery);
-			$stmt->bind_param("s", $userEmail);
-			$stmt->execute();
-			$studentsResult = $stmt->get_result();
-			
-			while ($student = $studentsResult->fetch_assoc()) {
-				$students[] = $student;
-			}
-			
-			$totalStudents = 0;
-			foreach ($academyDetails as $academy) {
-				$totalStudents += $academy['student_count'] ?? 0;
-			}
-		}
-	}
-	$defaultDashboard = ($userType == 'owner' || $userType == 'admin') ? 'turf' : '';
-	?>
+         $stmt = $conn->prepare($studentsQuery);
+         $stmt->bind_param("s", $userEmail);
+         $stmt->execute();
+         $studentsResult = $stmt->get_result();
+
+         while ($student = $studentsResult->fetch_assoc()) {
+             $students[] = $student;
+         }
+
+         $totalStudents = 0;
+         foreach ($academyDetails as $academy) {
+             $totalStudents += $academy['student_count'] ?? 0;
+         }
+     }
+ }
+ $defaultDashboard = $userType == 'owner' || $userType == 'admin' ? 'turf' : '';
+ ?>
 
 	<!DOCTYPE html>
 	<html lang="en">
@@ -168,9 +168,7 @@
 	<link rel="stylesheet" href="CSS/dashboard.css">
 	</head>
 	<body>
-	<?php 
-	include 'header.php'; 
-	?>
+	<?php include 'header.php'; ?>
 	<div class="dashboard">
 		<div>
 		<div class="welcome">
@@ -186,13 +184,13 @@
 		
 		<div class="dashboard-type-selector">
 		<?php if ($userType == 'owner' || $userType == 'admin'): ?>
-			<button class="dashboard-button <?php echo ($defaultDashboard == 'turf') ? 'active' : ''; ?>" onclick="switchDashboard('turf')">Turf Owner</button>
-			<button class="dashboard-button <?php echo ($defaultDashboard == 'academy') ? 'active' : ''; ?>" onclick="switchDashboard('academy')">Academy Admin</button>
+			<button class="dashboard-button <?php echo $defaultDashboard == 'turf' ? 'active' : ''; ?>" onclick="switchDashboard('turf')">Turf Owner</button>
+			<button class="dashboard-button <?php echo $defaultDashboard == 'academy' ? 'active' : ''; ?>" onclick="switchDashboard('academy')">Academy Admin</button>
 		<?php endif; ?>
 		</div>
 		
 		<?php if ($userType == 'owner' || $userType == 'admin'): ?>
-		<div id="turf-dashboard" class="dashboard-content <?php echo ($defaultDashboard == 'turf') ? 'active' : ''; ?>">
+		<div id="turf-dashboard" class="dashboard-content <?php echo $defaultDashboard == 'turf' ? 'active' : ''; ?>">
 		<div class="bento-grid">
 			<!-- Loop through all venues -->
 			<?php foreach ($venueDetails as $venue): ?>
@@ -301,15 +299,14 @@
 				<div class="detail-content">
 					<div class="detail-label">Recent Bookings</div>
 					<div class="booking-list">
-					<?php 
-					// Filter bookings for this specific venue
-					$venueBookings = array_filter($bookings, function($booking) use ($venue) {
-						return $booking['venue_id'] == $venue['venue_id'];
-					});
-					
-					if (count($venueBookings) > 0): 
-					?>
-						<?php foreach($venueBookings as $booking): ?>
+					<?php
+     // Filter bookings for this specific venue
+     $venueBookings = array_filter($bookings, function ($booking) use ($venue) {
+         return $booking['venue_id'] == $venue['venue_id'];
+     });
+
+     if (count($venueBookings) > 0): ?>
+						<?php foreach ($venueBookings as $booking): ?>
 						<div class="booking-item">
 							<div class="booking-detail">
 							<div class="booking-name"><?php echo htmlspecialchars($booking['user_name'] ?? 'Guest User'); ?></div>
@@ -319,7 +316,8 @@
 						<?php endforeach; ?>
 					<?php else: ?>
 						<div class="no-data">No recent bookings found</div>
-					<?php endif; ?>
+					<?php endif;
+     ?>
 					</div>
 				</div>
 				</div>
@@ -337,29 +335,37 @@
 				<h2>Edit Venue Details</h2>
 				
 				<?php
-				// Handle venue update in the same file
-				if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_venue') {
-					// Validate and process venue update
-					$venue_id = $_POST['venue_id'] ?? '';
-					$venue_name = $_POST['venue_name'] ?? '';
-					$location = $_POST['location'] ?? '';
-					$price = $_POST['price'] ?? 0;
-					$size = $_POST['size'] ?? '';
-					$availability = $_POST['availability'] ?? 1;
-					$amenity1 = $_POST['amenity1'] ?? '';
-					$amenity2 = $_POST['amenity2'] ?? '';
-					$amenity3 = $_POST['amenity3'] ?? '';
+    // Handle venue update in the same file
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_venue') {
+        // Validate and process venue update
+        $venue_id = $_POST['venue_id'] ?? '';
+        $venue_name = $_POST['venue_name'] ?? '';
+        $location = $_POST['location'] ?? '';
+        $price = $_POST['price'] ?? 0;
+        $size = $_POST['size'] ?? '';
+        $availability = $_POST['availability'] ?? 1;
+        $amenity1 = $_POST['amenity1'] ?? '';
+        $amenity2 = $_POST['amenity2'] ?? '';
+        $amenity3 = $_POST['amenity3'] ?? '';
 
-					// Validation
-					$errors = [];
-					if (empty($venue_name)) $errors[] = 'Venue name is required';
-					if (empty($location)) $errors[] = 'Location is required';
-					if ($price <= 0) $errors[] = 'Invalid price';
-					if (empty($size)) $errors[] = 'Turf size is required';
+        // Validation
+        $errors = [];
+        if (empty($venue_name)) {
+            $errors[] = 'Venue name is required';
+        }
+        if (empty($location)) {
+            $errors[] = 'Location is required';
+        }
+        if ($price <= 0) {
+            $errors[] = 'Invalid price';
+        }
+        if (empty($size)) {
+            $errors[] = 'Turf size is required';
+        }
 
-					if (empty($errors)) {
-						// Prepare update query
-						$update_sql = "UPDATE venue SET 
+        if (empty($errors)) {
+            // Prepare update query
+            $update_sql = "UPDATE venue SET 
 							venue_nm = ?, 
 							location = ?, 
 							price = ?, 
@@ -370,52 +376,40 @@
 							amenity3 = ? 
 							WHERE venue_id = ? AND owner_email = ?";
 
-						$update_stmt = $conn->prepare($update_sql);
-						$update_stmt->bind_param(
-							"ssisisssss", 
-							$venue_name, 
-							$location, 
-							$price, 
-							$size, 
-							$availability, 
-							$amenity1, 
-							$amenity2, 
-							$amenity3, 
-							$venue_id,
-							$userEmail
-						);
+            $update_stmt = $conn->prepare($update_sql);
+            $update_stmt->bind_param("ssisisssss", $venue_name, $location, $price, $size, $availability, $amenity1, $amenity2, $amenity3, $venue_id, $userEmail);
 
-						if ($update_stmt->execute()) {
-							$_SESSION['venue_update_success'] = 'Venue details updated successfully';
-							// Redirect to prevent form resubmission
-							header("Location: {$_SERVER['PHP_SELF']}");
-							exit();
-						} else {
-							$_SESSION['venue_update_error'] = 'Failed to update venue details';
-						}
-					} else {
-						$_SESSION['venue_update_errors'] = $errors;
-					}
-				}
-				
-				// Display any success or error messages
-				if (isset($_SESSION['venue_update_success'])) {
-					echo '<div class="success-message">' . htmlspecialchars($_SESSION['venue_update_success']) . '</div>';
-					unset($_SESSION['venue_update_success']);
-				}
-				if (isset($_SESSION['venue_update_error'])) {
-					echo '<div class="error-message">' . htmlspecialchars($_SESSION['venue_update_error']) . '</div>';
-					unset($_SESSION['venue_update_error']);
-				}
-				if (isset($_SESSION['venue_update_errors'])) {
-					echo '<div class="error-message">';
-					foreach ($_SESSION['venue_update_errors'] as $error) {
-						echo htmlspecialchars($error) . '<br>';
-					}
-					echo '</div>';
-					unset($_SESSION['venue_update_errors']);
-				}
-				?>
+            if ($update_stmt->execute()) {
+                $_SESSION['venue_update_success'] = 'Venue details updated successfully';
+                // Redirect to prevent form resubmission
+                header("Location: {$_SERVER['PHP_SELF']}");
+                exit();
+            } else {
+                $_SESSION['venue_update_error'] = 'Failed to update venue details';
+            }
+        } else {
+            $_SESSION['venue_update_errors'] = $errors;
+        }
+    }
+
+    // Display any success or error messages
+    if (isset($_SESSION['venue_update_success'])) {
+        echo '<div class="success-message">' . htmlspecialchars($_SESSION['venue_update_success']) . '</div>';
+        unset($_SESSION['venue_update_success']);
+    }
+    if (isset($_SESSION['venue_update_error'])) {
+        echo '<div class="error-message">' . htmlspecialchars($_SESSION['venue_update_error']) . '</div>';
+        unset($_SESSION['venue_update_error']);
+    }
+    if (isset($_SESSION['venue_update_errors'])) {
+        echo '<div class="error-message">';
+        foreach ($_SESSION['venue_update_errors'] as $error) {
+            echo htmlspecialchars($error) . '<br>';
+        }
+        echo '</div>';
+        unset($_SESSION['venue_update_errors']);
+    }
+    ?>
 
 				<form method="POST" action="">
 					<input type="hidden" name="action" value="update_venue">
@@ -495,43 +489,43 @@
 			</div>
 			
 			<?php
-			// Get tournaments
-			$tournamentsQuery = "SELECT t.* FROM tournaments t 
+   // Get tournaments
+   $tournamentsQuery = "SELECT t.* FROM tournaments t 
 						JOIN venue v ON t.venue_id = v.venue_id 
 						WHERE v.owner_email = ? AND t.end_date >= CURDATE() 
 						ORDER BY t.start_date ASC LIMIT 3";
-			$stmt = $conn->prepare($tournamentsQuery);
-			$stmt->bind_param("s", $userEmail);
-			$stmt->execute();
-			$tournamentsResult = $stmt->get_result();
-			
-			if ($tournamentsResult->num_rows > 0):
-				while ($tournament = $tournamentsResult->fetch_assoc()):
-			?>
+   $stmt = $conn->prepare($tournamentsQuery);
+   $stmt->bind_param("s", $userEmail);
+   $stmt->execute();
+   $tournamentsResult = $stmt->get_result();
+
+   if ($tournamentsResult->num_rows > 0):
+       while ($tournament = $tournamentsResult->fetch_assoc()): ?>
 				<div class="tournament-item">
-				<div class="tournament-icon">
-					<?php if (!empty($tournament['img_url'])): ?>
-					<img src="<?php echo htmlspecialchars($tournament['img_url']); ?>" alt="Tournament logo">
-					<?php else: ?>
-					<i class="fas fa-trophy"></i>
-					<?php endif; ?>
+                    <div class="tournament-icon">
+                        <?php if (!empty($tournament['img_url'])): ?>
+                        <img src="<?php echo htmlspecialchars($tournament['img_url']); ?>" alt="Tournament logo">
+                        <?php else: ?>
+                        <i class="fas fa-trophy"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="tournament-details">
+                        <h3><?php echo htmlspecialchars($tournament['tr_name']); ?></h3>
+                        <p class="tournament-date">
+                        <?php echo date("d M", strtotime($tournament['start_date'])); ?> - 
+                        <?php echo date("d M Y", strtotime($tournament['end_date'])); ?>
+                        </p>
+                        <p class="tournament-time"><?php echo htmlspecialchars($tournament['tr_time']); ?></p>
+                        <p class="tournament-prize">Prize Pool: ₹<?php echo number_format($tournament['prize']); ?></p>
+                    </div>
 				</div>
-				<div class="tournament-details">
-					<h3><?php echo htmlspecialchars($tournament['tr_name']); ?></h3>
-					<p class="tournament-date">
-					<?php echo date("d M", strtotime($tournament['start_date'])); ?> - 
-					<?php echo date("d M Y", strtotime($tournament['end_date'])); ?>
-					</p>
-					<p class="tournament-time"><?php echo htmlspecialchars($tournament['tr_time']); ?></p>
-					<p class="tournament-prize">Prize Pool: ₹<?php echo number_format($tournament['prize']); ?></p>
-				</div>
-				</div>
-			<?php 
-				endwhile;
-			else:
-			?>
+			<?php endwhile;
+   else:
+        ?>
 				<div class="no-data">No upcoming tournaments</div>
-			<?php endif; ?>
+			<?php
+   endif;
+   ?>
 			
 			<button class="add-button" onclick="location.href='create_tournament.php'">
 				<i class="fas fa-plus"></i> Add New Tournament
@@ -542,7 +536,7 @@
 		<?php endif; ?>
 		
 		<?php if ($userType == 'owner' || $userType == 'admin'): ?>
-			<div id="academy-dashboard" class="dashboard-content <?php echo ($defaultDashboard == 'academy') ? 'active' : ''; ?>">
+			<div id="academy-dashboard" class="dashboard-content <?php echo $defaultDashboard == 'academy' ? 'active' : ''; ?>">
 				<div class="bento-grid">
 					<?php foreach ($academyDetails as $academy): ?>
 						<div class="bento-item details-section">
@@ -573,8 +567,8 @@
 							<div class="detail-content">
 								<div class="detail-label">Academy Name</div>
 								<div class="detail-value">
-								<?php echo htmlspecialchars($academy['aca_nm']); ?>
-								<span class="status-badge status-active">ACTIVE</span>
+                                    <?php echo htmlspecialchars($academy['aca_nm']); ?>
+                                    <span class="status-badge status-active">ACTIVE</span>
 								</div>
 							</div>
 						</div>
@@ -655,14 +649,13 @@
 								<div class="detail-label">Students</div>
 								<div class="people-list">
 								<?php
-								// Filter students for this specific academy
-								$academyStudents = array_filter($students, function($student) use ($academy) {
-									return $student['ac_id'] == $academy['ac_id'];
-								});
-								
-								if (count($academyStudents) > 0): 
-								?>
-									<?php foreach($academyStudents as $student): ?>
+        // Filter students for this specific academy
+        $academyStudents = array_filter($students, function ($student) use ($academy) {
+            return $student['ac_id'] == $academy['ac_id'];
+        });
+
+        if (count($academyStudents) > 0): ?>
+									<?php foreach ($academyStudents as $student): ?>
 									<div class="people-item">
 										<div class="avatar">
 										<i class="fas fa-user"></i>
@@ -678,7 +671,8 @@
 									<?php endforeach; ?>
 								<?php else: ?>
 									<div class="no-data">No students enrolled yet</div>
-								<?php endif; ?>
+								<?php endif;
+        ?>
 								</div>
 							</div>
 						</div>
@@ -696,31 +690,41 @@
 								<h2>Edit Academy Details</h2>
 								
 								<?php
-								// Handle academy update in the same file
-								if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_academy') {
-									// Validate and process academy update
-									$academy_id = $_POST['academy_id'] ?? '';
-									$academy_name = $_POST['aca_nm'] ?? '';
-									$location = $_POST['ac_location'] ?? '';
-									$charges = $_POST['ac_charges'] ?? 0;
-									$level = $_POST['level'] ?? '';
-									$age_group = $_POST['age_group'] ?? '';
-									$availability = $_POST['availability'] ?? 1;
-									$feature1 = $_POST['feature1'] ?? '';
-									$feature2 = $_POST['feature2'] ?? '';
-									$feature3 = $_POST['feature3'] ?? '';
+        // Handle academy update in the same file
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_academy') {
+            // Validate and process academy update
+            $academy_id = $_POST['academy_id'] ?? '';
+            $academy_name = $_POST['aca_nm'] ?? '';
+            $location = $_POST['ac_location'] ?? '';
+            $charges = $_POST['ac_charges'] ?? 0;
+            $level = $_POST['level'] ?? '';
+            $age_group = $_POST['age_group'] ?? '';
+            $availability = $_POST['availability'] ?? 1;
+            $feature1 = $_POST['feature1'] ?? '';
+            $feature2 = $_POST['feature2'] ?? '';
+            $feature3 = $_POST['feature3'] ?? '';
 
-									// Validation
-									$errors = [];
-									if (empty($academy_name)) $errors[] = 'Academy name is required';
-									if (empty($location)) $errors[] = 'Location is required';
-									if ($charges <= 0) $errors[] = 'Invalid fee';
-									if (empty($level)) $errors[] = 'Level is required';
-									if (empty($age_group)) $errors[] = 'Age group is required';
+            // Validation
+            $errors = [];
+            if (empty($academy_name)) {
+                $errors[] = 'Academy name is required';
+            }
+            if (empty($location)) {
+                $errors[] = 'Location is required';
+            }
+            if ($charges <= 0) {
+                $errors[] = 'Invalid fee';
+            }
+            if (empty($level)) {
+                $errors[] = 'Level is required';
+            }
+            if (empty($age_group)) {
+                $errors[] = 'Age group is required';
+            }
 
-									if (empty($errors)) {
-										// Prepare update query
-										$update_sql = "UPDATE academys SET 
+            if (empty($errors)) {
+                // Prepare update query
+                $update_sql = "UPDATE academys SET 
 											aca_nm = ?, 
 											ac_location = ?, 
 											ac_charges = ?, 
@@ -731,52 +735,40 @@
 											feature3 = ? 
 											WHERE ac_id = ? AND owner_email = ?";
 
-										$update_stmt = $conn->prepare($update_sql);
-										$update_stmt->bind_param(
-											"sssssssis", 
-											$academy_name, 
-											$location, 
-											$charges, 
-											$level, 
-											$age_group, 
-											$feature1, 
-											$feature2, 
-											$feature3, 
-											$academy_id,
-											$userEmail
-										);
+                $update_stmt = $conn->prepare($update_sql);
+                $update_stmt->bind_param("sssssssis", $academy_name, $location, $charges, $level, $age_group, $feature1, $feature2, $feature3, $academy_id, $userEmail);
 
-										if ($update_stmt->execute()) {
-											$_SESSION['academy_update_success'] = 'Academy details updated successfully';
-											// Redirect to prevent form resubmission
-											header("Location: {$_SERVER['PHP_SELF']}");
-											exit();
-										} else {
-											$_SESSION['academy_update_error'] = 'Failed to update academy details';
-										}
-									} else {
-										$_SESSION['academy_update_errors'] = $errors;
-									}
-								}
-								
-								// Display any success or error messages
-								if (isset($_SESSION['academy_update_success'])) {
-									echo '<div class="success-message">' . htmlspecialchars($_SESSION['academy_update_success']) . '</div>';
-									unset($_SESSION['academy_update_success']);
-								}
-								if (isset($_SESSION['academy_update_error'])) {
-									echo '<div class="error-message">' . htmlspecialchars($_SESSION['academy_update_error']) . '</div>';
-									unset($_SESSION['academy_update_error']);
-								}
-								if (isset($_SESSION['academy_update_errors'])) {
-									echo '<div class="error-message">';
-									foreach ($_SESSION['academy_update_errors'] as $error) {
-										echo htmlspecialchars($error) . '<br>';
-									}
-									echo '</div>';
-									unset($_SESSION['academy_update_errors']);
-								}
-								?>
+                if ($update_stmt->execute()) {
+                    $_SESSION['academy_update_success'] = 'Academy details updated successfully';
+                    // Redirect to prevent form resubmission
+                    header("Location: {$_SERVER['PHP_SELF']}");
+                    exit();
+                } else {
+                    $_SESSION['academy_update_error'] = 'Failed to update academy details';
+                }
+            } else {
+                $_SESSION['academy_update_errors'] = $errors;
+            }
+        }
+
+        // Display any success or error messages
+        if (isset($_SESSION['academy_update_success'])) {
+            echo '<div class="success-message">' . htmlspecialchars($_SESSION['academy_update_success']) . '</div>';
+            unset($_SESSION['academy_update_success']);
+        }
+        if (isset($_SESSION['academy_update_error'])) {
+            echo '<div class="error-message">' . htmlspecialchars($_SESSION['academy_update_error']) . '</div>';
+            unset($_SESSION['academy_update_error']);
+        }
+        if (isset($_SESSION['academy_update_errors'])) {
+            echo '<div class="error-message">';
+            foreach ($_SESSION['academy_update_errors'] as $error) {
+                echo htmlspecialchars($error) . '<br>';
+            }
+            echo '</div>';
+            unset($_SESSION['academy_update_errors']);
+        }
+        ?>
 
 								<form method="POST" action="">
 									<input type="hidden" name="action" value="update_academy">
@@ -833,26 +825,26 @@
 							</div>
 							<div class="stat-item">
 							<div class="stat-number animate-number">
-								<?php 
-								$totalStudents = 0;
-								foreach ($academyDetails as $academy) {
-									$totalStudents += isset($academy['student_count']) ? $academy['student_count'] : 0;
-								}
-								echo $totalStudents;
-								?>
+								<?php
+        $totalStudents = 0;
+        foreach ($academyDetails as $academy) {
+            $totalStudents += isset($academy['student_count']) ? $academy['student_count'] : 0;
+        }
+        echo $totalStudents;
+        ?>
 							</div>
 							<div class="stat-label">Students</div>
 							</div>
 							<div class="stat-item">
 							<div class="stat-number animate-number">
-								<?php 
-								$totalSessions = 0;
-								foreach ($academyDetails as $academy) {
-									$sessions = isset($academy['timings']) ? substr_count($academy['timings'], ',') + 1 : 0;
-									$totalSessions += $sessions;
-								}
-								echo count($academyDetails) > 0 ? round($totalSessions / count($academyDetails)) : 0;
-								?>
+								<?php
+        $totalSessions = 0;
+        foreach ($academyDetails as $academy) {
+            $sessions = isset($academy['timings']) ? substr_count($academy['timings'], ',') + 1 : 0;
+            $totalSessions += $sessions;
+        }
+        echo count($academyDetails) > 0 ? round($totalSessions / count($academyDetails)) : 0;
+        ?>
 							</div>
 							<div class="stat-label">Avg. Sessions/Week</div>
 							</div>
@@ -882,79 +874,79 @@
 			</div>
 
 			<?php
-			// Handle venue deletion in the same file
-			if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete_venue') {
-			$venue_id = $_POST['venue_id'] ?? '';
-			
-			if (!empty($venue_id)) {
-				// Start a transaction
-				$conn->begin_transaction();
-				
-				try {
-				// First, check if the venue belongs to the current user
-				$check_sql = "SELECT venue_id FROM venue WHERE venue_id = ? AND owner_email = ?";
-				$check_stmt = $conn->prepare($check_sql);
-				$check_stmt->bind_param("ss", $venue_id, $userEmail);
-				$check_stmt->execute();
-				$check_result = $check_stmt->get_result();
-				
-				if ($check_result->num_rows == 0) {
-					throw new Exception("Unauthorized venue deletion attempt");
-				}
-				
-				// Delete all bookings associated with this venue
-				$delete_bookings_sql = "DELETE FROM book WHERE venue_id = ?";
-				$bookings_stmt = $conn->prepare($delete_bookings_sql);
-				$bookings_stmt->bind_param("s", $venue_id);
-				$bookings_stmt->execute();
-				
-				// Delete tournament registrations for tournaments at this venue
-				$delete_registrations_sql = "DELETE r FROM register r 
+   // Handle venue deletion in the same file
+   if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete_venue') {
+       $venue_id = $_POST['venue_id'] ?? '';
+
+       if (!empty($venue_id)) {
+           // Start a transaction
+           $conn->begin_transaction();
+
+           try {
+               // First, check if the venue belongs to the current user
+               $check_sql = "SELECT venue_id FROM venue WHERE venue_id = ? AND owner_email = ?";
+               $check_stmt = $conn->prepare($check_sql);
+               $check_stmt->bind_param("ss", $venue_id, $userEmail);
+               $check_stmt->execute();
+               $check_result = $check_stmt->get_result();
+
+               if ($check_result->num_rows == 0) {
+                   throw new Exception("Unauthorized venue deletion attempt");
+               }
+
+               // Delete all bookings associated with this venue
+               $delete_bookings_sql = "DELETE FROM book WHERE venue_id = ?";
+               $bookings_stmt = $conn->prepare($delete_bookings_sql);
+               $bookings_stmt->bind_param("s", $venue_id);
+               $bookings_stmt->execute();
+
+               // Delete tournament registrations for tournaments at this venue
+               $delete_registrations_sql = "DELETE r FROM register r 
 											JOIN tournaments t ON r.tr_id = t.tr_id 
 											WHERE t.venue_id = ?";
-				$reg_stmt = $conn->prepare($delete_registrations_sql);
-				$reg_stmt->bind_param("s", $venue_id);
-				$reg_stmt->execute();
-				
-				// Delete tournaments at this venue
-				$delete_tournaments_sql = "DELETE FROM tournaments WHERE venue_id = ?";
-				$tournaments_stmt = $conn->prepare($delete_tournaments_sql);
-				$tournaments_stmt->bind_param("s", $venue_id);
-				$tournaments_stmt->execute();
-				
-				// Finally, delete the venue itself
-				$delete_venue_sql = "DELETE FROM venue WHERE venue_id = ?";
-				$venue_stmt = $conn->prepare($delete_venue_sql);
-				$venue_stmt->bind_param("s", $venue_id);
-				$venue_stmt->execute();
-				
-				// Commit the transaction
-				$conn->commit();
-				
-				$_SESSION['venue_delete_success'] = 'Venue and all associated data deleted successfully';
-				// Redirect to prevent form resubmission
-				header("Location: {$_SERVER['PHP_SELF']}");
-				exit();
-				} catch (Exception $e) {
-				// Rollback on error
-				$conn->rollback();
-				$_SESSION['venue_delete_error'] = 'Failed to delete venue: ' . $e->getMessage();
-				}
-			} else {
-				$_SESSION['venue_delete_error'] = 'Invalid venue ID';
-			}
-			}
-			
-			// Display any success or error messages
-			if (isset($_SESSION['venue_delete_success'])) {
-			echo '<div class="success-message">' . htmlspecialchars($_SESSION['venue_delete_success']) . '</div>';
-			unset($_SESSION['venue_delete_success']);
-			}
-			if (isset($_SESSION['venue_delete_error'])) {
-			echo '<div class="error-message">' . htmlspecialchars($_SESSION['venue_delete_error']) . '</div>';
-			unset($_SESSION['venue_delete_error']);
-			}
-			?>
+               $reg_stmt = $conn->prepare($delete_registrations_sql);
+               $reg_stmt->bind_param("s", $venue_id);
+               $reg_stmt->execute();
+
+               // Delete tournaments at this venue
+               $delete_tournaments_sql = "DELETE FROM tournaments WHERE venue_id = ?";
+               $tournaments_stmt = $conn->prepare($delete_tournaments_sql);
+               $tournaments_stmt->bind_param("s", $venue_id);
+               $tournaments_stmt->execute();
+
+               // Finally, delete the venue itself
+               $delete_venue_sql = "DELETE FROM venue WHERE venue_id = ?";
+               $venue_stmt = $conn->prepare($delete_venue_sql);
+               $venue_stmt->bind_param("s", $venue_id);
+               $venue_stmt->execute();
+
+               // Commit the transaction
+               $conn->commit();
+
+               $_SESSION['venue_delete_success'] = 'Venue and all associated data deleted successfully';
+               // Redirect to prevent form resubmission
+               header("Location: {$_SERVER['PHP_SELF']}");
+               exit();
+           } catch (Exception $e) {
+               // Rollback on error
+               $conn->rollback();
+               $_SESSION['venue_delete_error'] = 'Failed to delete venue: ' . $e->getMessage();
+           }
+       } else {
+           $_SESSION['venue_delete_error'] = 'Invalid venue ID';
+       }
+   }
+
+   // Display any success or error messages
+   if (isset($_SESSION['venue_delete_success'])) {
+       echo '<div class="success-message">' . htmlspecialchars($_SESSION['venue_delete_success']) . '</div>';
+       unset($_SESSION['venue_delete_success']);
+   }
+   if (isset($_SESSION['venue_delete_error'])) {
+       echo '<div class="error-message">' . htmlspecialchars($_SESSION['venue_delete_error']) . '</div>';
+       unset($_SESSION['venue_delete_error']);
+   }
+   ?>
 
 			<form method="POST" action="">
 			<input type="hidden" name="action" value="delete_venue">
@@ -979,65 +971,65 @@
 			</div>
 
 			<?php
-			// Handle academy deletion in the same file
-			if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete_academy') {
-			$academy_id = $_POST['academy_id'] ?? '';
-			
-			if (!empty($academy_id)) {
-				// Start a transaction
-				$conn->begin_transaction();
-				
-				try {
-				// First, check if the academy belongs to the current user
-				$check_sql = "SELECT ac_id FROM academys WHERE ac_id = ? AND owner_email = ?";
-				$check_stmt = $conn->prepare($check_sql);
-				$check_stmt->bind_param("ss", $academy_id, $userEmail);
-				$check_stmt->execute();
-				$check_result = $check_stmt->get_result();
-				
-				if ($check_result->num_rows == 0) {
-					throw new Exception("Unauthorized academy deletion attempt");
-				}
-				
-				// Delete all enrollments associated with this academy
-				$delete_enrollments_sql = "DELETE FROM enroll WHERE ac_id = ?";
-				$enrollments_stmt = $conn->prepare($delete_enrollments_sql);
-				$enrollments_stmt->bind_param("s", $academy_id);
-				$enrollments_stmt->execute();
-				
-				// Finally, delete the academy itself
-				$delete_academy_sql = "DELETE FROM academys WHERE ac_id = ?";
-				$academy_stmt = $conn->prepare($delete_academy_sql);
-				$academy_stmt->bind_param("s", $academy_id);
-				$academy_stmt->execute();
-				
-				// Commit the transaction
-				$conn->commit();
-				
-				$_SESSION['academy_delete_success'] = 'Academy and all associated data deleted successfully';
-				// Redirect to prevent form resubmission
-				header("Location: {$_SERVER['PHP_SELF']}");
-				exit();
-				} catch (Exception $e) {
-				// Rollback on error
-				$conn->rollback();
-				$_SESSION['academy_delete_error'] = 'Failed to delete academy: ' . $e->getMessage();
-				}
-			} else {
-				$_SESSION['academy_delete_error'] = 'Invalid academy ID';
-			}
-			}
-			
-			// Display any success or error messages
-			if (isset($_SESSION['academy_delete_success'])) {
-			echo '<div class="success-message">' . htmlspecialchars($_SESSION['academy_delete_success']) . '</div>';
-			unset($_SESSION['academy_delete_success']);
-			}
-			if (isset($_SESSION['academy_delete_error'])) {
-			echo '<div class="error-message">' . htmlspecialchars($_SESSION['academy_delete_error']) . '</div>';
-			unset($_SESSION['academy_delete_error']);
-			}
-			?>
+   // Handle academy deletion in the same file
+   if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete_academy') {
+       $academy_id = $_POST['academy_id'] ?? '';
+
+       if (!empty($academy_id)) {
+           // Start a transaction
+           $conn->begin_transaction();
+
+           try {
+               // First, check if the academy belongs to the current user
+               $check_sql = "SELECT ac_id FROM academys WHERE ac_id = ? AND owner_email = ?";
+               $check_stmt = $conn->prepare($check_sql);
+               $check_stmt->bind_param("ss", $academy_id, $userEmail);
+               $check_stmt->execute();
+               $check_result = $check_stmt->get_result();
+
+               if ($check_result->num_rows == 0) {
+                   throw new Exception("Unauthorized academy deletion attempt");
+               }
+
+               // Delete all enrollments associated with this academy
+               $delete_enrollments_sql = "DELETE FROM enroll WHERE ac_id = ?";
+               $enrollments_stmt = $conn->prepare($delete_enrollments_sql);
+               $enrollments_stmt->bind_param("s", $academy_id);
+               $enrollments_stmt->execute();
+
+               // Finally, delete the academy itself
+               $delete_academy_sql = "DELETE FROM academys WHERE ac_id = ?";
+               $academy_stmt = $conn->prepare($delete_academy_sql);
+               $academy_stmt->bind_param("s", $academy_id);
+               $academy_stmt->execute();
+
+               // Commit the transaction
+               $conn->commit();
+
+               $_SESSION['academy_delete_success'] = 'Academy and all associated data deleted successfully';
+               // Redirect to prevent form resubmission
+               header("Location: {$_SERVER['PHP_SELF']}");
+               exit();
+           } catch (Exception $e) {
+               // Rollback on error
+               $conn->rollback();
+               $_SESSION['academy_delete_error'] = 'Failed to delete academy: ' . $e->getMessage();
+           }
+       } else {
+           $_SESSION['academy_delete_error'] = 'Invalid academy ID';
+       }
+   }
+
+   // Display any success or error messages
+   if (isset($_SESSION['academy_delete_success'])) {
+       echo '<div class="success-message">' . htmlspecialchars($_SESSION['academy_delete_success']) . '</div>';
+       unset($_SESSION['academy_delete_success']);
+   }
+   if (isset($_SESSION['academy_delete_error'])) {
+       echo '<div class="error-message">' . htmlspecialchars($_SESSION['academy_delete_error']) . '</div>';
+       unset($_SESSION['academy_delete_error']);
+   }
+   ?>
 
 			<form method="POST" action="">
 			<input type="hidden" name="action" value="delete_academy">

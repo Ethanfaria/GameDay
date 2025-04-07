@@ -1,6 +1,6 @@
 <?php
-include 'db.php'; // Include the database connection file
-session_start(); // Make sure to start the session to access user data
+include 'db.php'; 
+session_start(); 
 
 if (!isset($_SESSION['user_email'])) {
     // Redirect to login if user is not logged in
@@ -12,100 +12,231 @@ $user_email = $_SESSION['user_email'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['registerAcademy'])) { // If Academy form is submitted
+        // Define validation errors array
+        $errors = array();
         
-        $ac_id = uniqid('ac_'); // Generate a unique ID
-        $aca_nm = $_POST['academyName'];
-        $ac_location = $_POST['academyLocation'];
-        $ac_charges = $_POST['academyCharges'];
-        $venue_id = $_POST['venueId'];
+        // Validate required fields
+        $aca_nm = trim($_POST['academyName']);
+        if (empty($aca_nm)) {
+            array_push($errors, "Academy Name is required");
+        } elseif (strlen($aca_nm) < 3) {
+            array_push($errors, "Academy Name must be at least 3 characters long");
+        } elseif (!preg_match("/^[a-zA-Z0-9\s\-.,&']+$/", $aca_nm)) {
+            array_push($errors, "Academy Name contains invalid characters");
+        }
+        
+        $ac_location = trim($_POST['academyLocation']);
+        if (empty($ac_location)) {
+            array_push($errors, "Academy Location is required");
+        } elseif (strlen($ac_location) < 5) {
+            array_push($errors, "Academy Location must be at least 5 characters long");
+        }
+        
         $level = $_POST['academyLevel'];
+        if (empty($level)) {
+            array_push($errors, "Academy Level is required");
+        }
+        
         $age_group = $_POST['academyAgeGroup'];
-        $description = $_POST['academyDescription'];
-        $feature1 = $_POST['feature1'];
-        $feature2 = $_POST['feature2'];
-        $feature3 = $_POST['feature3'];
-        $admy_img = $_POST['academyImage'];
+        if (empty($age_group)) {
+            array_push($errors, "Age Group is required");
+        }
+        
+        $venue_id = $_POST['venueId'];
+        if (empty($venue_id)) {
+            array_push($errors, "Venue selection is required");
+        }
+        
+        $ac_charges = $_POST['academyCharges'];
+        if (empty($ac_charges) || !is_numeric($ac_charges) || $ac_charges <= 50) {
+            array_push($errors, "Monthly Fee must be a number greater than 50");
+        }
+        
         $duration = $_POST['academyDuration'];
+        if (empty($duration) || !is_numeric($duration) || $duration < 1) {
+            array_push($errors, "Duration must be at least 1 month");
+        }
         
-        // Process the time inputs
-        $startTime = date("h A", strtotime($_POST['startTime'] . ':00'));
-        $endTime = date("h A", strtotime($_POST['endTime'] . ':00'));
-        $timings = $startTime . ' - ' . $endTime;
+        $description = trim($_POST['academyDescription']);
+        if (empty($description)) {
+            array_push($errors, "Academy Description is required");
+        } elseif (strlen($description) < 20) {
+            array_push($errors, "Academy Description must be at least 20 characters long");
+        }
         
-        // Process the days checkboxes
+        $admy_img = trim($_POST['academyImage']);
+        if (!empty($admy_img)) {
+            $url_pattern = "/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/";
+            if (!preg_match($url_pattern, $admy_img)) {
+                array_push($errors, "Academy Image URL is not valid");
+            }
+        }
+        
+        // Validate days
         $selectedDays = isset($_POST['days']) ? $_POST['days'] : [];
-        $days = !empty($selectedDays) ? implode(', ', $selectedDays) : 'Not specified';
+        if (empty($selectedDays)) {
+            array_push($errors, "At least one day must be selected");
+        }
         
-        $sql = "INSERT INTO academys (ac_id, aca_nm, ac_location, ac_charges, venue_id, level, age_group, description, feature1, feature2, feature3, admy_img, timings, days, duration, owner_email) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssdssssssssssis", $ac_id, $aca_nm, $ac_location, $ac_charges, $venue_id, $level, $age_group, $description, $feature1, $feature2, $feature3, $admy_img, $timings, $days, $duration, $user_email);
+        // Validate time inputs
+        $startTime = $_POST['startTime'];
+        $endTime = $_POST['endTime'];
         
-        if ($stmt->execute()) {
-            // Update user type after successful academy registration
-            $update_user = "UPDATE user SET user_type = 'owner' WHERE email = ?";
-            $update_stmt = $conn->prepare($update_user);
-            $update_stmt->bind_param("s", $user_email);
-            $update_stmt->execute();
-           
-            // Fetch the updated user type from the database
-            $type_query = "SELECT user_type FROM user WHERE email = ?";
-            $type_stmt = $conn->prepare($type_query);
-            $type_stmt->bind_param("s", $user_email);
-            $type_stmt->execute();
-            $type_result = $type_stmt->get_result();
-            $type_data = $type_result->fetch_assoc();
-
-            // Update the session variable with the new user type
-            $_SESSION['user_type'] = $type_data['user_type'];
-            
-            echo "<script>alert('Academy Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+        if (empty($startTime)) {
+            array_push($errors, "Start Time is required");
+        }
+        
+        if (empty($endTime)) {
+            array_push($errors, "End Time is required");
+        }
+        
+        if (!empty($startTime) && !empty($endTime) && $startTime >= $endTime) {
+            array_push($errors, "End Time must be after Start Time");
+        }
+        
+        // If there are validation errors, do not proceed with insertion
+        if (count($errors) > 0) {
+            $errorMessage = "";
+            foreach ($errors as $error) {
+                $errorMessage .= $error . "\\n";
+            }
+            echo "<script>alert('Please correct the following errors:\\n" . $errorMessage . "');</script>";
         } else {
-            echo "<script>alert('Error: Unable to register academy. " . $conn->error . "');</script>";
+            // Proceed with academy registration
+            $ac_id = uniqid('ac_'); // Generate a unique ID
+            $feature1 = $_POST['feature1'];
+            $feature2 = $_POST['feature2'];
+            $feature3 = $_POST['feature3'];
+            
+            // Process the time inputs
+            $startTime = date("h A", strtotime($_POST['startTime'] . ':00'));
+            $endTime = date("h A", strtotime($_POST['endTime'] . ':00'));
+            $timings = $startTime . ' - ' . $endTime;
+            
+            // Process the days
+            $days = !empty($selectedDays) ? implode(', ', $selectedDays) : 'Not specified';
+            
+            // Insert into database
+            $sql = "INSERT INTO academys (ac_id, aca_nm, ac_location, ac_charges, venue_id, level, age_group, description, feature1, feature2, feature3, admy_img, timings, days, duration, owner_email) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssdssssssssssis", $ac_id, $aca_nm, $ac_location, $ac_charges, $venue_id, $level, $age_group, $description, $feature1, $feature2, $feature3, $admy_img, $timings, $days, $duration, $user_email);
+            
+            if ($stmt->execute()) {
+                // Update user type after successful academy registration
+                $update_user = "UPDATE user SET user_type = 'owner' WHERE email = ?";
+                $update_stmt = $conn->prepare($update_user);
+                $update_stmt->bind_param("s", $user_email);
+                $update_stmt->execute();
+               
+                // Fetch the updated user type from the database
+                $type_query = "SELECT user_type FROM user WHERE email = ?";
+                $type_stmt = $conn->prepare($type_query);
+                $type_stmt->bind_param("s", $user_email);
+                $type_stmt->execute();
+                $type_result = $type_stmt->get_result();
+                $type_data = $type_result->fetch_assoc();
+
+                // Update the session variable with the new user type
+                $_SESSION['user_type'] = $type_data['user_type'];
+                
+                echo "<script>alert('Academy Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+            } else {
+                echo "<script>alert('Error: Unable to register academy. " . $conn->error . "');</script>";
+            }
         }
     }
 
     if (isset($_POST['registerTurf'])) {
-        $venue_id = uniqid('ven_'); // Generate a unique ID
-        $venue_nm = $_POST['turfName'];
-        $location = $_POST['turfLocation'];
+        // Define validation errors array
+        $errors = array();
+        
+        // Validate required fields
+        $venue_nm = trim($_POST['turfName']);
+        if (empty($venue_nm)) {
+            array_push($errors, "Turf Name is required");
+        } elseif (strlen($venue_nm) < 3) {
+            array_push($errors, "Turf Name must be at least 3 characters long");
+        } elseif (!preg_match("/^[a-zA-Z0-9\s\-.,&']+$/", $venue_nm)) {
+            array_push($errors, "Turf Name contains invalid characters");
+        }
+        
+        $location = trim($_POST['turfLocation']);
+        if (empty($location)) {
+            array_push($errors, "Turf Location is required");
+        } elseif (strlen($location) < 5) {
+            array_push($errors, "Turf Location must be at least 5 characters long");
+        }
+        
         $length = $_POST['turfLength'];
+        if (empty($length) || !is_numeric($length) || $length <= 0) {
+            array_push($errors, "Turf Length must be a positive number");
+        }
+        
         $breadth = $_POST['turfBreadth'];
-        $size = $length . ' x ' . $breadth;
+        if (empty($breadth) || !is_numeric($breadth) || $breadth <= 0) {
+            array_push($errors, "Turf Breadth must be a positive number");
+        }
+        
         $price = $_POST['hourlyRate'];
-        $turf_img = $_POST['turfImage'];
-        $amenity1 = $_POST['amenity1'];
-        $amenity2 = $_POST['amenity2'];
-        $amenity3 = $_POST['amenity3'];
+        if (empty($price) || !is_numeric($price) || $price <= 50) {
+            array_push($errors, "Hourly Rate must be a number greater than 50");
+        }
         
-        $sql = "INSERT INTO venue (venue_id, venue_nm, location, size, price, turf_img, availability, amenity1, amenity2, amenity3, owner_email) 
-                VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssdssssss", $venue_id, $venue_nm, $location, $size, $price, $turf_img, $amenity1, $amenity2, $amenity3, $user_email);
-        
-        if ($stmt->execute()) {
-            // Update user type after successful turf registration
-            $update_user = "UPDATE user SET user_type = 'owner' WHERE email = ?";
-            $update_stmt = $conn->prepare($update_user);
-            $update_stmt->bind_param("s", $user_email);
-            $update_stmt->execute();
-            
-            // Fetch the updated user type from the database
-            $type_query = "SELECT user_type FROM user WHERE email = ?";
-            $type_stmt = $conn->prepare($type_query);
-            $type_stmt->bind_param("s", $user_email);
-            $type_stmt->execute();
-            $type_result = $type_stmt->get_result();
-            $type_data = $type_result->fetch_assoc();
-
-            // Update the session variable with the new user type
-            $_SESSION['user_type'] = $type_data['user_type'];
-            
-            echo "<script>alert('Turf Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+        $turf_img = trim($_POST['turfImage']);
+        if (empty($turf_img)) {
+            array_push($errors, "Turf Image URL is required");
         } else {
-            echo "<script>alert('Error: Unable to register turf. " . $conn->error . "');</script>";
+            $url_pattern = "/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/";
+            if (!preg_match($url_pattern, $turf_img)) {
+                array_push($errors, "Turf Image URL is not valid");
+            }
+        }
+        
+        // If there are validation errors, do not proceed with insertion
+        if (count($errors) > 0) {
+            $errorMessage = "";
+            foreach ($errors as $error) {
+                $errorMessage .= $error . "\\n";
+            }
+            echo "<script>alert('Please correct the following errors:\\n" . $errorMessage . "');</script>";
+        } else {
+            // Proceed with turf registration
+            $venue_id = uniqid('ven_'); // Generate a unique ID
+            $size = $length . ' x ' . $breadth;
+            $amenity1 = $_POST['amenity1'];
+            $amenity2 = $_POST['amenity2'];
+            $amenity3 = $_POST['amenity3'];
+            
+            $sql = "INSERT INTO venue (venue_id, venue_nm, location, size, price, turf_img, availability, amenity1, amenity2, amenity3, owner_email) 
+                    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssdssssss", $venue_id, $venue_nm, $location, $size, $price, $turf_img, $amenity1, $amenity2, $amenity3, $user_email);
+            
+            if ($stmt->execute()) {
+                // Update user type after successful turf registration
+                $update_user = "UPDATE user SET user_type = 'owner' WHERE email = ?";
+                $update_stmt = $conn->prepare($update_user);
+                $update_stmt->bind_param("s", $user_email);
+                $update_stmt->execute();
+                
+                // Fetch the updated user type from the database
+                $type_query = "SELECT user_type FROM user WHERE email = ?";
+                $type_stmt = $conn->prepare($type_query);
+                $type_stmt->bind_param("s", $user_email);
+                $type_stmt->execute();
+                $type_result = $type_stmt->get_result();
+                $type_data = $type_result->fetch_assoc();
+
+                // Update the session variable with the new user type
+                $_SESSION['user_type'] = $type_data['user_type'];
+                
+                echo "<script>alert('Turf Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+            } else {
+                echo "<script>alert('Error: Unable to register turf. " . $conn->error . "');</script>";
+            }
         }
     }
 }
@@ -132,6 +263,61 @@ if ($venues_result->num_rows > 0) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="CSS\ground-academy-register.css">
     <link rel="stylesheet" href="CSS\main.css">
+    <style>
+        .requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
+        .requirements.show {
+            display: block;
+        }
+        
+        .requirements ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .requirements li {
+            margin-bottom: 2px;
+        }
+        
+        .valid {
+            color: green;
+        }
+        
+        .invalid {
+            color: red;
+        }
+        
+        .error-container {
+            background-color: #ffe0e0;
+            border: 1px solid #ff9999;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            color: #d8000c;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input.error-field, 
+        .form-group select.error-field,
+        .form-group textarea.error-field {
+            border-color: #d8000c;
+        }
+        
+        .form-group input.valid-field, 
+        .form-group select.valid-field,
+        .form-group textarea.valid-field {
+            border-color: #4CAF50;
+        }
+    </style>
 </head>
 <body>
 <?php include 'header.php'; ?>
@@ -155,10 +341,21 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="turfName">Turf Name</label>
                                 <input type="text" id="turfName" name="turfName" required placeholder="Enter turf name">
+                                <div id="turfNameRequirements" class="requirements">
+                                    <ul>
+                                        <li id="turfNameLength">At least 3 characters long</li>
+                                        <li id="turfNameChars">Only letters, numbers, spaces, and basic punctuation</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="turfLocation">Location</label>
                                 <input type="text" id="turfLocation" name="turfLocation" required placeholder="Enter turf location">
+                                <div id="turfLocationRequirements" class="requirements">
+                                    <ul>
+                                        <li id="turfLocationLength">At least 5 characters long</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -168,10 +365,20 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="turfLength">Length (m)</label>
                                 <input type="number" id="turfLength" name="turfLength" required placeholder="Enter length">
+                                <div id="turfLengthRequirements" class="requirements">
+                                    <ul>
+                                        <li id="turfLengthValid">Must be a positive number (greater than 0)</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="turfBreadth">Breadth (m)</label>
                                 <input type="number" id="turfBreadth" name="turfBreadth" required placeholder="Enter breadth">
+                                <div id="turfBreadthRequirements" class="requirements">
+                                    <ul>
+                                        <li id="turfBreadthValid">Must be a positive number (greater than 0)</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -182,10 +389,20 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="hourlyRate">Hourly Rate (₹)</label>
                                 <input type="number" id="hourlyRate" name="hourlyRate" required placeholder="Enter hourly rate">
+                                <div id="hourlyRateRequirements" class="requirements">
+                                    <ul>
+                                        <li id="hourlyRateValid">Must be a positive number (greater than 50)</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="turfImage">Turf Image URL</label>
                                 <input type="url" id="turfImage" name="turfImage" required placeholder="Enter image URL">
+                                <div id="turfImageRequirements" class="requirements">
+                                    <ul>
+                                        <li id="turfImageUrl">Must be a valid URL format</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -225,10 +442,21 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="academyName">Academy Name</label>
                                 <input type="text" id="academyName" name="academyName" required placeholder="Enter academy name">
+                                <div id="academyNameRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyNameLength">At least 3 characters long</li>
+                                        <li id="academyNameChars">Only letters, numbers, spaces, and basic punctuation</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="academyLocation">Location</label>
                                 <input type="text" id="academyLocation" name="academyLocation" required placeholder="Enter academy location">
+                                <div id="academyLocationRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyLocationLength">At least 5 characters long</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -245,6 +473,11 @@ if ($venues_result->num_rows > 0) {
                                     <option value="advanced">Advanced</option>
                                     <option value="professional">Professional</option>
                                 </select>
+                                <div id="academyLevelRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyLevelSelected">Academy level must be selected</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="academyAgeGroup">Age Groups</label>
@@ -255,6 +488,11 @@ if ($venues_result->num_rows > 0) {
                                     <option value="adults">Adults (18+ years)</option>
                                     <option value="all">All Age Groups</option>
                                 </select>
+                                <div id="academyAgeGroupRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyAgeGroupSelected">Age group must be selected</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -270,6 +508,11 @@ if ($venues_result->num_rows > 0) {
                                     <option value="<?php echo $venue['venue_id']; ?>"><?php echo $venue['venue_nm']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div id="venueIdRequirements" class="requirements">
+                                    <ul>
+                                        <li id="venueIdSelected">Venue must be selected</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -280,10 +523,20 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="academyCharges">Monthly Fee (₹)</label>
                                 <input type="number" id="academyCharges" name="academyCharges" required placeholder="Enter monthly fee">
+                                <div id="academyChargesRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyChargesValid">Must be a positive number (greater than 50)</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="academyDuration">Duration (Months)</label>
                                 <input type="number" id="academyDuration" name="academyDuration" min="1" required placeholder="Enter program duration">
+                                <div id="academyDurationRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyDurationValid">Must be a positive number (at least 1 month)</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -294,6 +547,11 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="academyDescription">Description</label>
                                 <textarea id="academyDescription" name="academyDescription" rows="4" placeholder="Enter academy description"></textarea>
+                                <div id="academyDescriptionRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyDescriptionLength">At least 20 characters long</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -303,6 +561,11 @@ if ($venues_result->num_rows > 0) {
                             <div class="form-group">
                                 <label for="academyImage">Academy Image URL</label>
                                 <input type="url" id="academyImage" name="academyImage" placeholder="Enter image URL">
+                                <div id="academyImageRequirements" class="requirements">
+                                    <ul>
+                                        <li id="academyImageUrl">Must be a valid URL format</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         
@@ -317,6 +580,11 @@ if ($venues_result->num_rows > 0) {
                                     <label><input type="checkbox" name="days[]" value="Friday"> Friday</label>
                                     <label><input type="checkbox" name="days[]" value="Saturday"> Saturday</label>
                                     <label><input type="checkbox" name="days[]" value="Sunday"> Sunday</label>
+                                </div>
+                                <div id="daysRequirements" class="requirements">
+                                    <ul>
+                                        <li id="daysSelected">At least one day must be selected</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -335,6 +603,11 @@ if ($venues_result->num_rows > 0) {
                                     }
                                     ?>
                                 </select>
+                                <div id="startTimeRequirements" class="requirements">
+                                    <ul>
+                                        <li id="startTimeSelected">Start hour must be selected</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="endTime">End Hour</label>
@@ -349,6 +622,12 @@ if ($venues_result->num_rows > 0) {
                                     }
                                     ?>
                                 </select>
+                                <div id="endTimeRequirements" class="requirements">
+                                    <ul>
+                                        <li id="endTimeSelected">End hour must be selected</li>
+                                        <li id="timeValid">End time must be after start time</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -407,9 +686,6 @@ if ($venues_result->num_rows > 0) {
             checkboxLabels.forEach(label => {
                 label.addEventListener('click', function() {
                     const checkbox = this.querySelector('input[type="checkbox"]');
-                    
-                    // Toggle the selected class based on checkbox state
-                    // We use setTimeout to allow the checkbox to change state first
                     setTimeout(() => {
                         if (checkbox.checked) {
                             this.classList.add('selected');
@@ -456,139 +732,374 @@ if ($venues_result->num_rows > 0) {
             window.scrollTo(0, 0);
         }
 
-        // Validation for Turf Form
-        function validateTurfForm() {
-            const errorMessages = [];
-            
-            const turfName = document.getElementById('turfName').value.trim();
-            const turfLocation = document.getElementById('turfLocation').value.trim();
-            const turfSize = document.getElementById('turfSize').value;
-            const hourlyRate = document.getElementById('hourlyRate').value;
-            const turfImage = document.getElementById('turfImage').value.trim();
-            
-            // Turf Name validation
-            if (turfName === '') {
-                errorMessages.push('Turf Name is required');
-            }
-            
-            // Location validation
-            if (turfLocation === '') {
-                errorMessages.push('Turf Location is required');
-            }
-            
-            // Size validation
-            const turfLength = document.getElementById('turfLength').value;
-            const turfBreadth = document.getElementById('turfBreadth').value;
-            
-            if (turfLength === '' || isNaN(turfLength) || parseFloat(turfLength) <= 0) {
-                errorMessages.push('Valid Ground Length is required');
-            }
-            
-            if (turfBreadth === '' || isNaN(turfBreadth) || parseFloat(turfBreadth) <= 0) {
-                errorMessages.push('Valid Ground Breadth is required');
-            }
-            
-            // Hourly Rate validation
-            if (hourlyRate === '' || isNaN(hourlyRate) || parseFloat(hourlyRate) <= 0) {
-                errorMessages.push('Valid Hourly Rate is required');
-            }
-            
-            // Image URL validation
-            const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-            if (turfImage === '' || !urlPattern.test(turfImage)) {
-                errorMessages.push('Valid Image URL is required');
-            }
-            
-            return errorMessages;
-        }
+        // Turf Form: Show validation requirements on input focus
+document.getElementById('turfName').addEventListener('focus', function() {
+    document.getElementById('turfNameRequirements').classList.add('show');
+});
 
-        // Validation for Academy Form
-        function validateAcademyForm() {
-            const errorMessages = [];
-            
-            const academyName = document.getElementById('academyName').value.trim();
-            const academyLocation = document.getElementById('academyLocation').value.trim();
-            const academyLevel = document.getElementById('academyLevel').value;
-            const academyAgeGroup = document.getElementById('academyAgeGroup').value;
-            const venueId = document.getElementById('venueId').value;
-            const academyCharges = document.getElementById('academyCharges').value;
-            const academyDuration = document.getElementById('academyDuration').value;
-            const academyDescription = document.getElementById('academyDescription').value.trim();
-            const academyImage = document.getElementById('academyImage').value.trim();
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            
-            // Academy Name validation
-            if (academyName === '') {
-                errorMessages.push('Academy Name is required');
-            }
-            
-            // Location validation
-            if (academyLocation === '') {
-                errorMessages.push('Academy Location is required');
-            }
-            
-            // Level validation
-            if (academyLevel === '') {
-                errorMessages.push('Academy Level is required');
-            }
-            
-            // Age Group validation
-            if (academyAgeGroup === '') {
-                errorMessages.push('Age Group is required');
-            }
-            
-            // Venue validation
-            if (venueId === '') {
-                errorMessages.push('Venue Selection is required');
-            }
-            
-            // Charges validation
-            if (academyCharges === '' || isNaN(academyCharges) || parseFloat(academyCharges) <= 0) {
-                errorMessages.push('Valid Monthly Fee is required');
-            }
-            
-            // Duration validation
-            if (academyDuration === '' || isNaN(academyDuration) || parseInt(academyDuration) <= 0) {
-                errorMessages.push('Valid Program Duration is required');
-            }
-            
-            // Description validation
-            if (academyDescription === '') {
-                errorMessages.push('Academy Description is required');
-            }
-            
-            // Image URL validation (optional, but validate if provided)
-            if (academyImage !== '') {
-                const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-                if (!urlPattern.test(academyImage)) {
-                    errorMessages.push('Invalid Image URL');
-                }
-            }
-            
-            // Time validation
-            if (startTime === '') {
-                errorMessages.push('Start Time is required');
-            }
-            
-            if (endTime === '') {
-                errorMessages.push('End Time is required');
-            }
-            
-            // Check that end time is after start time
-            if (startTime && endTime && startTime >= endTime) {
-                errorMessages.push('End Time must be after Start Time');
-            }
-            
-            // Ensure at least one day is selected
-            const selectedDays = document.querySelectorAll('input[name="days[]"]:checked');
-            if (selectedDays.length === 0) {
-                errorMessages.push('At least one day must be selected');
-            }
-            
-            return errorMessages;
-        }
+document.getElementById('turfLocation').addEventListener('focus', function() {
+    document.getElementById('turfLocationRequirements').classList.add('show');
+});
 
+document.getElementById('turfLength').addEventListener('focus', function() {
+    document.getElementById('turfLengthRequirements').classList.add('show');
+});
+
+document.getElementById('turfBreadth').addEventListener('focus', function() {
+    document.getElementById('turfBreadthRequirements').classList.add('show');
+});
+
+document.getElementById('hourlyRate').addEventListener('focus', function() {
+    document.getElementById('hourlyRateRequirements').classList.add('show');
+});
+
+document.getElementById('turfImage').addEventListener('focus', function() {
+    document.getElementById('turfImageRequirements').classList.add('show');
+});
+
+// Academy Form: Show validation requirements on input focus
+document.getElementById('academyName').addEventListener('focus', function() {
+    document.getElementById('academyNameRequirements').classList.add('show');
+});
+
+document.getElementById('academyLocation').addEventListener('focus', function() {
+    document.getElementById('academyLocationRequirements').classList.add('show');
+});
+
+document.getElementById('academyLevel').addEventListener('focus', function() {
+    document.getElementById('academyLevelRequirements').classList.add('show');
+});
+
+document.getElementById('academyAgeGroup').addEventListener('focus', function() {
+    document.getElementById('academyAgeGroupRequirements').classList.add('show');
+});
+
+document.getElementById('venueId').addEventListener('focus', function() {
+    document.getElementById('venueIdRequirements').classList.add('show');
+});
+
+document.getElementById('academyCharges').addEventListener('focus', function() {
+    document.getElementById('academyChargesRequirements').classList.add('show');
+});
+
+document.getElementById('academyDuration').addEventListener('focus', function() {
+    document.getElementById('academyDurationRequirements').classList.add('show');
+});
+
+document.getElementById('academyDescription').addEventListener('focus', function() {
+    document.getElementById('academyDescriptionRequirements').classList.add('show');
+});
+
+document.getElementById('academyImage').addEventListener('focus', function() {
+    document.getElementById('academyImageRequirements').classList.add('show');
+});
+
+document.getElementById('startTime').addEventListener('focus', function() {
+    document.getElementById('startTimeRequirements').classList.add('show');
+});
+
+document.getElementById('endTime').addEventListener('focus', function() {
+    document.getElementById('endTimeRequirements').classList.add('show');
+});
+
+// Live validation feedback for Turf Form
+document.getElementById('turfName').addEventListener('input', validateTurfName);
+document.getElementById('turfLocation').addEventListener('input', validateTurfLocation);
+document.getElementById('turfLength').addEventListener('input', validateTurfLength);
+document.getElementById('turfBreadth').addEventListener('input', validateTurfBreadth);
+document.getElementById('hourlyRate').addEventListener('input', validateHourlyRate);
+document.getElementById('turfImage').addEventListener('input', validateTurfImage);
+
+// Live validation feedback for Academy Form
+document.getElementById('academyName').addEventListener('input', validateAcademyName);
+document.getElementById('academyLocation').addEventListener('input', validateAcademyLocation);
+document.getElementById('academyLevel').addEventListener('change', validateAcademyLevel);
+document.getElementById('academyAgeGroup').addEventListener('change', validateAcademyAgeGroup);
+document.getElementById('venueId').addEventListener('change', validateVenueId);
+document.getElementById('academyCharges').addEventListener('input', validateAcademyCharges);
+document.getElementById('academyDuration').addEventListener('input', validateAcademyDuration);
+document.getElementById('academyDescription').addEventListener('input', validateAcademyDescription);
+document.getElementById('academyImage').addEventListener('input', validateAcademyImage);
+document.getElementById('startTime').addEventListener('change', validateStartTime);
+document.getElementById('endTime').addEventListener('change', validateEndTime);
+
+// Add event listeners to checkboxes for days validation
+document.querySelectorAll('input[name="days[]"]').forEach(checkbox => {
+    checkbox.addEventListener('change', validateDays);
+});
+
+// Validation functions for Turf Form
+function validateTurfName() {
+    const turfName = document.getElementById('turfName').value;
+    const lengthRequirement = document.getElementById('turfNameLength');
+    const charsRequirement = document.getElementById('turfNameChars');
+    
+    if (turfName.length >= 3) {
+        lengthRequirement.classList.add('valid');
+        lengthRequirement.classList.remove('invalid');
+    } else {
+        lengthRequirement.classList.add('invalid');
+        lengthRequirement.classList.remove('valid');
+    }
+    
+    if (/^[a-zA-Z0-9\s\-.,&']+$/.test(turfName)) {
+        charsRequirement.classList.add('valid');
+        charsRequirement.classList.remove('invalid');
+    } else {
+        charsRequirement.classList.add('invalid');
+        charsRequirement.classList.remove('valid');
+    }
+}
+
+function validateTurfLocation() {
+    const location = document.getElementById('turfLocation').value;
+    const lengthRequirement = document.getElementById('turfLocationLength');
+    
+    if (location.length >= 5) {
+        lengthRequirement.classList.add('valid');
+        lengthRequirement.classList.remove('invalid');
+    } else {
+        lengthRequirement.classList.add('invalid');
+        lengthRequirement.classList.remove('valid');
+    }
+}
+
+function validateTurfLength() {
+    const length = document.getElementById('turfLength').value;
+    const validRequirement = document.getElementById('turfLengthValid');
+    
+    if (length > 0) {
+        validRequirement.classList.add('valid');
+        validRequirement.classList.remove('invalid');
+    } else {
+        validRequirement.classList.add('invalid');
+        validRequirement.classList.remove('valid');
+    }
+}
+
+function validateTurfBreadth() {
+    const breadth = document.getElementById('turfBreadth').value;
+    const validRequirement = document.getElementById('turfBreadthValid');
+    
+    if (breadth > 0) {
+        validRequirement.classList.add('valid');
+        validRequirement.classList.remove('invalid');
+    } else {
+        validRequirement.classList.add('invalid');
+        validRequirement.classList.remove('valid');
+    }
+}
+
+function validateHourlyRate() {
+    const rate = document.getElementById('hourlyRate').value;
+    const validRequirement = document.getElementById('hourlyRateValid');
+    
+    if (rate > 50) {
+        validRequirement.classList.add('valid');
+        validRequirement.classList.remove('invalid');
+    } else {
+        validRequirement.classList.add('invalid');
+        validRequirement.classList.remove('valid');
+    }
+}
+
+function validateTurfImage() {
+    const imageUrl = document.getElementById('turfImage').value;
+    const urlRequirement = document.getElementById('turfImageUrl');
+    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    
+    if (urlPattern.test(imageUrl)) {
+        urlRequirement.classList.add('valid');
+        urlRequirement.classList.remove('invalid');
+    } else {
+        urlRequirement.classList.add('invalid');
+        urlRequirement.classList.remove('valid');
+    }
+}
+
+// Validation functions for Academy Form
+function validateAcademyName() {
+    const academyName = document.getElementById('academyName').value;
+    const lengthRequirement = document.getElementById('academyNameLength');
+    const charsRequirement = document.getElementById('academyNameChars');
+    
+    if (academyName.length >= 3) {
+        lengthRequirement.classList.add('valid');
+        lengthRequirement.classList.remove('invalid');
+    } else {
+        lengthRequirement.classList.add('invalid');
+        lengthRequirement.classList.remove('valid');
+    }
+    
+    if (/^[a-zA-Z0-9\s\-.,&']+$/.test(academyName)) {
+        charsRequirement.classList.add('valid');
+        charsRequirement.classList.remove('invalid');
+    } else {
+        charsRequirement.classList.add('invalid');
+        charsRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyLocation() {
+    const location = document.getElementById('academyLocation').value;
+    const lengthRequirement = document.getElementById('academyLocationLength');
+    
+    if (location.length >= 5) {
+        lengthRequirement.classList.add('valid');
+        lengthRequirement.classList.remove('invalid');
+    } else {
+        lengthRequirement.classList.add('invalid');
+        lengthRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyLevel() {
+    const level = document.getElementById('academyLevel').value;
+    const selectedRequirement = document.getElementById('academyLevelSelected');
+    
+    if (level !== '') {
+        selectedRequirement.classList.add('valid');
+        selectedRequirement.classList.remove('invalid');
+    } else {
+        selectedRequirement.classList.add('invalid');
+        selectedRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyAgeGroup() {
+    const ageGroup = document.getElementById('academyAgeGroup').value;
+    const selectedRequirement = document.getElementById('academyAgeGroupSelected');
+    
+    if (ageGroup !== '') {
+        selectedRequirement.classList.add('valid');
+        selectedRequirement.classList.remove('invalid');
+    } else {
+        selectedRequirement.classList.add('invalid');
+        selectedRequirement.classList.remove('valid');
+    }
+}
+
+function validateVenueId() {
+    const venueId = document.getElementById('venueId').value;
+    const selectedRequirement = document.getElementById('venueIdSelected');
+    
+    if (venueId !== '') {
+        selectedRequirement.classList.add('valid');
+        selectedRequirement.classList.remove('invalid');
+    } else {
+        selectedRequirement.classList.add('invalid');
+        selectedRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyCharges() {
+    const charges = document.getElementById('academyCharges').value;
+    const validRequirement = document.getElementById('academyChargesValid');
+    
+    if (charges > 50) {
+        validRequirement.classList.add('valid');
+        validRequirement.classList.remove('invalid');
+    } else {
+        validRequirement.classList.add('invalid');
+        validRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyDuration() {
+    const duration = document.getElementById('academyDuration').value;
+    const validRequirement = document.getElementById('academyDurationValid');
+    
+    if (duration >= 1) {
+        validRequirement.classList.add('valid');
+        validRequirement.classList.remove('invalid');
+    } else {
+        validRequirement.classList.add('invalid');
+        validRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyDescription() {
+    const description = document.getElementById('academyDescription').value;
+    const lengthRequirement = document.getElementById('academyDescriptionLength');
+    
+    if (description.length >= 20) {
+        lengthRequirement.classList.add('valid');
+        lengthRequirement.classList.remove('invalid');
+    } else {
+        lengthRequirement.classList.add('invalid');
+        lengthRequirement.classList.remove('valid');
+    }
+}
+
+function validateAcademyImage() {
+    const imageUrl = document.getElementById('academyImage').value;
+    const urlRequirement = document.getElementById('academyImageUrl');
+    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    
+    if (imageUrl === '' || urlPattern.test(imageUrl)) {
+        urlRequirement.classList.add('valid');
+        urlRequirement.classList.remove('invalid');
+    } else {
+        urlRequirement.classList.add('invalid');
+        urlRequirement.classList.remove('valid');
+    }
+}
+
+function validateStartTime() {
+    const startTime = document.getElementById('startTime').value;
+    const selectedRequirement = document.getElementById('startTimeSelected');
+    
+    if (startTime !== '') {
+        selectedRequirement.classList.add('valid');
+        selectedRequirement.classList.remove('invalid');
+    } else {
+        selectedRequirement.classList.add('invalid');
+        selectedRequirement.classList.remove('valid');
+    }
+    
+    // Check time validation if both times are selected
+    const endTime = document.getElementById('endTime').value;
+    if (startTime !== '' && endTime !== '') {
+        validateEndTime();
+    }
+}
+
+function validateEndTime() {
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const selectedRequirement = document.getElementById('endTimeSelected');
+    const timeValidRequirement = document.getElementById('timeValid');
+    
+    if (endTime !== '') {
+        selectedRequirement.classList.add('valid');
+        selectedRequirement.classList.remove('invalid');
+    } else {
+        selectedRequirement.classList.add('invalid');
+        selectedRequirement.classList.remove('valid');
+    }
+    
+    // Check if end time is after start time
+    if (startTime !== '' && endTime !== '' && parseInt(endTime) > parseInt(startTime)) {
+        timeValidRequirement.classList.add('valid');
+        timeValidRequirement.classList.remove('invalid');
+    } else {
+        timeValidRequirement.classList.add('invalid');
+        timeValidRequirement.classList.remove('valid');
+    }
+}
+
+function validateDays() {
+    const selectedDays = document.querySelectorAll('input[name="days[]"]:checked');
+    const selectedRequirement = document.getElementById('daysSelected');
+    
+    if (selectedDays.length > 0) {
+        selectedRequirement.classList.add('valid');
+        selectedRequirement.classList.remove('invalid');
+    } else {
+        selectedRequirement.classList.add('invalid');
+        selectedRequirement.classList.remove('valid');
+    }
+}
         // Add event listeners for form submissions
         document.getElementById('turfForm').addEventListener('submit', function(event) {
             const turfErrors = validateTurfForm();
