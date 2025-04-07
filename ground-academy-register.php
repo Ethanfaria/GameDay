@@ -25,13 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             array_push($errors, "Academy Name contains invalid characters");
         }
         
-        $ac_location = trim($_POST['academyLocation']);
-        if (empty($ac_location)) {
-            array_push($errors, "Academy Location is required");
-        } elseif (strlen($ac_location) < 5) {
-            array_push($errors, "Academy Location must be at least 5 characters long");
-        }
-        
         $level = $_POST['academyLevel'];
         if (empty($level)) {
             array_push($errors, "Academy Level is required");
@@ -117,12 +110,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $days = !empty($selectedDays) ? implode(', ', $selectedDays) : 'Not specified';
             
             // Insert into database
-            $sql = "INSERT INTO academys (ac_id, aca_nm, ac_location, ac_charges, venue_id, level, age_group, description, feature1, feature2, feature3, admy_img, timings, days, duration, owner_email) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO academys (ac_id, aca_nm, venue_id, ac_charges, level, age_group, description, feature1, feature2, feature3, admy_img, timings, days, duration, owner_email) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssdssssssssssis", $ac_id, $aca_nm, $ac_location, $ac_charges, $venue_id, $level, $age_group, $description, $feature1, $feature2, $feature3, $admy_img, $timings, $days, $duration, $user_email);
-            
+            $stmt->bind_param("sssdsssssssssis", $ac_id, $aca_nm, $venue_id, $ac_charges, $level, $age_group, $description, $feature1, $feature2, $feature3, $admy_img, $timings, $days, $duration, $user_email);
+
             if ($stmt->execute()) {
                 // Update user type after successful academy registration
                 $update_user = "UPDATE user SET user_type = 'owner' WHERE email = ?";
@@ -137,11 +130,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $type_stmt->execute();
                 $type_result = $type_stmt->get_result();
                 $type_data = $type_result->fetch_assoc();
-
+            
                 // Update the session variable with the new user type
                 $_SESSION['user_type'] = $type_data['user_type'];
                 
-                echo "<script>alert('Academy Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+                echo "<script>window.location.href='admyadmindashboard.php';</script>";
             } else {
                 echo "<script>alert('Error: Unable to register academy. " . $conn->error . "');</script>";
             }
@@ -229,11 +222,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $type_stmt->execute();
                 $type_result = $type_stmt->get_result();
                 $type_data = $type_result->fetch_assoc();
-
+            
                 // Update the session variable with the new user type
                 $_SESSION['user_type'] = $type_data['user_type'];
                 
-                echo "<script>alert('Turf Registered Successfully!'); window.location.href='ground-academy-register.php';</script>";
+                echo "<script>window.location.href='admyadmindashboard.php';</script>";
             } else {
                 echo "<script>alert('Error: Unable to register turf. " . $conn->error . "');</script>";
             }
@@ -446,15 +439,6 @@ if ($venues_result->num_rows > 0) {
                                     <ul>
                                         <li id="academyNameLength">At least 3 characters long</li>
                                         <li id="academyNameChars">Only letters, numbers, spaces, and basic punctuation</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="academyLocation">Location</label>
-                                <input type="text" id="academyLocation" name="academyLocation" required placeholder="Enter academy location">
-                                <div id="academyLocationRequirements" class="requirements">
-                                    <ul>
-                                        <li id="academyLocationLength">At least 5 characters long</li>
                                     </ul>
                                 </div>
                             </div>
@@ -762,10 +746,6 @@ document.getElementById('academyName').addEventListener('focus', function() {
     document.getElementById('academyNameRequirements').classList.add('show');
 });
 
-document.getElementById('academyLocation').addEventListener('focus', function() {
-    document.getElementById('academyLocationRequirements').classList.add('show');
-});
-
 document.getElementById('academyLevel').addEventListener('focus', function() {
     document.getElementById('academyLevelRequirements').classList.add('show');
 });
@@ -812,7 +792,6 @@ document.getElementById('turfImage').addEventListener('input', validateTurfImage
 
 // Live validation feedback for Academy Form
 document.getElementById('academyName').addEventListener('input', validateAcademyName);
-document.getElementById('academyLocation').addEventListener('input', validateAcademyLocation);
 document.getElementById('academyLevel').addEventListener('change', validateAcademyLevel);
 document.getElementById('academyAgeGroup').addEventListener('change', validateAcademyAgeGroup);
 document.getElementById('venueId').addEventListener('change', validateVenueId);
@@ -906,9 +885,9 @@ function validateHourlyRate() {
 function validateTurfImage() {
     const imageUrl = document.getElementById('turfImage').value;
     const urlRequirement = document.getElementById('turfImageUrl');
-    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    const imagePattern = /\.(jpeg|jpg|gif|png|bmp|webp|svg)$/i;
     
-    if (urlPattern.test(imageUrl)) {
+    if (imagePattern.test(imageUrl)) {
         urlRequirement.classList.add('valid');
         urlRequirement.classList.remove('invalid');
     } else {
@@ -937,19 +916,6 @@ function validateAcademyName() {
     } else {
         charsRequirement.classList.add('invalid');
         charsRequirement.classList.remove('valid');
-    }
-}
-
-function validateAcademyLocation() {
-    const location = document.getElementById('academyLocation').value;
-    const lengthRequirement = document.getElementById('academyLocationLength');
-    
-    if (location.length >= 5) {
-        lengthRequirement.classList.add('valid');
-        lengthRequirement.classList.remove('invalid');
-    } else {
-        lengthRequirement.classList.add('invalid');
-        lengthRequirement.classList.remove('valid');
     }
 }
 
@@ -1034,9 +1000,9 @@ function validateAcademyDescription() {
 function validateAcademyImage() {
     const imageUrl = document.getElementById('academyImage').value;
     const urlRequirement = document.getElementById('academyImageUrl');
-    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    const imagePattern = /\.(jpeg|jpg|gif|png|bmp|webp|svg)$/i;
     
-    if (imageUrl === '' || urlPattern.test(imageUrl)) {
+    if (imageUrl === '' || imagePattern.test(imageUrl)) {
         urlRequirement.classList.add('valid');
         urlRequirement.classList.remove('invalid');
     } else {
