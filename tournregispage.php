@@ -25,7 +25,7 @@ $user = $user_result->fetch_assoc();
 // Get tournament details using tr_id
 $tournament_sql = "SELECT t.tr_id, t.tr_name, t.start_date, t.end_date, t.tr_time, 
                          t.entry_fee, t.description, t.img_url, t.players_per_team, t.max_teams,
-                         v.venue_nm, v.location 
+                         t.prize, v.venue_nm, v.location 
                   FROM tournaments t
                   LEFT JOIN venue v ON t.venue_id = v.venue_id 
                   WHERE t.tr_id = ?";
@@ -162,6 +162,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="detail-content">
                                     <h3>Entry Fee</h3>
                                     <p>₹<?php echo number_format($tournament['entry_fee']); ?></p>
+                                </div>
+                            </div>
+                            
+                            <div class="tournament-detail">
+                                <div class="detail-icon">
+                                    <i class="fas fa-award"></i>
+                                </div>
+                                <div class="detail-content">
+                                    <h3>Cash Prize</h3>
+                                    <p>₹<?php echo number_format($tournament['prize'], 2); ?></p>
                                 </div>
                             </div>
                             
