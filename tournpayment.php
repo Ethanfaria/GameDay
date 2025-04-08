@@ -1,15 +1,12 @@
 <?php
 session_start();
 include 'db.php'; // Ensure this file contains the database connection
+if (!isset($_SESSION['user_email'])) {
+    header("Location: login.php");
+    exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-    if (!isset($_SESSION['user_email'])) {
-        echo "<script>alert('Please log in to complete your registration.');</script>";
-        echo "<script>window.location.href = 'login.php';</script>";
-        exit();
-    }
-
     // Retrieve data from session
     $email = $_SESSION['user_email'];
     $tr_id = $_SESSION['tournament_id'];

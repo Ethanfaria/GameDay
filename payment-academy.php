@@ -17,8 +17,7 @@ $_SESSION['academy_id'] = $ac_id;
 
 // Check if user is logged in
 if (!isset($_SESSION['user_email'])) {
-    echo "<script>alert('Please log in to complete your enrollment.');</script>";
-    echo "<script>window.location.href = 'login.php';</script>";
+    header("Location: login.php");
     exit();
 }
 

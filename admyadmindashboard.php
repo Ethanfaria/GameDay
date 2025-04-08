@@ -98,9 +98,10 @@
 
  // Get academy details if user is an owner
  if ($userType == 'owner' || $userType == 'admin') {
-     $academyQuery = "SELECT a.*, COUNT(e.email) as student_count, 
+	$academyQuery = "SELECT a.*, v.venue_nm, v.location, COUNT(e.email) as student_count, 
 						COUNT(DISTINCT t.tr_id) as tournament_count
 						FROM academys a
+						LEFT JOIN venue v ON a.venue_id = v.venue_id
 						LEFT JOIN enroll e ON a.ac_id = e.ac_id
 						LEFT JOIN tournaments t ON a.ac_id = t.ac_id
 						WHERE a.owner_email = ?
@@ -545,7 +546,7 @@
 							<button class="edit-button" onclick="openAcademyEditModal(
 								'<?php echo $academy['ac_id']; ?>',
 								'<?php echo urlencode(htmlspecialchars($academy['aca_nm'])); ?>',
-								'<?php echo urlencode(htmlspecialchars($academy['ac_location'])); ?>',
+								'<?php echo $academy['venue_id']; ?>',
 								'<?php echo $academy['ac_charges']; ?>',
 								'<?php echo urlencode(htmlspecialchars($academy['level'])); ?>',
 								'<?php echo urlencode(htmlspecialchars($academy['age_group'])); ?>',
@@ -578,8 +579,8 @@
 								<i class="fas fa-map-marker-alt"></i>
 							</div>
 							<div class="detail-content">
-								<div class="detail-label">Location</div>
-								<div class="detail-value"><?php echo htmlspecialchars($academy['ac_location']); ?></div>
+								<div class="detail-label">Venue</div>
+								<div class="detail-value"><?php echo htmlspecialchars($academy['venue_nm'] ?? 'Not specified'); ?></div>
 							</div>
 						</div>
 						
@@ -777,11 +778,6 @@
 									<div class="form-group">
 										<label for="aca_nm">Academy Name</label>
 										<input type="text" name="aca_nm" id="edit_academy_name" class="modal-input" required>
-									</div>
-
-									<div class="form-group">
-										<label for="ac_location">Location</label>
-										<input type="text" name="ac_location" id="edit_location" class="modal-input" required>
 									</div>
 
 									<div class="form-row">
@@ -1118,21 +1114,20 @@
 		// Show the modal
 		document.getElementById('venueEditModal').style.display = 'flex';
 	}
-		function openAcademyEditModal(academyId, academyName, location, charges, level, ageGroup, feature1, feature2, feature3) {
-		// Populate form fields with proper decoding
-		document.getElementById('edit_academy_id').value = academyId;
-		document.getElementById('edit_academy_name').value = decodeURIComponent(academyName.replace(/\+/g, ' '));
-		document.getElementById('edit_location').value = decodeURIComponent(location.replace(/\+/g, ' '));
-		document.getElementById('edit_charges').value = charges;
-		document.getElementById('edit_level').value = decodeURIComponent(level.replace(/\+/g, ' '));
-		document.getElementById('edit_age_group').value = decodeURIComponent(ageGroup.replace(/\+/g, ' '));
-		document.getElementById('edit_feature1').value = feature1 ? decodeURIComponent(feature1.replace(/\+/g, ' ')) : '';
-		document.getElementById('edit_feature2').value = feature2 ? decodeURIComponent(feature2.replace(/\+/g, ' ')) : '';
-		document.getElementById('edit_feature3').value = feature3 ? decodeURIComponent(feature3.replace(/\+/g, ' ')) : '';
+	function openAcademyEditModal(academyId, academyName, venueId, charges, level, ageGroup, feature1, feature2, feature3) {
+    // Populate form fields with proper decoding
+    document.getElementById('edit_academy_id').value = academyId;
+    document.getElementById('edit_academy_name').value = decodeURIComponent(academyName.replace(/\+/g, ' '));
+    document.getElementById('edit_charges').value = charges;
+    document.getElementById('edit_level').value = decodeURIComponent(level.replace(/\+/g, ' '));
+    document.getElementById('edit_age_group').value = decodeURIComponent(ageGroup.replace(/\+/g, ' '));
+    document.getElementById('edit_feature1').value = feature1 ? decodeURIComponent(feature1.replace(/\+/g, ' ')) : '';
+    document.getElementById('edit_feature2').value = feature2 ? decodeURIComponent(feature2.replace(/\+/g, ' ')) : '';
+    document.getElementById('edit_feature3').value = feature3 ? decodeURIComponent(feature3.replace(/\+/g, ' ')) : '';
 
-		// Show the modal
-		document.getElementById('academyEditModal').style.display = 'flex';
-	}
+    // Show the modal
+    document.getElementById('academyEditModal').style.display = 'flex';
+}
 
 	function openVenueDeleteModal(venueId, venueName) {
 	// Set the venue ID in the hidden form field

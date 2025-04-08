@@ -2,11 +2,6 @@
 include 'header.php';
 include 'db.php';
 
-if (!isset($_SESSION['user_email'])) {
-    header("Location: login.php"); // Redirect to login if not logged in
-    exit();
-}
-
 $tr_id = isset($_GET['tr_id']) ? $_GET['tr_id'] : null;
 
 if (!$tr_id) {

@@ -4,6 +4,10 @@ date_default_timezone_set('Asia/Kolkata');
 
 include 'db.php'; // Database connection
 
+if (!isset($_SESSION['user_email'])) {
+    header("Location: login.php");
+    exit();
+}
 // Try to get venue_id from session first, then from GET parameters as fallback
 $venue_id = isset($_SESSION['venue_id']) ? $_SESSION['venue_id'] : 
             (isset($_GET['venue_id']) ? $_GET['venue_id'] : '');
