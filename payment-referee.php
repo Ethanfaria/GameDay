@@ -1,59 +1,73 @@
 <?php
 session_start();
-include 'db.php'; // Ensure this file contains the database connection
+include 'db.php';
 
-// Try to get academy_id from session first, then from GET parameters as fallback
-$ac_id = isset($_SESSION['academy_id']) ? $_SESSION['academy_id'] : 
-         (isset($_GET['ac_id']) ? $_GET['ac_id'] : '');
-
-if (empty($ac_id)) {
-    echo "<script>alert('Academy ID is missing.');</script>";
-    echo "<script>window.location.href = 'academies.php';</script>";
+// Check if booking_id is provided
+if (!isset($_GET['booking_id'])) {
+    echo "<script>alert('Booking ID is missing.');</script>";
+    echo "<script>window.location.href = 'userdashboard.php';</script>";
     exit();
 }
 
-// Store the academy_id in session for later use
-$_SESSION['academy_id'] = $ac_id;
+$booking_id = $_GET['booking_id'];
 
 // Check if user is logged in
 if (!isset($_SESSION['user_email'])) {
-    echo "<script>alert('Please log in to complete your enrollment.');</script>";
+    echo "<script>alert('Please log in to complete your payment.');</script>";
     echo "<script>window.location.href = 'login.php';</script>";
     exit();
 }
+
+$user_email = $_SESSION['user_email'];
 
 // Process the form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get selected payment method
     $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'upi';
     
-    // Redirect to payment result page instead of processing payment here
-    header("Location: payment-academy-result.php?method=$payment_method");
+    // Update booking status to confirmed
+    $update_sql = "UPDATE book SET status = 'confirmed', payment_status = 'paid' WHERE booking_id = ?";
+    $update_stmt = $conn->prepare($update_sql);
+    $update_stmt->bind_param("i", $booking_id);
+    $update_stmt->execute();
+    
+    // Redirect to dashboard with success message
+    $_SESSION['success'] = "Payment successful! Your referee booking is confirmed.";
+    header("Location: userdashboard.php");
     exit();
 }
 
-$sql = "SELECT * FROM academys WHERE ac_id = ?";
+// Fetch booking details with referee information
+$sql = "SELECT b.*, v.venue_nm, v.location, 
+        r.charges as referee_charges, 
+        u.user_name as referee_name,
+        u.user_ph as referee_phone
+        FROM book b
+        JOIN venue v ON b.venue_id = v.venue_id
+        JOIN referee r ON b.referee_email = r.referee_email
+        JOIN user u ON b.referee_email = u.email
+        WHERE b.booking_id = ? AND b.email = ?";
+        
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $ac_id);
+$stmt->bind_param("is", $booking_id, $user_email);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
-    $academy = $result->fetch_assoc();
-    
-    // Store academy details in session
-    $_SESSION['academy_name'] = $academy['aca_nm'];
-    $_SESSION['academy_location'] = $academy['ac_location'];
-    $_SESSION['academy_charges'] = $academy['ac_charges'];
-    $_SESSION['academy_duration'] = $academy['duration'];
+    $booking = $result->fetch_assoc();
     
     // Get values for display
-    $academy_name = $academy['aca_nm'];
-    $academy_location = $academy['ac_location'];
-    $academy_charges = $academy['ac_charges'];
-    $enrollment_duration = $academy['duration'] ? $academy['duration'] : 1;
+    $venue_name = $booking['venue_nm'];
+    $venue_location = $booking['location'];
+    $booking_date = date('F d, Y', strtotime($booking['bk_date']));
+    $booking_time = $booking['bk_dur'];
+    $referee_name = $booking['referee_name'];
+    $referee_phone = $booking['referee_phone'];
+    $referee_charges = $booking['referee_charges'];
+    $total_amount = $referee_charges; // Updated to use referee charges directly as total
 } else {
-    echo "<p>Academy not found.</p>";
+    echo "<script>alert('Invalid booking or you don\'t have permission to access this booking');</script>";
+    echo "<script>window.location.href = 'userdashboard.php';</script>";
     exit();
 }
 ?>
@@ -63,7 +77,7 @@ if ($result->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAME DAY - Academy Payment</title>
+    <title>GAME DAY - Referee Payment</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -83,20 +97,28 @@ if ($result->num_rows > 0) {
         <h1 class="summary-title">Order Summary</h1>
         <div class="order-summary">
                 <div class="summary-row">
-                    <div id="booking-type" class="summary-label">Academy Enrollment</div>
-                    <div id="booking-name" class="summary-value"><?php echo htmlspecialchars($academy_name); ?></div>
+                    <div class="summary-label">Referee</div>
+                    <div id="referee-name" class="summary-value"><?php echo htmlspecialchars($referee_name); ?></div>
+                </div>
+                <div class="summary-row">
+                    <div id="booking-type" class="summary-label">Referee Booking</div>
+                    <div id="booking-name" class="summary-value"><?php echo htmlspecialchars($venue_name); ?></div>
                 </div>
                 <div class="summary-row">
                     <div class="summary-label">Location</div>
-                    <div id="booking-location" class="summary-value"><?php echo htmlspecialchars($academy_location); ?></div>
+                    <div id="booking-location" class="summary-value"><?php echo htmlspecialchars($venue_location); ?></div>
                 </div>
                 <div class="summary-row">
-                    <div class="summary-label">Duration</div>
-                    <div id="enrollment-duration" class="summary-value"><?php echo htmlspecialchars($enrollment_duration); ?> months</div>
+                    <div class="summary-label">Date & Time</div>
+                    <div id="booking-datetime" class="summary-value"><?php echo htmlspecialchars($booking_date) . ' | ' . htmlspecialchars($booking_time); ?></div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Referee Fee</div>
+                    <div id="referee-fee" class="summary-value">₹<?php echo htmlspecialchars($referee_charges); ?></div>
                 </div>
                 <div class="total-row" >
                     <div class="total-label">Total Amount</div>
-                    <div id="total-amount" class="total-value">₹<?php echo htmlspecialchars($academy_charges * $enrollment_duration); ?></div>
+                    <div id="total-amount" class="total-value">₹<?php echo htmlspecialchars($total_amount); ?></div>
                 </div>
         </div>
 
@@ -158,8 +180,9 @@ if ($result->num_rows > 0) {
             </div>
         </div>
 
-        <form method="POST" action="">
+        <form method="POST" action="payment-referee-result.php">
             <input type="hidden" name="payment_method" id="paymentMethod" value="upi">
+            <input type="hidden" name="booking_id" value="<?php echo $booking_id; ?>">
             <button type="submit" class="proceed-button" id="proceedButton">Proceed to Pay</button>
         </form>
     </div>
@@ -172,7 +195,7 @@ if ($result->num_rows > 0) {
                 pn: "GAME DAY",
                 am: amount,
                 cu: "INR",
-                tn: "Academy Enrollment Payment"
+                tn: "Referee Booking Payment"
             };
             
             const upiUrl = `upi://pay?${new URLSearchParams(qrData).toString()}`;
@@ -241,7 +264,7 @@ if ($result->num_rows > 0) {
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             // Amount calculation
-            const amount = <?php echo json_encode($academy_charges * $enrollment_duration); ?>;
+            const amount = <?php echo json_encode($total_amount); ?>;
             
             // Generate QR code for UPI payment
             generateQRCode(amount);

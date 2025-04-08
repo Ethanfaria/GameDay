@@ -105,31 +105,29 @@ $total_charges = $_SESSION['academy_charges'] * $enrollment_duration;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="CSS\payment.css">
-    <link rel="stylesheet" href="CSS\main.css">
 </head>
-<body>
-    <div class="payment-result-container">
-        <h2>Complete Payment</h2>
+<body style="background-color: #0a2e1a; color: white; overflow-x: hidden; padding: 0 20px; margin: 0; font-family: 'Montserrat', 'Arial', sans-serif; box-sizing: border-box;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 500px; margin: 50px auto; padding: 30px; background-color: rgba(0, 100, 50, 0.3); border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);">
+        <h2 style="margin-bottom: 30px; font-size: 28px; color: #b9ff00; text-align: center;">Complete Payment</h2>
         
-        <div class="payment-info">
-            <p><strong><?php echo htmlspecialchars($_SESSION['academy_name']); ?></strong></p>
-            <p>Enrollment Duration: <?php echo htmlspecialchars($enrollment_duration); ?> months</p>
-            <p><strong>₹<?php echo htmlspecialchars($total_charges); ?></strong></p>
-            <span class="payment-method-label"><?php echo ucfirst(htmlspecialchars($payment_method)); ?></span>
+        <div style="width: 100%; background-color: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-bottom: 30px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <p style="font-size: 18px; margin-bottom: 10px;"><strong><?php echo htmlspecialchars($_SESSION['academy_name']); ?></strong></p>
+            <p style="font-size: 16px; margin-bottom: 10px; opacity: 0.8;">Enrollment Duration: <?php echo htmlspecialchars($enrollment_duration); ?> months</p>
+            <p style="font-size: 24px; margin-bottom: 10px;"><strong>₹<?php echo htmlspecialchars($total_charges); ?></strong></p>
+            <span style="display: inline-block; background-color: #b9ff00; color: #0a2e1a; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 600;"><?php echo ucfirst(htmlspecialchars($payment_method)); ?></span>
         </div>
         
-        <p>For demonstration purposes, please select the payment outcome:</p>
+        <p style="text-align: center; margin-bottom: 20px; font-size: 16px;">For demonstration purposes, please select the payment outcome:</p>
         
-        <div class="payment-options">
-            <form method="POST" action="">
+        <div style="display: flex; gap: 20px; width: 100%; justify-content: center;">
+            <form method="POST" action="" style="width: 45%;">
                 <input type="hidden" name="payment_status" value="success">
-                <button type="submit" class="result-button success-button">
+                <button type="submit" style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
                     <i class="fas fa-check-circle" style="margin-right: 8px;"></i> Success
                 </button>
             </form>
             
-            <button class="result-button failure-button" id="failureButton">
+            <button id="failureButton" style="width: 45%; padding: 12px; background-color: #f44336; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
                 <i class="fas fa-times-circle" style="margin-right: 8px;"></i> Failure
             </button>
         </div>

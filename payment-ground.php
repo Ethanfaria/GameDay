@@ -2,52 +2,69 @@
 session_start();
 date_default_timezone_set('Asia/Kolkata');
 
-include 'db.php'; // Database connection
+include 'db.php'; // Ensure this file contains the database connection
 
-if (!isset($_SESSION['user_email'])) {
-    header("Location: login.php");
-    exit();
-}
-// Try to get venue_id from session first, then from GET parameters as fallback
-$venue_id = isset($_SESSION['venue_id']) ? $_SESSION['venue_id'] : 
-            (isset($_GET['venue_id']) ? $_GET['venue_id'] : '');
-
-$sql = "SELECT * FROM venue WHERE venue_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $venue_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows > 0) {
-    $ground = $result->fetch_assoc();
-    
-    // Retrieve booking details from session or fall back to available data
-    $venue_name = isset($_SESSION['venue_name']) ? $_SESSION['venue_name'] : $ground['venue_nm'];
-    $booking_date = isset($_SESSION['booking_date']) ? $_SESSION['booking_date'] : 
-                    (isset($_GET['date']) ? $_GET['date'] : 'Date Not Available');
-    $booking_time = isset($_SESSION['booking_time']) ? $_SESSION['booking_time'] : 
-                    (isset($_GET['time']) ? $_GET['time'] : 'Time Not Available');
-    $price = isset($_SESSION['price']) ? $_SESSION['price'] : $ground['price'];
-    
-    // Store all necessary variables in session
-    $_SESSION['venue_id'] = $venue_id;
-    $_SESSION['venue_name'] = $venue_name;
-    $_SESSION['booking_date'] = $booking_date;
-    $_SESSION['booking_time'] = $booking_time;
-    $_SESSION['price'] = $price;
-} else {
-    echo "<p>Ground not found.</p>";
-    exit();
-}
-
-// Process the form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get selected payment method
-    $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'upi';
+    // Retrieve data from session
+    $email = $_SESSION['user_email'];
+    $booking_date = $_SESSION['booking_date']; // Convert to MySQL format
+    $booking_time = (string)$_SESSION['booking_time']; // Ensure this is a string
+    $venue_name = $_SESSION['venue_name'];
+    $price = $_SESSION['price'];
+    $venue_id = $_SESSION['venue_id'];
+
+    // Check if required session variables are set
+    if (!isset($email, $booking_date, $booking_time, $venue_id)) {
+        die("Error: Missing required booking details.");
+    }
+
+    // Check if the user exists
+    $checkUser = $conn->prepare("SELECT email FROM user WHERE email = ?");
+    $checkUser->bind_param("s", $email);
+    $checkUser->execute();
+    $result = $checkUser->get_result();
+
+    if ($result->num_rows === 0) {
+        die("Error: The user email does not exist in the database.");
+    }
+
+    // Check if booking already exists
+    $checkBooking = $conn->prepare("SELECT bk_dur FROM book WHERE email = ? AND venue_id = ? AND bk_date = ?");
+    $checkBooking->bind_param("sss", $email, $venue_id, $booking_date);
+    $checkBooking->execute();
+    $bookingResult = $checkBooking->get_result();
     
-    // Redirect to payment result page
-    header("Location: payment-result.php?method=$payment_method");
-    exit();
+    // Fetch all booked slots
+    $booked_slots = [];
+    while ($row = $bookingResult->fetch_assoc()) {
+        $booked_slots[] = $row['bk_dur']; // Store booked time slots
+    }
+    
+    if (in_array($booking_time, $booked_slots)) {
+        echo "<script>alert('You have already booked this slot.');</script>";
+    } else {
+        // Insert booking into the database
+        $sql = "INSERT INTO book (email, bk_date, bk_dur, venue_id) VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if ($stmt === false) {
+            die("Error preparing statement: " . $conn->error);
+        }
+
+        $stmt->bind_param("ssss", $email, $booking_date, $booking_time, $venue_id);
+
+        if ($stmt->execute()) {
+
+            $_SESSION['booking_successful'] = true;
+
+            header("Location: payment-ground-success.php?email=$email&venue_id=$venue_id&date=$booking_date&time=$booking_time");
+            exit();
+        }    
+
+        $stmt->close();
+    }
+    $checkBooking->close();
+    $checkUser->close();
 }
 ?>
 
@@ -63,100 +80,120 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <link rel="stylesheet" href="CSS\payment.css">
+    <link rel="stylesheet" href="CSS\payment-ground.css">
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
+
+<?php 
+    // Try to get venue_id from session first, then from GET parameters as fallback
+    $venue_id = isset($_SESSION['venue_id']) ? $_SESSION['venue_id'] : 
+                (isset($_GET['venue_id']) ? $_GET['venue_id'] : '');
+    
+    $sql = "SELECT * FROM venue WHERE venue_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $venue_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $ground = $result->fetch_assoc();
+        
+        // Retrieve booking details from session or fall back to available data
+        $venue_name = isset($_SESSION['venue_name']) ? $_SESSION['venue_name'] : $ground['venue_nm'];
+        $booking_date = isset($_SESSION['booking_date']) ? $_SESSION['booking_date'] : 
+                        (isset($_GET['date']) ? $_GET['date'] : 'Date Not Available');
+        $booking_time = isset($_SESSION['booking_time']) ? $_SESSION['booking_time'] : 
+                        (isset($_GET['time']) ? $_GET['time'] : 'Time Not Available');
+        $price = isset($_SESSION['price']) ? $_SESSION['price'] : $ground['price'];
+    } else {
+        echo "<p>Ground not found.</p>";
+        exit();
+    }
+?>
     <div class="payment-container">
         <a href="javascript:history.back()" class="back-button">
             <i class="fas fa-arrow-left"></i> Back
         </a>
         
-        <h1 class="summary-title">Order Summary</h1>
         <div class="order-summary">
-            <div class="summary-row">
-                <div id="booking-type" class="summary-label">Turf Booking</div>
-                <div id="booking-name" class="summary-value"><?php echo htmlspecialchars($venue_name); ?></div>
-            </div>
-            <div class="summary-row">
-                <div class="summary-label">Date</div>
-                <div id="booking-date" class="summary-value"><?php echo htmlspecialchars($booking_date); ?></div>
-            </div>
-            <div class="summary-row">
-                <div class="summary-label">Time</div>
-                <div id="booking-time" class="summary-value"><?php echo htmlspecialchars($booking_time); ?></div>
-            </div>
-            <div class="total-row">
-                <div class="total-label">Total Amount</div>
-                <div id="total-amount" class="total-value">₹<?php echo htmlspecialchars($price); ?></div>
+            <h2>Order Summary</h2>
+            <div class="order-details">
+                <p>
+                    <span id="booking-type">Turf Booking</span>
+                    <span id="booking-name"><?php echo htmlspecialchars($venue_name); ?></span>
+                </p>
+                <p>
+                    <span>Date & Time</span>
+                    <span id="booking-datetime"><?php echo htmlspecialchars($booking_date . ' | ' . $booking_time); ?></span>
+                </p>
+                <p class="total-amount">
+                    <span>Total Amount</span>
+                    <span id="total-amount">₹<?php echo htmlspecialchars($price); ?></span>
+                </p>
             </div>
         </div>
 
-        <h3 class="payment-section-title">Select Payment Method</h3>
-        
-        <div class="payment-option" id="upiOption" data-method="upi">
-            <div class="payment-icon">
+        <div class="payment-methods">
+            <h3>Select Payment Method</h3>
+            <div class="payment-method" data-method="upi">
                 <i class="fas fa-mobile-alt"></i>
+                <span>UPI / QR Code</span>
             </div>
-            <div class="payment-label">UPI / QR Code</div>
-        </div>
-        
-        <div class="payment-option" id="cardOption" data-method="card">
-            <div class="payment-icon">
+            <div class="payment-method" data-method="card">
                 <i class="fas fa-credit-card"></i>
+                <span>Credit / Debit Card</span>
             </div>
-            <div class="payment-label">Credit / Debit Card</div>
-        </div>
-        
-        <div class="payment-option" id="bankingOption" data-method="netbanking">
-            <div class="payment-icon">
+            <div class="payment-method" data-method="netbanking">
                 <i class="fas fa-university"></i>
-            </div>
-            <div class="payment-label">Net Banking</div>
-        </div>
-        
-        <!-- UPI Payment Details -->
-        <div class="payment-details" id="upiDetails">
-            <div class="qr-section">
-                <div class="qr-code" id="qrcode">
-                    <!-- QR code will be generated here -->
-                </div>
-                <div class="payment-instructions">
-                    <h3>Scan to Pay</h3>
-                    <p>Use any UPI app to scan this QR code and make your payment</p>
-                    <div class="payment-upi-id">gameday@ybl</div>
-                    <p>Or use UPI ID to pay directly through your UPI app</p>
-                </div>
+                <span>Net Banking</span>
             </div>
         </div>
 
-        <!-- Card Payment Form -->
-        <div class="payment-details" id="cardDetails">
-            <div class="qr-section">
-                <div class="payment-instructions">
-                    <h3>Card Payment</h3>
-                    <p>You will be redirected to secure payment gateway</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Net Banking Form -->
-        <div class="payment-details" id="bankingDetails">
-            <div class="qr-section">
-                <div class="payment-instructions">
-                    <h3>Net Banking</h3>
-                    <p>You will be redirected to your bank's secure login page</p>
-                </div>
-            </div>
+        <div class="qr-section" id="qrSection">
+            <h3>Scan QR Code to Pay</h3>
+            <p class="qr-amount" id="qrAmount">₹<?php echo htmlspecialchars($price); ?></p>
+            <div id="qrcode"></div>
+            <p class="upi-id">UPI ID: gameday@ybl</p>
+            <p>Or click below to pay using other UPI apps</p>
         </div>
 
         <form method="POST" action="">
-            <input type="hidden" name="payment_method" id="paymentMethod" value="upi">
-            <button type="submit" class="proceed-button" id="proceedButton">Proceed to Pay</button>
+            <button type="submit" id="pay-button" class="payment-button">Proceed to Pay</button>
         </form>
     </div>
 
+    <div class="success-popup" id="successPopup">
+        <i class="fas fa-check-circle"></i>
+        <h2>Payment Successful!</h2>
+        <p>Redirecting to confirmation page...</p>
+    </div>
+
+    <div class="error-popup" id="errorPopup">
+        <i class="fas fa-times-circle"></i>
+        <h2>Payment Failed</h2>
+        <p>Your payment could not be processed. Please try a different payment method.</p>
+        <button onclick="closeErrorPopup()">Try Again</button>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
     <script>
+
+        // Get URL parameters
+        function getUrlParams() {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const pairs = queryString.split('&');
+            
+            for (const pair of pairs) {
+                const [key, value] = pair.split('=');
+                params[key] = decodeURIComponent(value || '');
+            }
+            
+            return params;
+        }
+
         // Generate QR Code
         function generateQRCode(amount) {
             const qrData = {
@@ -183,64 +220,86 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             });
         }
 
-        // Get elements
-        const upiOption = document.getElementById('upiOption');
-        const cardOption = document.getElementById('cardOption');
-        const bankingOption = document.getElementById('bankingOption');
-        
-        const upiDetails = document.getElementById('upiDetails');
-        const cardDetails = document.getElementById('cardDetails');
-        const bankingDetails = document.getElementById('bankingDetails');
-        const paymentMethod = document.getElementById('paymentMethod');
-
-        // Define the hideAllDetails function
-        function hideAllDetails() {
-            // Hide all payment details
-            upiDetails.style.display = 'none';
-            cardDetails.style.display = 'none';
-            bankingDetails.style.display = 'none';
+        // Show success popup
+        function showSuccessPopup() {
+            document.getElementById('successPopup').classList.add('show');
+            document.getElementById('overlay').classList.add('show');
             
-            // Remove selected class from all options
-            upiOption.classList.remove('selected');
-            cardOption.classList.remove('selected');
-            bankingOption.classList.remove('selected');
+            setTimeout(() => {
+                window.location.href = 'payment-ground-success.php?venue_id=<?php echo htmlspecialchars($venue_id); ?>&booking_success=true';
+            }, 2000);
         }
 
-        // Show UPI details when UPI option is clicked
-        upiOption.addEventListener('click', function() {
-            hideAllDetails();
-            upiDetails.style.display = 'block';
-            upiOption.classList.add('selected');
-            paymentMethod.value = 'upi';
+        // Show error popup
+        function showErrorPopup() {
+            document.getElementById('errorPopup').classList.add('show');
+            document.getElementById('overlay').classList.add('show');
+        }
+
+        // Close error popup
+        function closeErrorPopup() {
+            document.getElementById('errorPopup').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+         // Update booking details
+        function updateBookingDetails() {
+            // No need to update anything as we're using PHP to set these values
+            // This function is now just a placeholder
+            
+            // Generate QR code on page load
+            const amount = <?php echo json_encode($price); ?>;
+            generateQRCode(amount);
+        }
+
+        // Handle payment method selection
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.addEventListener('click', () => {
+                // Remove selected class from all methods
+                document.querySelectorAll('.payment-method').forEach(m => 
+                    m.classList.remove('selected'));
+                
+                // Add selected class to clicked method
+                method.classList.add('selected');
+                
+                // Show/hide QR section for UPI
+                const qrSection = document.getElementById('qrSection');
+                if (method.dataset.method === 'upi') {
+                    qrSection.classList.add('visible');
+                } else {
+                    qrSection.classList.remove('visible');
+                }
+            });
         });
 
-        // Show card details when card option is clicked
-        cardOption.addEventListener('click', function() {
-            hideAllDetails();
-            cardDetails.style.display = 'block';
-            cardOption.classList.add('selected');
-            paymentMethod.value = 'card';
-        });
-        
-        // Show banking details when banking option is clicked
-        bankingOption.addEventListener('click', function() {
-            hideAllDetails();
-            bankingDetails.style.display = 'block';
-            bankingOption.classList.add('selected');
-            paymentMethod.value = 'netbanking';
-        });
+        // Initialize Razorpay payment
+        function initializePayment() {
+            const params = getUrlParams();
+            
+            const options = {
+                key: 'YOUR_RAZORPAY_KEY',
+                amount: params.amount * 100,
+                currency: 'INR',
+                name: 'GAME DAY',
+                description: `Payment for Turf Booking`,
+                image: 'your-logo-url.png',
+                handler: function(response) {
+                    showSuccessPopup();
+                },
+                prefill: {
+                    name: '',
+                    email: '',
+                    contact: ''
+                },
+                theme: {
+                    color: '#b9ff00'
+                }
+            };
+        }
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Amount calculation
-            const amount = <?php echo json_encode($price); ?>;
-            
-            // Generate QR code for UPI payment
-            generateQRCode(amount);
-            
-            // Default to UPI option
-            upiOption.click();
-        });
+        updateBookingDetails();
+        initializePayment();
     </script>
 </body>
-</html>
+</html> 

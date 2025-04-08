@@ -116,6 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->close();
             ?>
         </div>
+        <div class="pages">
+                <button class="btn-no btn-prev">Previous</button>
+                <button class="btn-no active">1</button>
+                <button class="btn-no">2</button>
+                <button class="btn-no">3</button>
+                <div class="ellipsis">...</div>
+                <button class="btn-no">5</button>
+                <button class="btn-no btn-next">Next</button>
+            </div>
     </div>
     <?php include 'footer.php'; ?>
     <script>
@@ -181,6 +190,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 showSlide(currentSlide + 1);
             }, 5000);
         });
+        document.addEventListener('DOMContentLoaded', function() {
+        // Pagination functionality
+        const itemsPerPage = 9; // Adjust based on design preference
+        const tournamentItems = document.querySelectorAll('.tournament-card');
+        const totalItems = tournamentItems.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        let currentPage = 1;
+        
+        // Get pagination elements
+        const prevButton = document.querySelector('.pages .btn-prev');
+        const nextButton = document.querySelector('.pages .btn-next');
+        const pageButtons = Array.from(document.querySelectorAll('.pages .btn-no:not(.btn-prev):not(.btn-next)'));
+        const ellipsis = document.querySelector('.pages .ellipsis');
+        
+        // Initialize pagination
+        function initializePagination() {
+            if (totalPages <= 5) {
+                // If 5 or fewer pages, show all page numbers
+                for (let i = 0; i < pageButtons.length; i++) {
+                    if (i < totalPages) {
+                        pageButtons[i].textContent = i + 1;
+                        pageButtons[i].style.display = 'inline-block';
+                    } else {
+                        pageButtons[i].style.display = 'none';
+                    }
+                }
+                ellipsis.style.display = 'none';
+            } else {
+                // More than 5 pages, show first 3, ellipsis, and last page
+                pageButtons[0].textContent = '1';
+                pageButtons[1].textContent = '2';
+                pageButtons[2].textContent = '3';
+                ellipsis.style.display = 'inline-block';
+                pageButtons[3].textContent = totalPages;
+            }
+            
+            // Hide pagination if there's only one page
+            if (totalPages <= 1) {
+                document.querySelector('.pages').style.display = 'none';
+            } else {
+                document.querySelector('.pages').style.display = 'flex';
+            }
+        }
+        
+        // Update page display
+        function updatePageDisplay() {
+            // Hide all items
+            tournamentItems.forEach(item => {
+                item.style.display = 'none';
+            });
+            
+            // Show items for current page
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                if (tournamentItems[i]) {
+                    tournamentItems[i].style.display = 'block';
+                }
+            }
+            
+            // Update pagination buttons
+            pageButtons.forEach(button => {
+                button.classList.remove('active');
+                if (parseInt(button.textContent) === currentPage) {
+                    button.classList.add('active');
+                }
+            });
+            
+            // Update prev/next buttons
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+            
+            // Update pagination display
+            if (totalPages > 5) {
+                if (currentPage <= 3) {
+                    // Near start, show first 3, ellipsis, and last page
+                    pageButtons[0].textContent = '1';
+                    pageButtons[1].textContent = '2';
+                    pageButtons[2].textContent = '3';
+                    ellipsis.style.display = 'inline-block';
+                    pageButtons[3].textContent = totalPages;
+                } else if (currentPage >= totalPages - 2) {
+                    // Near end, show first page, ellipsis, and last 3
+                    pageButtons[0].textContent = '1';
+                    ellipsis.style.display = 'inline-block';
+                    pageButtons[1].textContent = totalPages - 2;
+                    pageButtons[2].textContent = totalPages - 1;
+                    pageButtons[3].textContent = totalPages;
+                } else {
+                    // Middle, show first page, ellipsis, current and neighbors, ellipsis, last page
+                    pageButtons[0].textContent = '1';
+                    ellipsis.style.display = 'inline-block';
+                    pageButtons[1].textContent = currentPage - 1;
+                    pageButtons[2].textContent = currentPage;
+                    pageButtons[3].textContent = currentPage + 1;
+                }
+            }
+        }
+        
+        // Initial pagination setup
+        initializePagination();
+        updatePageDisplay();
+        
+        // Add click event listeners to page buttons
+        pageButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.textContent && !isNaN(parseInt(this.textContent))) {
+                    currentPage = parseInt(this.textContent);
+                    updatePageDisplay();
+                }
+            });
+        });
+        
+        // Add click event listeners to prev/next buttons
+        prevButton.addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePageDisplay();
+            }
+        });
+        
+        nextButton.addEventListener('click', function() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePageDisplay();
+            }
+        });
+    });
     </script>
 
 </body>

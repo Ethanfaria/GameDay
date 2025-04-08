@@ -75,6 +75,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <link rel="stylesheet" href="CSS\payment.css">
     <link rel="stylesheet" href="CSS\main.css">
+    <style>
+        .payment-container {
+    background-color: rgba(0, 77, 61, 0.8);
+    width: 100%;
+    max-width: 700px;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(185, 255, 0, 0.1);
+    padding: 30px;
+    margin: 0 auto; /* Center the container */
+}
+</style>
 </head>
 <body>
 

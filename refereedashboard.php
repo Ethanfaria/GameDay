@@ -33,7 +33,7 @@ function fetchRefereeStats($conn, $ref_email) {
         COUNT(DISTINCT b.booking_id) as matches_officiated,
         COUNT(DISTINCT MONTH(b.bk_date)) as months_active,
         COALESCE(r.charges, 0) as hourly_rate,
-        COALESCE(r.charges * COUNT(DISTINCT b.booking_id), 0) as total_earnings
+        COALESCE(r.charges * COUNT(DISTINCT CASE WHEN b.status = 'accepted' THEN b.booking_id END), 0) as total_earnings
     FROM referee r
     LEFT JOIN book b ON r.referee_email = b.referee_email
     WHERE r.referee_email = ? 
@@ -46,10 +46,12 @@ function fetchRefereeStats($conn, $ref_email) {
     $stats_stmt->close();
     
     return $stats;
-  }
+}
 
 // Fetch upcoming matches
-function fetchUpcomingMatches($conn, $ref_email) {
+// Update the matches query
+// Update the function signature to accept current_date
+function fetchUpcomingMatches($conn, $ref_email, $current_date) {
     $matches_sql = "SELECT 
         b.booking_id,
         b.bk_date,
@@ -58,11 +60,14 @@ function fetchUpcomingMatches($conn, $ref_email) {
         v.location,
         b.venue_id,
         b.status,
+        b.referee_email,
         r.charges
     FROM book b
     LEFT JOIN venue v ON b.venue_id = v.venue_id
     LEFT JOIN referee r ON r.referee_email = b.referee_email
-    WHERE b.referee_email = ? AND b.bk_date >= ?
+    WHERE b.referee_email = ? 
+    AND b.bk_date >= ?
+    AND b.status IN ('pending', 'accepted')
     ORDER BY b.bk_date ASC";
   
     $matches_stmt = $conn->prepare($matches_sql);
@@ -72,15 +77,16 @@ function fetchUpcomingMatches($conn, $ref_email) {
     $matches_stmt->close();
     
     return $matches_result;
-  }
+}
 
 // Handle booking status updates
+// Update the status handling function
 function updateBookingStatus($conn, $booking_id, $ref_email, $action) {
     $new_status = ($action == 'accept') ? 'accepted' : 'declined';
     
-    $update_sql = "UPDATE book SET status = ? WHERE booking_id = ? AND referee_email = ?";
+    $update_sql = "UPDATE book SET status = ?, referee_email = ? WHERE booking_id = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("sis", $new_status, $booking_id, $ref_email);
+    $update_stmt->bind_param("ssi", $new_status, $ref_email, $booking_id);
     $update_stmt->execute();
     $update_stmt->close();
 }
@@ -97,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Fetch data
 $referee = fetchRefereeProfile($conn, $ref_email);
 $stats = fetchRefereeStats($conn, $ref_email);
-$matches_result = fetchUpcomingMatches($conn, $ref_email);
+$matches_result = fetchUpcomingMatches($conn, $ref_email, $current_date);
 ?>
 
 <!DOCTYPE html>
@@ -243,15 +249,15 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
                                 <div>Time: <?php echo $match['time_slot']; ?></div>
                                 <div>Payment: ₹<?php echo number_format($match['charges'], 2); ?></div>
                                 
-                                <?php if($match['status'] == 'pending'): ?>
+                                <?php if($match['status'] == 'pending' && (empty($match['referee_email']) || $match['referee_email'] == $ref_email)): ?>
                                     <div class="match-actions">
-                                        <form method="post" style="display: inline;">
+                                        <form method="post">
                                             <input type="hidden" name="booking_id" value="<?php echo $match['booking_id']; ?>">
                                             <input type="hidden" name="action" value="accept">
-                                            <button type="submit" class="match-button accept-btn">Accept</button>
+                                            <button type="submit" class="match-button accept-btn">Accept Request</button>
                                         </form>
                                         
-                                        <form method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to decline this match?');">
+                                        <form method="post" onsubmit="return confirm('Are you sure you want to decline this request?');">
                                             <input type="hidden" name="booking_id" value="<?php echo $match['booking_id']; ?>">
                                             <input type="hidden" name="action" value="decline">
                                             <button type="submit" class="match-button decline-btn">Decline</button>
@@ -360,6 +366,8 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email);
     });
 
     // Match card status badge
+// In the match card section where badges are defined
+<?php 
 $badge_class = '';
 switch($match['status']) {
     case 'accepted':
@@ -368,10 +376,13 @@ switch($match['status']) {
     case 'pending':
         $badge_class = 'badge-upcoming';
         break;
-    case 'declined':
-        $badge_class = 'badge-declined';
+    case 'canceled':
+        $badge_class = 'badge-canceled';
         break;
+    default:
+        $badge_class = 'badge-upcoming';
 }
+?>
 
     // Edit profile button
     document.querySelector('.edit-button').addEventListener('click', function() {

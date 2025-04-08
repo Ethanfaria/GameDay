@@ -126,12 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['selectedDate'])) {
             $booked_slots[$date][] = $duration;
         }
 
-        // Pass booked slots and venue availability to JavaScript
-        echo "<script>
-            const bookedSlots = " . json_encode($booked_slots) . ";
-            const venueAvailability = " . $ground['availability'] . ";
-        </script>";
-
         $academy_bookings_query = "
             SELECT a.days, a.timings, v.venue_id 
             FROM academys a 
@@ -171,7 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['selectedDate'])) {
         $stmt->execute();
         $tournament_result = $stmt->get_result();
 
-        $tournament_bookings = [];
         while ($tournament = $tournament_result->fetch_assoc()) {
             $start_date = new DateTime($tournament['start_date']);
             $end_date = new DateTime($tournament['end_date']);
@@ -469,9 +462,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['selectedDate'])) {
                 const timeRange = `${startTime} - ${endTime}`;
                 
                 // More robust booking check
-                const isBooked = bookedTimesForDate.some(bookedTime => 
-                    bookedTime.trim() === timeRange.trim()
-                );
+                const isBooked = bookedTimesForDate.some(bookedTime => {
+                    // Direct match (for regular bookings)
+                    if (bookedTime.trim() === timeRange.trim()) {
+                        return true;
+                    }
+                    
+                    // Check for tournament time overlap
+                    if (bookedTime.includes(' - ')) {
+                        const [tournamentStart, tournamentEnd] = bookedTime.split(' - ');
+                        const [slotStart, slotEnd] = timeRange.split(' - ');
+                        
+                        // Compare times properly
+                        return (
+                            compareTime(slotStart.trim(), tournamentStart.trim()) >= 0 && 
+                            compareTime(slotStart.trim(), tournamentEnd.trim()) < 0
+                        );
+                    }
+                    
+                    return false;
+                });
                 
                 // Check if this time range is blocked by an academy
                 const isAcademyBlocked = academyBookingsForDay.some(booking => {

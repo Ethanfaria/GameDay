@@ -26,82 +26,62 @@ if (!isset($_SESSION['user_email'])) {
 	include 'db.php';
 
 	// Handle Profile Update
-	// Handle Profile Update
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_profile') {
-    $user_email = $_SESSION['user_email'];
-    $name = $_POST['name'] ?? '';
-    $phone = $_POST['phone'] ?? '';
-    $currentPassword = $_POST['currentPassword'] ?? '';
-    $newPassword = $_POST['newPassword'] ?? '';
+	if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'update_profile') {
+		$user_email = $_SESSION['user_email'];
+		$name = $_POST['name'] ?? '';
+		$phone = $_POST['phone'] ?? '';
+		$currentPassword = $_POST['currentPassword'] ?? '';
+		$newPassword = $_POST['newPassword'] ?? '';
 
-    // Validate inputs
-    $errors = [];
-    
-    // Name validation
-    if (empty($name)) {
-        $errors[] = 'Name is required';
-    } elseif (strlen($name) < 3) {
-        $errors[] = "Name must be at least 3 characters long";
-    } elseif (!preg_match("/^[a-zA-Z0-9_]+$/", $name)) {
-        $errors[] = "Name can only contain letters, numbers, and underscores";
-    }
-    
-    // Phone validation
-    if (empty($phone)) {
-        $errors[] = 'Phone is required';
-    } elseif (!preg_match("/^[0-9]{10}$/", $phone)) {
-        $errors[] = "Phone number must be 10 digits";
-    } else {
-        // Check if phone number already exists in database (but not for current user)
-        $sql = "SELECT * FROM user WHERE user_ph = ? AND email != ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $phone, $user_email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->num_rows > 0) {
-            $errors[] = "Phone number is already registered by another user";
-        }
-        $stmt->close();
-    }
-    
-    // Password validation (only if new password is provided)
-    if (!empty($newPassword)) {
-        if (strlen($newPassword) < 8) {
-            $errors[] = "Password must be at least 8 characters long";
-        } elseif (!preg_match("/[A-Z]/", $newPassword)) {
-            $errors[] = "Password must contain at least one uppercase letter";
-        } elseif (!preg_match("/[a-z]/", $newPassword)) {
-            $errors[] = "Password must contain at least one lowercase letter";
-        } elseif (!preg_match("/[0-9]/", $newPassword)) {
-            $errors[] = "Password must contain at least one number";
-        } elseif (!preg_match("/[\W_]/", $newPassword)) {
-            $errors[] = "Password must contain at least one special character";
-        }
-    }
+		// Validate inputs
+		$errors = [];
+		if (empty($name)) $errors[] = 'Name is required';
+		if (empty($phone)) $errors[] = 'Phone is required';
 
-    // Verify current password
-    $verify_password_sql = "SELECT password FROM user WHERE email = ?";
-    $verify_stmt = $conn->prepare($verify_password_sql);
-    $verify_stmt->bind_param("s", $user_email);
-    $verify_stmt->execute();
-    $result = $verify_stmt->get_result();
-    $user = $result->fetch_assoc();
+		// Verify current password
+		$verify_password_sql = "SELECT password FROM user WHERE email = ?";
+		$verify_stmt = $conn->prepare($verify_password_sql);
+		$verify_stmt->bind_param("s", $user_email);
+		$verify_stmt->execute();
+		$result = $verify_stmt->get_result();
+		$user = $result->fetch_assoc();
 
-    if (!password_verify($currentPassword, $user['password'])) {
-        $errors[] = 'Current password is incorrect';
-    }
+		if (!password_verify($currentPassword, $user['password'])) {
+			$errors[] = 'Current password is incorrect';
+		}
 
-    // If no errors, proceed with update
-    if (empty($errors)) {
-        // Rest of your existing update code
-    } else {
-        $_SESSION['update_errors'] = $errors;
-    }
-    
-    // Redirect back to dashboard to prevent form resubmission
-    header("Location: userdashboard.php");
-    exit();
-}
+		// If no errors, proceed with update
+		if (empty($errors)) {
+			// Prepare update query
+			if (!empty($newPassword)) {
+				// Update with new password
+				$hashed_password = password_hash($newPassword, PASSWORD_DEFAULT);
+				$update_sql = "UPDATE user SET user_name = ?, user_ph = ?, password = ? WHERE email = ?";
+				$update_stmt = $conn->prepare($update_sql);
+				$update_stmt->bind_param("siss", $name, $phone, $hashed_password, $user_email);
+			} else {
+				// Update without changing password
+				$update_sql = "UPDATE user SET user_name = ?, user_ph = ? WHERE email = ?";
+				$update_stmt = $conn->prepare($update_sql);
+				$update_stmt->bind_param("sis", $name, $phone, $user_email);
+			}
+
+			// Execute update
+			if ($update_stmt->execute()) {
+				// Update session name if changed
+				$_SESSION['user_name'] = $name;
+				$_SESSION['update_success'] = 'Profile updated successfully';
+			} else {
+				$_SESSION['update_error'] = 'Update failed';
+			}
+		} else {
+			$_SESSION['update_errors'] = $errors;
+		}
+
+		// Redirect back to dashboard to prevent form resubmission
+		header("Location: userdashboard.php");
+		exit();
+	}
 	
 	function getUserVisitedVenues($conn, $user_email) {
 		$visited_venues_sql = "SELECT DISTINCT v.venue_id, v.venue_nm 
@@ -283,12 +263,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 		</div>
 		
 		<div class="bento-grid">
+		<!-- Profile actions moved to top -->
+		<div class="bento-item profile-actions">
+		<div class="bento-header">
+		<h2><i class="fas fa-user-circle section-icon"></i> Profile Actions</h2>
+		</div>
+		<div class="quick-action" id="editProfileAction">
+		<div class="icon-placeholder"><i class="fas fa-user-edit"></i></div>
+		<div>Edit Profile</div>
+		</div>
+		<div class="quick-action" id="inviteFriendsAction">
+		<div class="icon-placeholder"><i class="fas fa-user-plus"></i></div>
+		<div>Invite Friends</div>
+		</div>
+		<div class="quick-action" id="groundReviewAction">
+		<div class="icon-placeholder"><i class="fas fa-star"></i></div>
+		<div>Rate & Review Turf</div>
+		</div>
+		<div class="quick-action" id="academyReviewAction">
+		<div class="icon-placeholder"><i class="fas fa-graduation-cap"></i></div>
+		<div>Rate & Review Academy</div>
+		</div>
+		<button onclick="window.location.href='logout.php'" class="signout-button">
+		<i class="fas fa-sign-out-alt"></i> Sign Out
+		</button>
+		</div>
+		
+		<!-- Most important information first -->
 		<div class="bento-item upcoming-matches">
-			<div class="bento-header">
-			<h2><i class="fas fa-futbol section-icon"></i> Upcoming Matches</h2>
-			</div>
-			<div class="scroll-container">
-			<?php
+		<div class="bento-header">
+		<h2><i class="fas fa-futbol section-icon"></i> Upcoming Matches</h2>
+		</div>
+		<div class="scroll-container">
+		<?php
 	if ($bookings_result->num_rows > 0) {
 		while($row = $bookings_result->fetch_assoc()) {
 			$booking_date = new DateTime($row['bk_date']);
@@ -315,127 +322,186 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 			</div>
 		</div>
 		
-		<div class="bento-item profile-actions">
-			<div class="bento-header">
-			<h2><i class="fas fa-user-circle section-icon"></i> Profile Actions</h2>
-			</div>
-			<div class="quick-action" id="editProfileAction">
-			<div class="icon-placeholder"><i class="fas fa-user-edit"></i></div>
-			<div>Edit Profile</div>
-			</div>
-			<div class="quick-action" id="inviteFriendsAction">
-			<div class="icon-placeholder"><i class="fas fa-user-plus"></i></div>
-			<div>Invite Friends</div>
-			</div>
-			<div class="quick-action" id="groundReviewAction">
-			<div class="icon-placeholder"><i class="fas fa-star"></i></div>
-			<div>Rate & Review Turf</div>
-			</div>
-			<div class="quick-action" id="academyReviewAction">
-			<div class="icon-placeholder"><i class="fas fa-graduation-cap"></i></div>
-			<div>Rate & Review Academy</div>
-			</div>
-			<button onclick="window.location.href='logout.php'" class="signout-button">
-			<i class="fas fa-sign-out-alt"></i> Sign Out
-			</button>
-		</div>
-		
+		<!-- Stats are important for user engagement -->
 		<div class="bento-item stats">
-			<div class="bento-header">
-			<h2><i class="fas fa-chart-line section-icon"></i> Your Stats</h2>
-			</div>
-			<div class="stats-grid">
-			<div class="stat-item">
-				<div class="stat-number animate-number"><?php echo $stats['matches_played'] ?? 0; ?></div>
-				<div class="stat-label">Matches Played</div>
-			</div>
-			<div class="stat-item">
-				<div class="stat-number animate-number"><?php echo $stats['grounds_visited'] ?? 0; ?></div>
-				<div class="stat-label">Grounds Visited</div>
-			</div>
-			<div class="stat-item">
-				<div class="stat-number animate-number"><?php echo $stats['total_hours'] ?? 0; ?></div>
-				<div class="stat-label">Hours Played</div>
-			</div>
-			<div class="stat-item">
-				<div class="stat-number animate-number"><?php echo $teammate_count ?? 0; ?></div>
-				<div class="stat-label">Teammates</div>
-			</div>
-			</div>
-			
-			<?php if ($next_tournament): ?>
-			<div class="countdown">
-			<div style="color: #a9a9a9;"><?php echo htmlspecialchars($next_tournament['tr_name']); ?></div>
-			<div class="countdown-number"><?php echo $next_tournament['days_left']; ?></div>
-			<div>Days Left</div>
-			</div>
-			<?php endif; ?>
+		<div class="bento-header">
+		<h2><i class="fas fa-chart-line section-icon"></i> Your Stats</h2>
 		</div>
+		<div class="stats-grid">
+		<div class="stat-item">
+			<div class="stat-number animate-number"><?php echo $stats['matches_played'] ?? 0; ?></div>
+			<div class="stat-label">Matches Played</div>
+		</div>
+		<div class="stat-item">
+			<div class="stat-number animate-number"><?php echo $stats['grounds_visited'] ?? 0; ?></div>
+			<div class="stat-label">Grounds Visited</div>
+		</div>
+		<div class="stat-item">
+			<div class="stat-number animate-number"><?php echo $stats['total_hours'] ?? 0; ?></div>
+			<div class="stat-label">Hours Played</div>
+		</div>
+		<div class="stat-item">
+			<div class="stat-number animate-number"><?php echo $teammate_count ?? 0; ?></div>
+			<div class="stat-label">Teammates</div>
+		</div>
+		</div>
+		
+		<?php if ($next_tournament): ?>
+		<div class="countdown">
+		<div style="color: #a9a9a9;"><?php echo htmlspecialchars($next_tournament['tr_name']); ?></div>
+		<div class="countdown-number"><?php echo $next_tournament['days_left']; ?></div>
+		<div>Days Left</div>
+		</div>
+		<?php endif; ?>
+		</div>
+		
+		<!-- Referee status is important for upcoming games -->
+		<div class="bento-item referee-status">
+		<div class="bento-header">
+		<h2><i class="fas fa-whistle section-icon"></i> Referee Status</h2>
+		</div>
+		<div class="scroll-container">
+		<?php
+		// Get referee status for upcoming bookings
+		$referee_sql = "SELECT b.*, v.venue_nm, u.user_name as referee_name
+						FROM book b
+						JOIN venue v ON b.venue_id = v.venue_id
+						LEFT JOIN user u ON b.referee_email = u.email
+						WHERE b.email = ? AND b.bk_date >= CURRENT_DATE() 
+						AND b.referee_email IS NOT NULL AND b.referee_email != ''
+						ORDER BY b.bk_date ASC";
+		$referee_stmt = $conn->prepare($referee_sql);
+		$referee_stmt->bind_param("s", $user_email);
+		$referee_stmt->execute();
+		$referee_result = $referee_stmt->get_result();
 
-		<div class="bento-item academy-enrollments">
-			<div class="bento-header">
-			<h2><i class="fas fa-graduation-cap section-icon"></i> Enrolled Academies</h2>
-			</div>
-			<?php
-			if ($academy_result->num_rows > 0) {
-				while($academy = $academy_result->fetch_assoc()) {
-			?>
-			<div class="academy-item">
-			<div class="academy-info">
-				<div><?php echo htmlspecialchars($academy['aca_nm']); ?></div>
-				<div class="academy-location"><i class="far fa-clock"></i><?php echo htmlspecialchars($academy['ac_location']); ?></div>
-			</div>
-			</div>
-			<?php
+		if ($referee_result->num_rows > 0) {
+			while($row = $referee_result->fetch_assoc()) {
+				$booking_date = new DateTime($row['bk_date']);
+				$formatted_date = $booking_date->format('M d');
+				
+				// Check if referee is assigned
+				$has_referee = !empty($row['referee_email']);
+				// Use the actual status from database or default to "Pending"
+				$referee_status = !empty($row['status']) ? htmlspecialchars($row['status']) : 'Pending';
+				
+				// Determine status class based on the status value
+				if (strtolower($referee_status) == 'declined') {
+					$status_class = 'status-declined';
+					$icon_class = 'fa-times-circle';
+				} else if (strtolower($referee_status) == 'confirmed' || strtolower($referee_status) == 'accepted') {
+					$status_class = 'status-confirmed';
+					$icon_class = 'fa-check-circle';
+				} else {
+					// Default to pending
+					$status_class = 'status-pending';
+					$icon_class = 'fa-clock';
 				}
-			} else {
-				echo "<p>No academy enrollments</p>";
-			}
-			$academy_stmt->close();
-			?>
-		</div>
-		
-		<div class="bento-item tournament-registration">
-			<div class="bento-header">
-			<h2><i class="fas fa-trophy section-icon"></i> Tournament Registrations</h2>
+		?>
+		<div class="referee-item">
+			<div class="referee-info">
+				<div><span class="date-badge"><?php echo $formatted_date; ?></span> <?php echo htmlspecialchars($row['bk_dur']); ?></div>
+				<div class="referee-location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['venue_nm']); ?></div>
+				<?php if ($has_referee): ?>
+				<div class="referee-name"><i class="fas fa-user-shield"></i> Referee: <?php echo htmlspecialchars($row['referee_name'] ?? 'Unknown'); ?></div>
+				<?php endif; ?>
 			</div>
-			<?php 
-			if ($registered_tournament_result->num_rows > 0) {
-				while ($registered_tournament = $registered_tournament_result->fetch_assoc()) {
-			?>
-			<div class="tournament-item">
-			<div class="tournament-info">
-				<div><?php echo htmlspecialchars($registered_tournament['tr_name']); ?></div>
-				<div class="tournament-location">
-				<i class="far fa-calendar-alt"></i> 
-				Starting <?php echo date('M d, Y', strtotime($registered_tournament['start_date'])); ?>
+			<div class="referee-status-container">
+				<div class="referee-status-badge <?php echo $status_class; ?>">
+					<i class="fas <?php echo $icon_class; ?>"></i> 
+					<?php echo $referee_status; ?>
 				</div>
+				<?php if (strtolower($referee_status) == 'accepted'): ?>
+				<div class="referee-action-buttons">
+					<button class="referee-status-badge pay-button" onclick="window.location.href='payment-referee.php?booking_id=<?php echo $row['booking_id']; ?>'">
+						<i class="fas fa-credit-card"></i> Pay
+					</button>
+					<button class="referee-status-badge cancel-button" onclick="if(confirm('Are you sure you want to cancel this referee request?')) window.location.href='cancel_referee.php?booking_id=<?php echo $row['booking_id']; ?>'">
+						<i class="fas fa-times-circle"></i> Cancel
+					</button>
+				</div>
+				<?php endif; ?>
 			</div>
-			</div>
-			<?php 
-				}
-			} else {
-			?>
-			<p>No tournament registrations</p>
-			<?php 
+		</div>
+		<?php
 			}
-			$registered_stmt->close();
-			?>
+		} else {
+			echo "<p>No upcoming bookings with referee information</p>";
+		}
+		$referee_stmt->close();
+		?>
+		</div>
 		</div>
 		
+		<!-- Replace the stacked container with separate boxes -->
+		<!-- Tournament registrations and Academy enrollments side by side -->
+		<div class="bento-item tournament-registration">
+		    <div class="bento-header">
+		    <h2><i class="fas fa-trophy section-icon"></i> Tournament Registrations</h2>
+		    </div>
+		    <?php 
+		    if ($registered_tournament_result->num_rows > 0) {
+		        while ($registered_tournament = $registered_tournament_result->fetch_assoc()) {
+		    ?>
+		    <div class="tournament-item">
+		    <div class="tournament-info">
+		        <div><?php echo htmlspecialchars($registered_tournament['tr_name']); ?></div>
+		        <div class="tournament-location">
+		        <i class="far fa-calendar-alt"></i> 
+		        Starting <?php echo date('M d, Y', strtotime($registered_tournament['start_date'])); ?>
+		        </div>
+		    </div>
+		    </div>
+		    <?php 
+		        }
+		    } else {
+		    ?>
+		    <p>No tournament registrations</p>
+		    <?php 
+		    }
+		    $registered_stmt->close();
+		    ?>
+		</div>
+		
+		<!-- Academy enrollments as a separate box -->
+		<div class="bento-item academy-enrollments">
+		    <div class="bento-header">
+		    <h2><i class="fas fa-graduation-cap section-icon"></i> Enrolled Academies</h2>
+		    </div>
+		    <?php
+		    if ($academy_result->num_rows > 0) {
+		        while($academy = $academy_result->fetch_assoc()) {
+		    ?>
+		    <div class="academy-item">
+		    <div class="academy-info">
+		        <div><?php echo htmlspecialchars($academy['aca_nm']); ?></div>
+		        <div class="academy-location"><i class="far fa-clock"></i><?php echo htmlspecialchars($academy['ac_location']); ?></div>
+		    </div>
+		    </div>
+		    <?php
+		        }
+		    } else {
+		        echo "<p>No academy enrollments</p>";
+		    }
+		    $academy_stmt->close();
+		    ?>
+		</div>
+		</div>
+		
+		<!-- Booking history for reference -->
 		<div class="bento-item booking-history">
 			<div class="bento-header">
 			<h2><i class="fas fa-history section-icon"></i> Booking History</h2>
 			</div>
 			<div class="scroll-container">
 			<?php
-			// Get past bookings
+			// Get booking history - modified to include all bookings (past and future)
 			$history_sql = "SELECT b.*, v.venue_nm, v.location 
-							FROM book b 
-							LEFT JOIN venue v ON b.venue_id = v.venue_id 
-							WHERE b.email = ? AND b.bk_date < CURDATE() 
-							ORDER BY b.bk_date DESC
-							LIMIT 3";
+			                FROM book b
+			                JOIN venue v ON b.venue_id = v.venue_id
+			                WHERE b.email = ?
+			                ORDER BY b.bk_date DESC
+			                LIMIT 10";
 			$history_stmt = $conn->prepare($history_sql);
 			$history_stmt->bind_param("s", $user_email);
 			$history_stmt->execute();
@@ -447,11 +513,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 			?>
 			<div class="booking-item">
 				<div class="booking-info">
-				<div><span class="date-badge"><?php echo $booking_date->format('M d'); ?></span></div>
+				<div><span class="date-badge"><?php echo $booking_date->format('M d'); ?></span> <?php echo htmlspecialchars($row['bk_dur']); ?></div>
 				<div class="booking-location"><i class="fas fa-map-marker-alt"></i><?php echo htmlspecialchars($row['venue_nm']) . ' - ' . htmlspecialchars($row['location']); ?></div>
 				</div>
 				<div class="booking-actions">
-				<button class="action-button primary" onclick="window.location.href='book.php?venue_id=<?php echo $row['venue_id']; ?>'"><i class="fas fa-redo"></i> Book Again</button>
+				<button class="action-button primary" onclick="window.location.href='turfbooknow.php?venue_id=<?php echo $row['venue_id']; ?>'"><i class="fas fa-redo"></i> Book Again</button>
 				</div>
 			</div>
 			<?php
@@ -467,62 +533,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 	</div>
 	<div id="profileEditModal" class="modal">
 		<div class="modal-content">
-			<span class="close-btn" onclick="closeModal('profileEditModal')">&times;</span>
-			<h2>Edit Profile</h2>
-			
-			<?php if (isset($_SESSION['update_errors'])): ?>
-				<div class="error-message">
-					<?php foreach ($_SESSION['update_errors'] as $error): ?>
-						<p><?php echo htmlspecialchars($error); ?></p>
-					<?php endforeach; ?>
-					<?php unset($_SESSION['update_errors']); ?>
-				</div>
-			<?php endif; ?>
-			
-			<?php if (isset($_SESSION['update_success'])): ?>
-				<div class="success-message">
-					<p><?php echo htmlspecialchars($_SESSION['update_success']); ?></p>
-					<?php unset($_SESSION['update_success']); ?>
-				</div>
-			<?php endif; ?>
-			
-			<form method="POST" action="userdashboard.php" id="profileEditForm">
-				<input type="hidden" name="action" value="update_profile">
-				
-				<div class="form-group">
-					<input type="text" name="name" id="editName" class="modal-input" placeholder="Name" value="<?php echo htmlspecialchars($user_details['user_name'] ?? ''); ?>" required onkeyup="validateEditName()">
-					<div class="requirements">
-						<p id="nameLength" class="requirement">At least 3 characters</p>
-						<p id="nameChars" class="requirement">Only letters, numbers, and underscores</p>
-					</div>
-				</div>
-				
-				<input type="email" class="modal-input" placeholder="Email" value="<?php echo htmlspecialchars($user_email); ?>" readonly>
-				
-				<div class="form-group">
-					<input type="tel" name="phone" id="editPhone" class="modal-input" placeholder="Phone Number" value="<?php echo htmlspecialchars($user_details['user_ph'] ?? ''); ?>" required onkeyup="validateEditPhone()">
-					<div class="requirements">
-						<p id="phoneDigits" class="requirement">Must be 10 digits</p>
-						<p id="phoneNumbers" class="requirement">Numbers only</p>
-						<p id="phoneVal" class="requirement">Valid phone number</p>
-					</div>
-				</div>
-				
-				<input type="password" name="currentPassword" class="modal-input" placeholder="Current Password" required>
-				
-				<div class="form-group">
-					<input type="password" name="newPassword" id="editPassword" class="modal-input" placeholder="New Password (leave blank if no change)" onkeyup="validateEditPassword()">
-					<div class="requirements">
-						<p id="passwordLength" class="requirement">At least 8 characters</p>
-						<p id="passwordUpper" class="requirement">At least one uppercase letter</p>
-						<p id="passwordLower" class="requirement">At least one lowercase letter</p>
-						<p id="passwordNumber" class="requirement">At least one number</p>
-						<p id="passwordSpecial" class="requirement">At least one special character</p>
-					</div>
-				</div>
-				
-				<button type="submit" class="modal-submit">Save Changes</button>
-			</form>
+		<span class="close-btn" onclick="closeModal('profileEditModal')">&times;</span>
+		<h2>Edit Profile</h2>
+		<form method="POST" action="userdashboard.php">
+			<input type="hidden" name="action" value="update_profile">
+			<input type="text" name="name" class="modal-input" placeholder="Name" value="<?php echo htmlspecialchars($user_details['user_name'] ?? ''); ?>" required>
+			<input type="email" class="modal-input" placeholder="Email" value="<?php echo htmlspecialchars($user_email); ?>" readonly>
+			<input type="tel" name="phone" class="modal-input" placeholder="Phone Number" value="<?php echo htmlspecialchars($user_details['user_ph'] ?? ''); ?>" required>
+			<input type="password" name="currentPassword" class="modal-input" placeholder="Current Password" required>
+			<input type="password" name="newPassword" class="modal-input" placeholder="New Password (leave blank if no change)">
+			<button type="submit" class="modal-submit">Save Changes</button>
+		</form>
 		</div>
 	</div>
 	<div id="groundReviewModal" class="modal">
@@ -709,6 +730,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 		});
 		});
 		
+		// Modal functions
 		function openModal(modalId) {
 		document.getElementById(modalId).style.display = 'flex';
 		}
@@ -716,130 +738,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 		function closeModal(modalId) {
 		document.getElementById(modalId).style.display = 'none';
 		}
-
-		function validateEditName() {
-			const name = document.getElementById('editName').value;
-			const lengthRequirement = document.getElementById('nameLength');
-			const charsRequirement = document.getElementById('nameChars');
-			
-			if (name.length >= 3) {
-				lengthRequirement.classList.add('valid');
-				lengthRequirement.classList.remove('invalid');
-			} else {
-				lengthRequirement.classList.add('invalid');
-				lengthRequirement.classList.remove('valid');
-			}
-			
-			if (/^[a-zA-Z0-9_]+$/.test(name)) {
-				charsRequirement.classList.add('valid');
-				charsRequirement.classList.remove('invalid');
-			} else {
-				charsRequirement.classList.add('invalid');
-				charsRequirement.classList.remove('valid');
-			}
-		}
-
-		function validateEditPhone() {
-			const phone = document.getElementById('editPhone').value;
-			const digitsRequirement = document.getElementById('phoneDigits');
-			const numbersRequirement = document.getElementById('phoneNumbers');
-			const valueRequirement = document.getElementById('phoneVal');
-			
-			if (phone.length === 10) {
-				digitsRequirement.classList.add('valid');
-				digitsRequirement.classList.remove('invalid');
-			} else {
-				digitsRequirement.classList.add('invalid');
-				digitsRequirement.classList.remove('valid');
-			}
-			
-			if (/^[0-9]+$/.test(phone)) {
-				numbersRequirement.classList.add('valid');
-				numbersRequirement.classList.remove('invalid');
-			} else {
-				numbersRequirement.classList.add('invalid');
-				numbersRequirement.classList.remove('valid');
-			}
-			
-			if (phone !== '' && parseInt(phone) !== 0) {
-				valueRequirement.classList.add('valid');
-				valueRequirement.classList.remove('invalid');
-			} else {
-				valueRequirement.classList.add('invalid');
-				valueRequirement.classList.remove('valid');
-			}
-		}
-
-		function validateEditPassword() {
-			const password = document.getElementById('editPassword').value;
-			
-			// If password is empty, don't validate (since it's optional)
-			if (!password) {
-				document.querySelectorAll('#profileEditForm .requirements p').forEach(el => {
-					el.classList.remove('valid');
-					el.classList.remove('invalid');
-				});
-				return;
-			}
-			
-			const lengthRequirement = document.getElementById('passwordLength');
-			const upperRequirement = document.getElementById('passwordUpper');
-			const lowerRequirement = document.getElementById('passwordLower');
-			const numberRequirement = document.getElementById('passwordNumber');
-			const specialRequirement = document.getElementById('passwordSpecial');
-			
-			if (password.length >= 8) {
-				lengthRequirement.classList.add('valid');
-				lengthRequirement.classList.remove('invalid');
-			} else {
-				lengthRequirement.classList.add('invalid');
-				lengthRequirement.classList.remove('valid');
-			}
-			
-			if (/[A-Z]/.test(password)) {
-				upperRequirement.classList.add('valid');
-				upperRequirement.classList.remove('invalid');
-			} else {
-				upperRequirement.classList.add('invalid');
-				upperRequirement.classList.remove('valid');
-			}
-			
-			if (/[a-z]/.test(password)) {
-				lowerRequirement.classList.add('valid');
-				lowerRequirement.classList.remove('invalid');
-			} else {
-				lowerRequirement.classList.add('invalid');
-				lowerRequirement.classList.remove('valid');
-			}
-			
-			if (/[0-9]/.test(password)) {
-				numberRequirement.classList.add('valid');
-				numberRequirement.classList.remove('invalid');
-			} else {
-				numberRequirement.classList.add('invalid');
-				numberRequirement.classList.remove('valid');
-			}
-			
-			if (/[\W_]/.test(password)) {
-				specialRequirement.classList.add('valid');
-				specialRequirement.classList.remove('invalid');
-			} else {
-				specialRequirement.classList.add('invalid');
-				specialRequirement.classList.remove('valid');
-			}
-		}
-
-		// Add this to your existing DOMContentLoaded event listener
-		document.addEventListener('DOMContentLoaded', function() {
-			// Initialize validation states when modal opens
-			document.getElementById('editProfileAction').addEventListener('click', function() {
-				setTimeout(function() {
-					validateEditName();
-					validateEditPhone();
-					validateEditPassword();
-				}, 100);
-			});
-		});
 		</script>
 	</body>
 </html>
