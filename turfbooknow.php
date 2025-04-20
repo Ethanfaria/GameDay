@@ -617,6 +617,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['selectedDate'])) {
                 }
             });
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const bookingForm = document.getElementById('bookingForm');
+            const confirmButton = document.getElementById('confirmBooking');
+            
+            // Initially disable the confirm button
+            confirmButton.disabled = true;
+            confirmButton.classList.add('disabled');
+            
+            // Function to check if a time slot is selected
+            function checkTimeSlotSelection() {
+                const selectedTimeInput = document.getElementById('selectedTime');
+                if (selectedTimeInput.value) {
+                    confirmButton.disabled = false;
+                    confirmButton.classList.remove('disabled');
+                } else {
+                    confirmButton.disabled = true;
+                    confirmButton.classList.add('disabled');
+                }
+            }
+            
+            // Add validation before form submission
+            bookingForm.addEventListener('submit', function(event) {
+                const selectedTimeInput = document.getElementById('selectedTime');
+                if (!selectedTimeInput.value) {
+                    event.preventDefault();
+                    alert('Please select a date and time slot before proceeding.');
+                }
+            });
+            
+            // Update the updateBookingSummary function to enable the button when a time slot is selected
+            const originalUpdateBookingSummary = updateBookingSummary;
+            window.updateBookingSummary = function(startTime, endTime, selectedDate, hour) {
+                originalUpdateBookingSummary(startTime, endTime, selectedDate, hour);
+                checkTimeSlotSelection();
+            };
+            
+            // Add some CSS for the disabled button
+            const style = document.createElement('style');
+            style.textContent = `
+                .confirm-button.disabled {
+                    background-color: #cccccc;
+                    cursor: not-allowed;
+                    opacity: 0.7;
+                }
+            `;
+            document.head.appendChild(style);
+        });
     </script>
 </body>
 </html>

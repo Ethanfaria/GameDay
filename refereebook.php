@@ -10,6 +10,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="CSS/main.css">
     <link rel="stylesheet" href="CSS/refereebook.css">
+    <style>select#booking_id {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    width: 100%;
+    appearance: none; /* Removes default browser styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+select#booking_id option {
+    background-color: var(--dark-green);
+    color: white;
+}
+
+select#booking_id:focus {
+    outline: none;
+    border-color: var(--neon-green);
+    box-shadow: 0 0 15px rgba(185, 255, 0, 0.3);
+}</style>
 </head>
 <body>
     <?php 
@@ -17,9 +42,8 @@
     include 'header.php'; 
     include 'db.php';
 
-    // Check if user is logged in
     if (!isset($_SESSION['user_email'])) {
-        echo "<script>alert('Please login to book a referee.'); window.location.href='login.php';</script>";
+        header("Location: login.php");
         exit();
     }
 

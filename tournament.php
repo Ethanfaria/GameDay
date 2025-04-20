@@ -1,10 +1,6 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_email'])) {
-    header("Location: login.php"); // Redirect to login if not logged in
-    exit();
-}
 
 // Check if the request is a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

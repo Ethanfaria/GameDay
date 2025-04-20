@@ -83,7 +83,6 @@ body {
     justify-content: space-between;
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
     font-weight: bold;
 }
 
@@ -249,4 +248,39 @@ body {
         text-align: left;
         margin-top: 5px;
     }
+}
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.action-button {
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.primary-button {
+    background-color: #c4ff3c;
+    color: #0a2e1a;
+}
+
+.primary-button:hover {
+    background-color: #d1ff4a;
+    transform: translateY(-2px);
+}
+
+.secondary-button {
+    background-color: transparent;
+    color: #c4ff3c;
+    border: 1px solid #c4ff3c;
+}
+
+.secondary-button:hover {
+    background-color: rgba(196, 255, 60, 0.1);
+    transform: translateY(-2px);
 }

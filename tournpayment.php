@@ -10,7 +10,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve data from session
     $email = $_SESSION['user_email'];
     $tr_id = $_SESSION['tournament_id'];
-    $registration_date = date('Y-m-d');
 
     // Check if required session variables are set
     if (!isset($email, $tr_id)) {
@@ -36,15 +35,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($registrationResult->num_rows > 0) {
         echo "<script>alert('You are already registered for this tournament.');</script>";
     } else {
+        // Generate a unique registration ID
+        $reg_id = 'REG' . rand(1000, 9999);
+        
+        // Check if the generated ID already exists
+        $idExists = true;
+        while ($idExists) {
+            $checkId = $conn->prepare("SELECT reg_id FROM register WHERE reg_id = ?");
+            $checkId->bind_param("s", $reg_id);
+            $checkId->execute();
+            $idResult = $checkId->get_result();
+            
+            if ($idResult->num_rows === 0) {
+                $idExists = false;
+            } else {
+                $reg_id = 'REG' . rand(1000, 9999);
+            }
+            $checkId->close();
+        }
+        
         // Insert registration into the database
-        $sql = "INSERT INTO tournament_registrations (tr_id, reg_date, email) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO register (reg_id, tr_id, email) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
 
         if ($stmt === false) {
             die("Error preparing statement: " . $conn->error);
         }
 
-        $stmt->bind_param("sss", $tr_id, $registration_date, $email);
+        $stmt->bind_param("sss", $reg_id, $tr_id, $email);
 
         if ($stmt->execute()) {
             $_SESSION['registration_successful'] = true;
@@ -206,7 +224,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </div>
 
-        <form method="POST" action="">
+        <form method="POST" action="" id="paymentForm">
+            <input type="hidden" name="payment_method" id="paymentMethod" value="upi">
             <button type="submit" class="proceed-button" id="proceedButton">Proceed to Pay</button>
         </form>
     </div>

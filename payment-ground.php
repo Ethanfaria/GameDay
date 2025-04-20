@@ -4,6 +4,11 @@ date_default_timezone_set('Asia/Kolkata');
 
 include 'db.php'; // Ensure this file contains the database connection
 
+if (!isset($_SESSION['user_email'])) {
+    header("Location: login.php");
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve data from session
     $email = $_SESSION['user_email'];
@@ -80,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <link rel="stylesheet" href="CSS\payment-ground.css">
+    <link rel="stylesheet" href="CSS\payment.css">
     <link rel="stylesheet" href="CSS\main.css">
 </head>
 <body>
@@ -116,70 +121,70 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <i class="fas fa-arrow-left"></i> Back
         </a>
         
+        <h2 class="summary-title">Order Summary</h2>
+        
         <div class="order-summary">
-            <h2>Order Summary</h2>
-            <div class="order-details">
-                <p>
-                    <span id="booking-type">Turf Booking</span>
-                    <span id="booking-name"><?php echo htmlspecialchars($venue_name); ?></span>
-                </p>
-                <p>
-                    <span>Date & Time</span>
-                    <span id="booking-datetime"><?php echo htmlspecialchars($booking_date . ' | ' . $booking_time); ?></span>
-                </p>
-                <p class="total-amount">
-                    <span>Total Amount</span>
-                    <span id="total-amount">₹<?php echo htmlspecialchars($price); ?></span>
-                </p>
+            <div class="summary-row">
+                <span class="summary-label">Booking Type</span>
+                <span class="summary-value" id="booking-type">Turf Booking</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Venue</span>
+                <span class="summary-value" id="booking-name"><?php echo htmlspecialchars($venue_name); ?></span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Date & Time</span>
+                <span class="summary-value" id="booking-datetime"><?php echo htmlspecialchars($booking_date . ' | ' . $booking_time); ?></span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Total Amount</span>
+                <span class="total-value" id="total-amount">₹<?php echo htmlspecialchars($price); ?></span>
             </div>
         </div>
 
-        <div class="payment-methods">
-            <h3>Select Payment Method</h3>
-            <div class="payment-method" data-method="upi">
+        <h3 class="payment-section-title">Select Payment Method</h3>
+        
+        <div class="payment-option" data-method="upi">
+            <div class="payment-icon">
                 <i class="fas fa-mobile-alt"></i>
-                <span>UPI / QR Code</span>
             </div>
-            <div class="payment-method" data-method="card">
+            <span class="payment-label">UPI / QR Code</span>
+        </div>
+        
+        <div class="payment-option" data-method="card">
+            <div class="payment-icon">
                 <i class="fas fa-credit-card"></i>
-                <span>Credit / Debit Card</span>
             </div>
-            <div class="payment-method" data-method="netbanking">
+            <span class="payment-label">Credit / Debit Card</span>
+        </div>
+        
+        <div class="payment-option" data-method="netbanking">
+            <div class="payment-icon">
                 <i class="fas fa-university"></i>
-                <span>Net Banking</span>
             </div>
+            <span class="payment-label">Net Banking</span>
         </div>
 
-        <div class="qr-section" id="qrSection">
+        <div class="qr-section" id="qrSection" style="display: none;">
             <h3>Scan QR Code to Pay</h3>
             <p class="qr-amount" id="qrAmount">₹<?php echo htmlspecialchars($price); ?></p>
-            <div id="qrcode"></div>
-            <p class="upi-id">UPI ID: gameday@ybl</p>
-            <p>Or click below to pay using other UPI apps</p>
+            <div class="qr-code">
+                <div id="qrcode"></div>
+            </div>
+            <div class="payment-instructions">
+                <h3>Payment Instructions</h3>
+                <p>Open any UPI app and scan the QR code above to make the payment</p>
+            </div>
+            <div class="payment-upi-id">UPI ID: gameday@ybl</div>
+            <p class="payment-instructions">Or use your preferred UPI app to pay</p>
         </div>
 
         <form method="POST" action="">
-            <button type="submit" id="pay-button" class="payment-button">Proceed to Pay</button>
+            <button type="submit" id="pay-button" class="proceed-button">Proceed to Pay</button>
         </form>
     </div>
-
-    <div class="success-popup" id="successPopup">
-        <i class="fas fa-check-circle"></i>
-        <h2>Payment Successful!</h2>
-        <p>Redirecting to confirmation page...</p>
-    </div>
-
-    <div class="error-popup" id="errorPopup">
-        <i class="fas fa-times-circle"></i>
-        <h2>Payment Failed</h2>
-        <p>Your payment could not be processed. Please try a different payment method.</p>
-        <button onclick="closeErrorPopup()">Try Again</button>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
-
+    
     <script>
-
         // Get URL parameters
         function getUrlParams() {
             const params = {};
@@ -220,29 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             });
         }
 
-        // Show success popup
-        function showSuccessPopup() {
-            document.getElementById('successPopup').classList.add('show');
-            document.getElementById('overlay').classList.add('show');
-            
-            setTimeout(() => {
-                window.location.href = 'payment-ground-success.php?venue_id=<?php echo htmlspecialchars($venue_id); ?>&booking_success=true';
-            }, 2000);
-        }
-
-        // Show error popup
-        function showErrorPopup() {
-            document.getElementById('errorPopup').classList.add('show');
-            document.getElementById('overlay').classList.add('show');
-        }
-
-        // Close error popup
-        function closeErrorPopup() {
-            document.getElementById('errorPopup').classList.remove('show');
-            document.getElementById('overlay').classList.remove('show');
-        }
-
-         // Update booking details
+        // Update booking details
         function updateBookingDetails() {
             // No need to update anything as we're using PHP to set these values
             // This function is now just a placeholder
@@ -253,10 +236,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Handle payment method selection
-        document.querySelectorAll('.payment-method').forEach(method => {
+        document.querySelectorAll('.payment-option').forEach(method => {
             method.addEventListener('click', () => {
                 // Remove selected class from all methods
-                document.querySelectorAll('.payment-method').forEach(m => 
+                document.querySelectorAll('.payment-option').forEach(m => 
                     m.classList.remove('selected'));
                 
                 // Add selected class to clicked method
@@ -265,9 +248,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Show/hide QR section for UPI
                 const qrSection = document.getElementById('qrSection');
                 if (method.dataset.method === 'upi') {
-                    qrSection.classList.add('visible');
+                    qrSection.style.display = 'flex';
                 } else {
-                    qrSection.classList.remove('visible');
+                    qrSection.style.display = 'none';
                 }
             });
         });
@@ -284,7 +267,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 description: `Payment for Turf Booking`,
                 image: 'your-logo-url.png',
                 handler: function(response) {
-                    showSuccessPopup();
+                    // Direct redirect instead of showing popup
+                    window.location.href = 'payment-ground-success.php?venue_id=<?php echo htmlspecialchars($venue_id); ?>&booking_success=true';
                 },
                 prefill: {
                     name: '',
@@ -300,6 +284,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Initialize page
         updateBookingDetails();
         initializePayment();
+        
+        // Select UPI by default
+        document.querySelector('.payment-option[data-method="upi"]').click();
     </script>
+    
+    <style>
+    /* Additional styles for QR code */
+    #qrcode {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .qr-amount {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--neon-green);
+        margin-bottom: 15px;
+    }
+    </style>
 </body>
-</html> 
+</html>

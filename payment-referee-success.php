@@ -176,10 +176,7 @@ if ($result->num_rows > 0) {
             <i class="fas fa-check-circle success-icon"></i>
             <h1 class="success-title">Payment Successful!</h1>
             <p class="success-message">Your referee booking has been confirmed.</p>
-            <div class="transaction-id">
-                Transaction ID: <?php echo $transaction_id; ?>
-            </div>
-            
+           
             <div class="booking-details">
                 <h2 style="color: #c4ff3c; margin-bottom: 1rem;">Booking Details</h2>
                 <div class="detail-row">
@@ -206,13 +203,8 @@ if ($result->num_rows > 0) {
                     <div class="detail-label">Amount Paid:</div>
                     <div class="detail-value">₹<?php echo htmlspecialchars($referee_charges); ?></div>
                 </div>
-                <div class="detail-row">
-                    <div class="detail-label">Status:</div>
-                    <div class="detail-value" style="color: #4CAF50;">Confirmed</div>
-                </div>
+              
             </div>
-            
-            <p class="success-message">A confirmation has been sent to your registered email address.</p>
             
             <div class="action-buttons">
                 <a href="userdashboard.php" class="action-button primary-button">

@@ -13,8 +13,7 @@ $booking_id = $_GET['booking_id'];
 
 // Check if user is logged in
 if (!isset($_SESSION['user_email'])) {
-    echo "<script>alert('Please log in to complete your payment.');</script>";
-    echo "<script>window.location.href = 'login.php';</script>";
+    header("Location: login.php");
     exit();
 }
 
@@ -26,15 +25,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'upi';
     
     // Update booking status to confirmed
-    $update_sql = "UPDATE book SET status = 'confirmed', payment_status = 'paid' WHERE booking_id = ?";
+    $update_sql = "UPDATE book SET status = 'confirmed' WHERE booking_id = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("i", $booking_id);
-    $update_stmt->execute();
     
-    // Redirect to dashboard with success message
-    $_SESSION['success'] = "Payment successful! Your referee booking is confirmed.";
-    header("Location: userdashboard.php");
-    exit();
+    // Check if prepare statement was successful
+    if ($update_stmt === false) {
+        echo "<script>alert('Database error: " . $conn->error . "');</script>";
+        exit();
+    }
+    
+    $update_stmt->bind_param("i", $booking_id);
+    $update_result = $update_stmt->execute();
+    
+    if ($update_result) {
+        // Add debug message to confirm update
+        echo "<script>console.log('Database updated successfully for booking ID: $booking_id');</script>";
+        
+        // Set success message in session
+        $_SESSION['payment_success'] = "Payment successful! Your referee booking is confirmed.";
+        
+        // Redirect to success page with booking_id
+        header("Location: payment-referee-success.php?booking_id=$booking_id");
+        exit();
+    } else {
+        echo "<script>alert('Payment processing failed: " . $update_stmt->error . "');</script>";
+        echo "<script>console.error('SQL Error: " . $update_stmt->error . "');</script>";
+    }
 }
 
 // Fetch booking details with referee information
@@ -180,7 +196,7 @@ if ($result->num_rows > 0) {
             </div>
         </div>
 
-        <form method="POST" action="payment-referee-result.php">
+        <form method="POST" action="">
             <input type="hidden" name="payment_method" id="paymentMethod" value="upi">
             <input type="hidden" name="booking_id" value="<?php echo $booking_id; ?>">
             <button type="submit" class="proceed-button" id="proceedButton">Proceed to Pay</button>

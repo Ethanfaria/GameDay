@@ -227,8 +227,7 @@ if (!isset($_SESSION['user_email'])) {
 	$academy_sql = "SELECT a.aca_nm, a.ac_location, a.admy_img, e.en_date 
 					FROM enroll e
 					JOIN academys a ON e.ac_id = a.ac_id
-					WHERE e.email = ?
-					LIMIT 2";
+					WHERE e.email = ?";
 	$academy_stmt = $conn->prepare($academy_sql);
 	$academy_stmt->bind_param("s", $user_email);
 	$academy_stmt->execute();
@@ -262,7 +261,9 @@ if (!isset($_SESSION['user_email'])) {
 		<p>Manage your futsal bookings and schedule from your personal dashboard.</p>
 		</div>
 		
-		<div class="bento-grid">
+		<div class="bento-grid" style="
+    margin-bottom: 20px;
+">
 		<!-- Profile actions moved to top -->
 		<div class="bento-item profile-actions">
 		<div class="bento-header">
@@ -386,7 +387,7 @@ if (!isset($_SESSION['user_email'])) {
 				$referee_status = !empty($row['status']) ? htmlspecialchars($row['status']) : 'Pending';
 				
 				// Determine status class based on the status value
-				if (strtolower($referee_status) == 'declined') {
+				if (strtolower($referee_status) == 'declined' || strtolower($referee_status) == 'cancelled') {
 					$status_class = 'status-declined';
 					$icon_class = 'fa-times-circle';
 				} else if (strtolower($referee_status) == 'confirmed' || strtolower($referee_status) == 'accepted') {
@@ -398,25 +399,23 @@ if (!isset($_SESSION['user_email'])) {
 					$icon_class = 'fa-clock';
 				}
 		?>
-		<div class="referee-item">
-			<div class="referee-info">
-				<div><span class="date-badge"><?php echo $formatted_date; ?></span> <?php echo htmlspecialchars($row['bk_dur']); ?></div>
-				<div class="referee-location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['venue_nm']); ?></div>
+		<div class="match-item">
+			<div class="match-info">
+				<div><span class="date-badge <?php echo $booking_date == new DateTime('today') ? 'today-badge' : ''; ?>"><?php echo $formatted_date; ?></span> <?php echo htmlspecialchars($row['bk_dur']); ?></div>
+				<div class="match-location"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($row['venue_nm']); ?></div>
 				<?php if ($has_referee): ?>
-				<div class="referee-name"><i class="fas fa-user-shield"></i> Referee: <?php echo htmlspecialchars($row['referee_name'] ?? 'Unknown'); ?></div>
+				<div class="match-location"><i class="fas fa-user-shield"></i> Referee: <?php echo htmlspecialchars($row['referee_name'] ?? 'Unknown'); ?></div>
 				<?php endif; ?>
-			</div>
-			<div class="referee-status-container">
 				<div class="referee-status-badge <?php echo $status_class; ?>">
 					<i class="fas <?php echo $icon_class; ?>"></i> 
 					<?php echo $referee_status; ?>
 				</div>
 				<?php if (strtolower($referee_status) == 'accepted'): ?>
 				<div class="referee-action-buttons">
-					<button class="referee-status-badge pay-button" onclick="window.location.href='payment-referee.php?booking_id=<?php echo $row['booking_id']; ?>'">
+					<button class="action-button primary" onclick="window.location.href='payment-referee.php?booking_id=<?php echo $row['booking_id']; ?>'">
 						<i class="fas fa-credit-card"></i> Pay
 					</button>
-					<button class="referee-status-badge cancel-button" onclick="if(confirm('Are you sure you want to cancel this referee request?')) window.location.href='cancel_referee.php?booking_id=<?php echo $row['booking_id']; ?>'">
+					<button class="action-button secondary" onclick="if(confirm('Are you sure you want to cancel this referee request?')) window.location.href='cancel_referee.php?booking_id=<?php echo $row['booking_id']; ?>'">
 						<i class="fas fa-times-circle"></i> Cancel
 					</button>
 				</div>
@@ -436,59 +435,62 @@ if (!isset($_SESSION['user_email'])) {
 		<!-- Replace the stacked container with separate boxes -->
 		<!-- Tournament registrations and Academy enrollments side by side -->
 		<div class="bento-item tournament-registration">
-		    <div class="bento-header">
-		    <h2><i class="fas fa-trophy section-icon"></i> Tournament Registrations</h2>
-		    </div>
-		    <?php 
-		    if ($registered_tournament_result->num_rows > 0) {
-		        while ($registered_tournament = $registered_tournament_result->fetch_assoc()) {
-		    ?>
-		    <div class="tournament-item">
-		    <div class="tournament-info">
-		        <div><?php echo htmlspecialchars($registered_tournament['tr_name']); ?></div>
-		        <div class="tournament-location">
-		        <i class="far fa-calendar-alt"></i> 
-		        Starting <?php echo date('M d, Y', strtotime($registered_tournament['start_date'])); ?>
-		        </div>
-		    </div>
-		    </div>
-		    <?php 
-		        }
-		    } else {
-		    ?>
-		    <p>No tournament registrations</p>
-		    <?php 
-		    }
-		    $registered_stmt->close();
-		    ?>
+			<div class="bento-header">
+			<h2><i class="fas fa-trophy section-icon"></i> Tournament Registrations</h2>
+			</div>
+			<div class="scroll-container">
+			<?php 
+			if ($registered_tournament_result->num_rows > 0) {
+				while ($registered_tournament = $registered_tournament_result->fetch_assoc()) {
+			?>
+			<div class="tournament-item">
+			<div class="tournament-info">
+				<div><?php echo htmlspecialchars($registered_tournament['tr_name']); ?></div>
+				<div class="tournament-location">
+				<i class="far fa-calendar-alt"></i> 
+				Starting <?php echo date('M d, Y', strtotime($registered_tournament['start_date'])); ?>
+				</div>
+			</div>
+			</div>
+			<?php 
+				}
+			} else {
+			?>
+			<p>No tournament registrations</p>
+			<?php 
+			}
+			$registered_stmt->close();
+			?>
+			</div>
 		</div>
 		
-		<!-- Academy enrollments as a separate box -->
+		<!-- Academy enrollments moved to left side -->
 		<div class="bento-item academy-enrollments">
-		    <div class="bento-header">
-		    <h2><i class="fas fa-graduation-cap section-icon"></i> Enrolled Academies</h2>
-		    </div>
-		    <?php
-		    if ($academy_result->num_rows > 0) {
-		        while($academy = $academy_result->fetch_assoc()) {
-		    ?>
-		    <div class="academy-item">
-		    <div class="academy-info">
-		        <div><?php echo htmlspecialchars($academy['aca_nm']); ?></div>
-		        <div class="academy-location"><i class="far fa-clock"></i><?php echo htmlspecialchars($academy['ac_location']); ?></div>
-		    </div>
-		    </div>
-		    <?php
-		        }
-		    } else {
-		        echo "<p>No academy enrollments</p>";
-		    }
-		    $academy_stmt->close();
-		    ?>
+			<div class="bento-header">
+			<h2><i class="fas fa-graduation-cap section-icon"></i> Enrolled Academies</h2>
+			</div>
+			<div class="scroll-container">
+			<?php
+			if ($academy_result->num_rows > 0) {
+				while($academy = $academy_result->fetch_assoc()) {
+			?>
+			<div class="academy-item">
+			<div class="academy-info">
+				<div><?php echo htmlspecialchars($academy['aca_nm']); ?></div>
+				<div class="academy-location"><i class="far fa-clock"></i><?php echo htmlspecialchars($academy['ac_location']); ?></div>
+			</div>
+			</div>
+			<?php
+				}
+			} else {
+				echo "<p>No academy enrollments</p>";
+			}
+			$academy_stmt->close();
+			?>
+			</div>
 		</div>
-		</div>
-		
-		<!-- Booking history for reference -->
+
+		<!-- Booking history no longer spans columns, placed on right side -->
 		<div class="bento-item booking-history">
 			<div class="bento-header">
 			<h2><i class="fas fa-history section-icon"></i> Booking History</h2>
@@ -497,11 +499,11 @@ if (!isset($_SESSION['user_email'])) {
 			<?php
 			// Get booking history - modified to include all bookings (past and future)
 			$history_sql = "SELECT b.*, v.venue_nm, v.location 
-			                FROM book b
-			                JOIN venue v ON b.venue_id = v.venue_id
-			                WHERE b.email = ?
-			                ORDER BY b.bk_date DESC
-			                LIMIT 10";
+							FROM book b
+							JOIN venue v ON b.venue_id = v.venue_id
+							WHERE b.email = ?
+							ORDER BY b.bk_date DESC
+							LIMIT 10";
 			$history_stmt = $conn->prepare($history_sql);
 			$history_stmt->bind_param("s", $user_email);
 			$history_stmt->execute();
@@ -528,7 +530,6 @@ if (!isset($_SESSION['user_email'])) {
 			$history_stmt->close();
 			?>
 			</div>
-		</div>
 		</div>
 	</div>
 	<div id="profileEditModal" class="modal">

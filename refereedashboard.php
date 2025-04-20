@@ -33,14 +33,15 @@ function fetchRefereeStats($conn, $ref_email) {
         COUNT(DISTINCT b.booking_id) as matches_officiated,
         COUNT(DISTINCT MONTH(b.bk_date)) as months_active,
         COALESCE(r.charges, 0) as hourly_rate,
-        COALESCE(r.charges * COUNT(DISTINCT CASE WHEN b.status = 'accepted' THEN b.booking_id END), 0) as total_earnings
+        COALESCE(r.charges * (SELECT COUNT(*) FROM book WHERE referee_email = ? AND status = 'confirmed'), 0) as total_earnings
     FROM referee r
     LEFT JOIN book b ON r.referee_email = b.referee_email
     WHERE r.referee_email = ? 
-    AND b.bk_date <= CURDATE()";
+    AND b.bk_date <= CURDATE()
+    GROUP BY r.charges";
     
     $stats_stmt = $conn->prepare($stats_sql);
-    $stats_stmt->bind_param("s", $ref_email);
+    $stats_stmt->bind_param("ss", $ref_email, $ref_email);
     $stats_stmt->execute();
     $stats = $stats_stmt->get_result()->fetch_assoc();
     $stats_stmt->close();
@@ -52,6 +53,17 @@ function fetchRefereeStats($conn, $ref_email) {
 // Update the matches query
 // Update the function signature to accept current_date
 function fetchUpcomingMatches($conn, $ref_email, $current_date) {
+    // Debug query to check if canceled bookings exist
+    $debug_sql = "SELECT status, COUNT(*) as count FROM book WHERE referee_email = ? GROUP BY status";
+    $debug_stmt = $conn->prepare($debug_sql);
+    $debug_stmt->bind_param("s", $ref_email);
+    $debug_stmt->execute();
+    $debug_result = $debug_stmt->get_result();
+    while($row = $debug_result->fetch_assoc()) {
+        error_log("Status: " . $row['status'] . ", Count: " . $row['count']);
+    }
+    $debug_stmt->close();
+    
     $matches_sql = "SELECT 
         b.booking_id,
         b.bk_date,
@@ -67,7 +79,6 @@ function fetchUpcomingMatches($conn, $ref_email, $current_date) {
     LEFT JOIN referee r ON r.referee_email = b.referee_email
     WHERE b.referee_email = ? 
     AND b.bk_date >= ?
-    AND b.status IN ('pending', 'accepted')
     ORDER BY b.bk_date ASC";
   
     $matches_stmt = $conn->prepare($matches_sql);
@@ -131,7 +142,7 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email, $current_date);
             <div class="bento-item referee-profile-section">
                 <div class="bento-header">
                     <h2><i class="fas fa-user-tie section-icon"></i> Referee Profile</h2>
-                    <button class="edit-button"><i class="fas fa-edit"></i> Edit Profile</button>
+                    <button onclick="window.location.href='referee-edit-profile.php'" class="edit-button"><i class="fas fa-edit"></i> Edit Profile</button>
                 </div>
                 
                 <div class="referee-detail-item">
@@ -163,6 +174,16 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email, $current_date);
                     <div class="referee-detail-content">
                         <div class="referee-detail-label">Location</div>
                         <div class="referee-detail-value"><?php echo htmlspecialchars($referee['ref_location']); ?></div>
+                    </div>
+                </div>
+
+                <div class="referee-detail-item">
+                    <div class="referee-detail-icon"><i class="fa-solid fa-image"></i></div>
+                    <div class="referee-detail-content">
+                        <div class="referee-detail-label">Picture</div>
+                        <div class="referee-detail-value">
+                            <img src="images/referee/<?php echo htmlspecialchars($referee['ref_pic']); ?>" alt="Referee" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-top: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        </div>
                     </div>
                 </div>
                
@@ -204,39 +225,60 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email, $current_date);
                 
                 <div class="match-list">
                     <?php if($matches_result->num_rows > 0): ?>
+                        <?php 
+                        // Debug output
+                        echo "<!-- Total matches: " . $matches_result->num_rows . " -->";
+                        ?>
                         <?php while($match = $matches_result->fetch_assoc()): ?>
+                            <?php 
+                            // Debug output for each match
+                            echo "<!-- Match ID: " . $match['booking_id'] . ", Status: " . $match['status'] . " -->";
+                            ?>
                             <div class="match-card">
-                                <?php 
-                                $badge_class = '';
-                                switch($match['status']) {
-                                    case 'confirmed':
-                                        $badge_class = 'badge-confirmed';
-                                        break;
-                                    case 'pending':
-                                        $badge_class = 'badge-upcoming';
-                                        break;
-                                    default:
-                                        $badge_class = 'badge-upcoming';
-                                }
-                                ?>
-                                <div class="badge <?php echo $badge_class; ?>"><?php echo strtoupper($match['status']); ?></div>
-                                
-                                <div class="match-date">
+                                <div class="match-header">
+                                    <div class="match-date">
+                                        <?php 
+                                        $match_date = new DateTime($match['bk_date']);
+                                        $today = new DateTime(date('Y-m-d'));
+                                        $tomorrow = new DateTime('tomorrow');
+                                        
+                                        if($match_date->format('Y-m-d') == $today->format('Y-m-d')) {
+                                            echo "Today";
+                                        } elseif($match_date->format('Y-m-d') == $tomorrow->format('Y-m-d')) {
+                                            echo "Tomorrow";
+                                        } else {
+                                            echo $match_date->format('d M, Y');
+                                        }
+                                        
+                                        echo " " . $match['time_slot'];
+                                        ?>
+                                    </div>
+                                    
                                     <?php 
-                                    $match_date = new DateTime($match['bk_date']);
-                                    $today = new DateTime(date('Y-m-d'));
-                                    $tomorrow = new DateTime('tomorrow');
+                                    // Force lowercase for comparison and print raw value for debugging
+                                    $status = strtolower(trim($match['status']));
                                     
-                                    if($match_date->format('Y-m-d') == $today->format('Y-m-d')) {
-                                        echo "Today";
-                                    } elseif($match_date->format('Y-m-d') == $tomorrow->format('Y-m-d')) {
-                                        echo "Tomorrow";
-                                    } else {
-                                        echo $match_date->format('d M, Y');
+                                    switch($status) {
+                                        case 'confirmed':
+                                            $badge_class = 'badge-confirmed';
+                                            break;
+                                        case 'accepted':
+                                            $badge_class = 'badge-accepted';
+                                            break;
+                                        case 'pending':
+                                            $badge_class = 'badge-upcoming';
+                                            break;
+                                        case 'canceled':
+                                        case 'cancelled':
+                                            $badge_class = 'badge-canceled';
+                                            break;
+                                        default:
+                                            $badge_class = 'badge-upcoming';
                                     }
-                                    
-                                    echo " " . $match['time_slot'];
                                     ?>
+                                    <div class="badge <?php echo $badge_class; ?>">
+                                        <?php echo strtoupper($match['status']); ?>
+                                    </div>
                                 </div>
                                 
                                 <div class="match-teams"><?php echo htmlspecialchars($match['venue_name']); ?></div>
@@ -366,28 +408,9 @@ $matches_result = fetchUpcomingMatches($conn, $ref_email, $current_date);
     });
 
     // Match card status badge
-// In the match card section where badges are defined
-<?php 
-$badge_class = '';
-switch($match['status']) {
-    case 'accepted':
-        $badge_class = 'badge-confirmed';
-        break;
-    case 'pending':
-        $badge_class = 'badge-upcoming';
-        break;
-    case 'canceled':
-        $badge_class = 'badge-canceled';
-        break;
-    default:
-        $badge_class = 'badge-upcoming';
-}
-?>
-
-    // Edit profile button
-    document.querySelector('.edit-button').addEventListener('click', function() {
-      alert('Profile edit feature coming soon!');
-    });
+    // Remove the PHP code that was incorrectly placed here
+    
+   
 
     // Sign out button
     document.querySelector('.signout-button').addEventListener('click', function() {

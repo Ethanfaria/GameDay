@@ -27,7 +27,7 @@
 }
 
 .welcome p {
-  color: #a9a9a9;
+  color: #c4ff3c99; /* Changed from #a9a9a9 to a semi-transparent green */
 }
 
 .bento-grid {
@@ -188,7 +188,7 @@
 
 .referee-detail-label {
   font-size: 0.8rem;
-  color: #a9a9a9;
+  color: #c4ff3c99; /* Changed from #a9a9a9 to a semi-transparent green */
   margin-bottom: 0.2rem;
 }
 
@@ -310,7 +310,7 @@
   width: 12%;
   text-align: center;
   font-size: 0.8rem;
-  color: #a9a9a9;
+  color: #c4ff3c99; /* Changed from #a9a9a9 to a semi-transparent green */
 }
 
 .signout-button {
@@ -361,7 +361,7 @@
 
 .match-date {
   font-size: 0.8rem;
-  color: #a9a9a9;
+  color: #c4ff3c;
   margin-bottom: 0.5rem;
 }
 
@@ -412,17 +412,39 @@
   border-radius: 0.3rem;
   font-size: 0.8rem;
   font-weight: bold;
+  z-index: 10;
 }
 
 .badge-upcoming {
-  background-color: #276e2f;
-  border: 1px solid #c4ff3c;
-  color: #c4ff3c;
+  background-color: #2196F3 !important; /* Blue */
+  color: white !important;
+  border: none !important;
 }
 
 .badge-confirmed {
-  background-color: #c4ff3c;
-  color: #0a2e1a;
+  background-color: #c4ff3c !important; /* Bright green */
+  color: black !important;
+  border: none !important;
+}
+
+.badge-accepted {
+  background-color: #FFC107 !important; /* Yellow */
+  color: black !important;
+  border: none !important;
+}
+
+.badge-canceled {
+  background-color: #F44336 !important; /* Red */
+  color: white !important;
+  border: none !important;
+}
+
+/* Make it even more specific */
+.match-card .badge.badge-canceled,
+.match-card .badge.badge-cancelled {
+  background-color: #F44336 !important; /* Red */
+  color: white !important;
+  border: none !important;
 }
 
 .certification-badge {
@@ -452,7 +474,7 @@
 }
 
 .empty-star {
-  color: #a9a9a9;
+  color: #c4ff3c; 
   margin-right: 0.2rem;
 }
 
@@ -482,4 +504,59 @@
   .mobile-menu-btn {
     display: block;
   }
+}
+
+/* Add these styles to your existing CSS file */
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.match-date {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+}
+
+.badge-confirmed {
+    background-color: #4CAF50;
+}
+
+.badge-accepted {
+    background-color: #2196F3;
+}
+
+.badge-upcoming, .badge-pending {
+    background-color: #FF9800;
+}
+
+.badge-canceled {
+    background-color: #F44336;
+}
+
+/* Update match card styles */
+.match-card {
+    background-color: #19391d;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+/* Remove any absolute positioning that might have been causing overlap */
+.match-card .badge {
+    position: static;
+    display: inline-block;
 }

@@ -69,54 +69,60 @@ unset($_SESSION['academy_charges']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAME DAY - Enrollment Confirmation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="CSS\payment.css">
-    <link rel="stylesheet" href="CSS\main.css">
+    <link rel="stylesheet" href="CSS/payment.css">
+    <link rel="stylesheet" href="CSS/main.css">
 </head>
 <body>
-    <?php include 'header.php'; ?>
-    
     <div class="payment-container">
-        <i class="fas fa-check-circle success-icon"></i>
-        <h1>Enrollment Successful!</h1>
-        <p>You have successfully enrolled in the academy. Please check your details below.</p>
+        <i class="fas fa-check-circle success-icon" style="font-size: 64px; color: var(--neon-green); display: block; text-align: center; margin-bottom: 20px;"></i>
+        <h1 class="summary-title">Enrollment Successful!</h1>
         
-        <div class="enrollment-details">
-            <p>
-                <span>Academy Name</span>
-                <span><?php echo htmlspecialchars($academy_name); ?></span>
-            </p>
-            <p>
-                <span>Location</span>
-                <span><?php echo htmlspecialchars($academy_location); ?></span>
-            </p>
-            <p>
-                <span>Enrollment Date</span>
-                <span><?php echo date('d M Y', strtotime($enrollment_date)); ?></span>
-            </p>
-            <p>
-                <span>Duration</span>
-                <span><?php echo htmlspecialchars($enrollment_duration); ?> months</span>
-            </p>
-            <p>
-                <span>End Date</span>
-                <span><?php echo date('d M Y', strtotime($end_date)); ?></span>
-            </p>
-            <p>
-                <span>Monthly Fee</span>
-                <span>₹<?php echo htmlspecialchars(number_format($academy_charges)); ?></span>
-            </p>
-            <p>
-                <span>Total Amount Paid</span>
-                <span>₹<?php echo htmlspecialchars(number_format($academy_charges * $enrollment_duration)); ?></span>
-            </p>
+        <div class="order-summary">
+            <div class="summary-row">
+                <div class="summary-label">Email ID</div>
+                <div class="summary-value"><?php echo htmlspecialchars($email); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Academy Name</div>
+                <div class="summary-value"><?php echo htmlspecialchars($academy_name); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Location</div>
+                <div class="summary-value"><?php echo htmlspecialchars($academy_location); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Enrollment Date</div>
+                <div class="summary-value"><?php echo date('d M Y', strtotime($enrollment_date)); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Duration</div>
+                <div class="summary-value"><?php echo htmlspecialchars($enrollment_duration); ?> months</div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">End Date</div>
+                <div class="summary-value"><?php echo date('d M Y', strtotime($end_date)); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Monthly Fee</div>
+                <div class="summary-value">₹<?php echo htmlspecialchars(number_format($academy_charges)); ?></div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Total Amount Paid</div>
+                <div class="total-value">₹<?php echo htmlspecialchars(number_format($academy_charges * $enrollment_duration)); ?></div>
+            </div>
         </div>
         
-        <p>A confirmation email has been sent to your registered email address.</p>
-        
         <div class="action-buttons">
-            <a href="index.php" class="action-button">Go to Home</a>
-            <a href="profile.php" class="action-button secondary-button">View Profile</a>
+                <a href="userdashboard.php" class="action-button primary-button">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                </a>
+                <a href="index.php" class="action-button secondary-button">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
         </div>
     </div>
 </body>

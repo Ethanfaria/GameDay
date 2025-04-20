@@ -8,7 +8,7 @@ $ac_id = isset($_SESSION['academy_id']) ? $_SESSION['academy_id'] :
 
 if (empty($ac_id)) {
     echo "<script>alert('Academy ID is missing.');</script>";
-    echo "<script>window.location.href = 'academies.php';</script>";
+    echo "<script>window.location.href = 'academy.php';</script>";
     exit();
 }
 
@@ -17,8 +17,7 @@ $_SESSION['academy_id'] = $ac_id;
 
 // Check if user is logged in
 if (!isset($_SESSION['user_email'])) {
-    echo "<script>alert('Please log in to complete your enrollment.');</script>";
-    echo "<script>window.location.href = 'login.php';</script>";
+    header("Location: login.php");
     exit();
 }
 
@@ -27,9 +26,72 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get selected payment method
     $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'upi';
     
-    // Redirect to payment result page instead of processing payment here
-    header("Location: payment-academy-result.php?method=$payment_method");
-    exit();
+    // Process the enrollment immediately
+    $email = $_SESSION['user_email'];
+    $enrollment_duration = $_SESSION['academy_duration'];
+    $enrollment_date = date('Y-m-d');
+    $en_id = uniqid('en_');
+
+    // Validate session data exists
+    if (!isset($email, $ac_id)) {
+        echo "<script>alert('Missing required enrollment details.');</script>";
+        echo "<script>window.location.href = 'academy.php';</script>";
+        exit();
+    }
+
+    // Check if the user exists
+    $checkUser = $conn->prepare("SELECT email FROM user WHERE email = ?");
+    $checkUser->bind_param("s", $email);
+    $checkUser->execute();
+    $result = $checkUser->get_result();
+
+    if ($result->num_rows === 0) {
+        echo "<script>alert('User email does not exist in the database.');</script>";
+        echo "<script>window.location.href = 'login.php';</script>";
+        exit();
+    }
+
+    // Check if enrollment already exists
+    $checkEnrollment = $conn->prepare("SELECT * FROM enroll WHERE email = ? AND ac_id = ?");
+    $checkEnrollment->bind_param("ss", $email, $ac_id);
+    $checkEnrollment->execute();
+    $enrollmentResult = $checkEnrollment->get_result();
+    
+    if ($enrollmentResult->num_rows > 0) {
+        // Already enrolled, show error
+        echo "<script>alert('You are already enrolled in this academy.');</script>";
+        echo "<script>window.location.href = 'academy.php';</script>";
+        exit();
+    } else {
+        // Insert enrollment into the database
+        $sql = "INSERT INTO enroll (en_id, ac_id, en_dur, en_date, email) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if ($stmt === false) {
+            echo "<script>alert('Error preparing statement: " . $conn->error . "');</script>";
+            echo "<script>window.location.href = 'academy.php';</script>";
+            exit();
+        }
+
+        $stmt->bind_param("ssiss", $en_id, $ac_id, $enrollment_duration, $enrollment_date, $email);
+
+        if ($stmt->execute()) {
+            // Successful enrollment
+            $_SESSION['enrollment_successful'] = true;
+            echo "<script>window.location.href = 'payment-academy-success.php?ac_id=$ac_id&enrollment_success=true&en_id=$en_id';</script>";
+            exit();
+        } else {
+            // Database error
+            echo "<script>alert('Database error: " . $stmt->error . "');</script>";
+            echo "<script>window.location.href = 'academy.php';</script>";
+            exit();
+        }
+
+        $stmt->close();
+    }
+
+    $checkEnrollment->close();
+    $checkUser->close();
 }
 
 $sql = "SELECT * FROM academys WHERE ac_id = ?";
@@ -70,7 +132,6 @@ if ($result->num_rows > 0) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <link rel="stylesheet" href="CSS\payment-ground.css">
     <link rel="stylesheet" href="CSS\payment.css">
     <link rel="stylesheet" href="CSS\main.css">
 </head>

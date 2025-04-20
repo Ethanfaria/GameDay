@@ -7,14 +7,17 @@ $booking_date = $_GET['date'] ?? 'Unknown';
 $booking_time = $_GET['time'] ?? 'Unknown';
 
 $venue_name = "Unknown Venue";
+$venue_price = "Unknown";
+
 if ($venue_id !== 'Unknown') {
-    $stmt = $conn->prepare("SELECT venue_nm FROM venue WHERE venue_id = ?");
+    $stmt = $conn->prepare("SELECT venue_nm, price FROM venue WHERE venue_id = ?");
     $stmt->bind_param("s", $venue_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($row = $result->fetch_assoc()) {
         $venue_name = $row['venue_nm'];
+        $venue_price = $row['price'];
     }
     
     $stmt->close();
@@ -26,124 +29,48 @@ if ($venue_id !== 'Unknown') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAME DAY - Booking Confirmed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --dark-green: #0a2e1a;
-            --neon-green: #b9ff00;
-            --dark-gray: #333;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', 'Arial', sans-serif;
-        }
-
-        body {
-            background-color: var(--dark-green);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .success-container {
-            max-width: 600px;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .success-icon {
-            font-size: 80px;
-            color: var(--neon-green);
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            color: var(--neon-green);
-            margin-bottom: 20px;
-        }
-
-        .booking-details {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: left;
-        }
-
-        .booking-details p {
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .buttons {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .button {
-            padding: 12px 25px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .primary-button {
-            background-color: var(--neon-green);
-            color: var(--dark-green);
-        }
-
-        .secondary-button {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .button:hover {
-            transform: scale(1.05);
-            opacity: 0.9;
-        }
-    </style>
+    <link rel="stylesheet" href="CSS/payment.css">
+    <link rel="stylesheet" href="CSS/main.css">
 </head>
 <body>
-    <div class="success-container">
-        <i class="fas fa-check-circle success-icon"></i>
-        <h1>Booking Confirmed!</h1>
-        <p>Your booking has been successfully confirmed. A confirmation email has been sent to your registered email address.</p>
+    <div class="payment-container">
+        <i class="fas fa-check-circle success-icon" style="font-size: 64px; color: var(--neon-green); display: block; text-align: center; margin-bottom: 20px;"></i>
+        <h1 class="summary-title">Booking Confirmed!</h1>
         
-        <div class="booking-details">
-            <p>
-                <span>Email ID:</span>
-                <span id="booking-id"><?php echo htmlspecialchars($email); ?></span>
-            </p>
-            <p>
-                <span>Venue:</span>
-                <span id="venue-name"><?php echo htmlspecialchars($venue_name); ?></span>
-            </p>
-            <p>
-                <span>Booking Date:</span>
-                <span id="booking-datetime"><?php echo htmlspecialchars($booking_date); ?></span>
-            </p>
-            <p>
-                <span>Booking Time:</span>
-                <span id="booking-time"><?php echo htmlspecialchars($booking_time); ?></span>
-            </p>
+        <div class="order-summary">
+            <div class="summary-row">
+                <div class="summary-label">Email ID</div>
+                <div class="summary-value"><?php echo htmlspecialchars($email); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Venue</div>
+                <div class="summary-value"><?php echo htmlspecialchars($venue_name); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Booking Date</div>
+                <div class="summary-value"><?php echo htmlspecialchars($booking_date); ?></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Booking Time</div>
+                <div class="summary-value"><?php echo htmlspecialchars($booking_time); ?></div>
+            </div>
+            <div class="total-row">
+                <div class="total-label">Price</div>
+                <div class="total-value">₹<?php echo htmlspecialchars($venue_price); ?></div>
+            </div>
         </div>
-
-        <div class="buttons">
-            <a href="index.php" class="button primary-button">Back to Home</a>
-            <a href="#" class="button secondary-button" onclick="window.print()">Download Receipt</a>
+        
+        <div class="action-buttons">
+                <a href="userdashboard.php" class="action-button primary-button">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                </a>
+                <a href="index.php" class="action-button secondary-button">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
         </div>
     </div>
 </body>
